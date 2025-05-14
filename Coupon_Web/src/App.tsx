@@ -1,19 +1,22 @@
-import { useState } from 'react'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import './App.css';
+import Home from './pages/Home'
+import Stores from './pages/Stores';
+import Nav from './components/Nav';
+
 
 function App() {
- 
-
   return (
-    <>
-      <div>
-        <div className="eragon text-black text-2xl font-bold text-center mt-10">
-          Welcome to Eragon Coupons
-        </div>
-      </div>
+    <Router>
+      <Nav/>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/stores" element={<Stores />} />
   
-    </>
-  )
+
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
