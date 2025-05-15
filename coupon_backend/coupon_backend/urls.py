@@ -28,4 +28,5 @@ urlpatterns = [
     path('', home, name='home'),  # Add the homepage
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('api/', include('products.urls')),
 ]
