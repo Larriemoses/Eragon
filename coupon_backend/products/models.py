@@ -12,6 +12,10 @@ class ProductCoupon(models.Model):
     code = models.CharField(max_length=50, unique=True)
     discount = models.DecimalField(max_digits=5, decimal_places=2)
     expiry_date = models.DateField()
+    likes = models.PositiveIntegerField(default=0)
+    dislikes = models.PositiveIntegerField(default=0)
+    used_count = models.PositiveIntegerField(default=0)
+    used_today = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"{self.title} ({self.product.name})"
