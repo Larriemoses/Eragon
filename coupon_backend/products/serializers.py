@@ -4,9 +4,17 @@ from .models import Product, ProductCoupon
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = ['id', 'name']
 
 class ProductCouponSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(), source='product', write_only=True
+    )
+
     class Meta:
         model = ProductCoupon
-        fields = '__all__'
+        fields = [
+            'id', 'product', 'product_id', 'title', 'code', 'discount',
+            'likes', 'dislikes', 'used_count', 'used_today'
+        ]

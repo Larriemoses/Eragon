@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponseRedirect
 from rest_framework.routers import DefaultRouter
+from rest_framework.authtoken.views import obtain_auth_token
 from coupons.views import CouponViewSet
 from .views import home  # Import the home view
 
@@ -29,4 +30,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/', include('products.urls')),
+    path('api-token-auth/', obtain_auth_token),
 ]
