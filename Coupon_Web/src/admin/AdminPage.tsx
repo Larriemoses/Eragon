@@ -16,8 +16,6 @@ interface ProductCoupon {
   title: string;
   code: string;
   discount: string;
-  likes: number;
-  dislikes: number;
   used_count: number;
   used_today: number;
 }
@@ -59,6 +57,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (!productId || !title || !code || !discount) {
+      showPopup("All fields are required.");
+      setLoading(false);
+      return;
+    }
+
     const res = await fetch("https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/productcoupon/", {
       method: "POST",
       headers: {
@@ -84,6 +89,14 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       setDiscount("");
       setProductId("");
       showPopup("Coupon added successfully!");
+    } else {
+      // Show backend error
+      const errorData = await res.json();
+      showPopup(
+        typeof errorData === "string"
+          ? errorData
+          : Object.values(errorData).flat().join(" ")
+      );
     }
     setLoading(false);
   };
@@ -232,8 +245,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                   <th className="px-2 py-2">Discount</th>
                   <th className="px-2 py-2">Clicks</th>
                   <th className="px-2 py-2">Today</th>
-                  <th className="px-2 py-2">Thumbs Up</th>
-                  <th className="px-2 py-2">Thumbs Down</th>
                   <th className="px-2 py-2">Actions</th>
                 </tr>
               </thead>
@@ -246,8 +257,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                     <td className="px-2 py-2">{c.discount}</td>
                     <td className="px-2 py-2">{c.used_count}</td>
                     <td className="px-2 py-2">{c.used_today}</td>
-                    <td className="px-2 py-2">{c.likes}</td>
-                    <td className="px-2 py-2">{c.dislikes}</td>
                     <td className="px-2 py-2">
                       <button
                         className="bg-red-500 text-white px-3 py-1 rounded"
@@ -260,7 +269,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                 ))}
                 {coupons.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="text-center py-4">
+                    <td colSpan={7} className="text-center py-4">
                       No coupons found.
                     </td>
                   </tr>
@@ -282,8 +291,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                   <div className="flex flex-wrap gap-2 text-xs mt-2">
                     <span className="bg-gray-100 px-2 py-1 rounded">Clicks: {c.used_count}</span>
                     <span className="bg-gray-100 px-2 py-1 rounded">Today: {c.used_today}</span>
-                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded">👍 {c.likes}</span>
-                    <span className="bg-red-100 text-red-700 px-2 py-1 rounded">👎 {c.dislikes}</span>
                   </div>
                   <button
                     className="mt-3 w-full bg-red-500 text-white px-3 py-1 rounded"
