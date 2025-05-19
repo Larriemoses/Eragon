@@ -142,3 +142,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',  # Require authentication by default
     ],
 }
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

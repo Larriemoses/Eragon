@@ -6,6 +6,7 @@ import Stores from './pages/Stores';
 import Nav from './components/Nav';
 import Login from './admin/Login';
 import AdminPage from './admin/AdminPage';
+import ProductStore from './pages/ProductStore';
 
 const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void }> = ({ token, setToken }) => {
   const location = useLocation();
@@ -17,6 +18,7 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/stores" element={<Stores />} />
+        <Route path="/store/:id" element={<ProductStore />} /> {/* <-- Fix here */}
         <Route
           path="/admin-login"
           element={<Login onLogin={setToken} />}

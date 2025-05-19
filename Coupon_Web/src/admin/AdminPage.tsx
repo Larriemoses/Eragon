@@ -4,6 +4,11 @@ import { useNavigate } from "react-router-dom";
 interface Product {
   id: number;
   name: string;
+  logo?: string | null;
+  logo_url?: string | null;
+  title?: string;
+  subtitle?: string;
+  sub_subtitle?: string;
 }
 
 interface AdminPageProps {
@@ -30,6 +35,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const [loading, setLoading] = useState(false);
   const [newProduct, setNewProduct] = useState("");
   const [popup, setPopup] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [logo, setLogo] = useState<File | null>(null);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [subSubTitle, setSubSubTitle] = useState("");
   const navigate = useNavigate();
 
   // Show popup for 2 seconds
@@ -58,7 +68,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     e.preventDefault();
     setLoading(true);
 
-    if (!productId || !title || !code || !discount) {
+    if (!productId || !title || !discount) {
       showPopup("All fields are required.");
       setLoading(false);
       return;
@@ -73,7 +83,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       body: JSON.stringify({
         product: productId,
         title,
-        code,
+        code, // code can be empty string or null
         discount,
       }),
     });
@@ -104,19 +114,32 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   // Add product handler
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProduct.trim()) return;
+    if (!name.trim()) return;
+
+    const formData = new FormData();
+    formData.append("name", name);
+    if (logo) formData.append("logo", logo);
+    formData.append("logo_url", logoUrl);
+    formData.append("title", title);
+    formData.append("subtitle", subtitle);
+    formData.append("sub_subtitle", subSubTitle);
+
     const res = await fetch("https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products/", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Token ${token}`,
       },
-      body: JSON.stringify({ name: newProduct }),
+      body: formData,
     });
     if (res.ok) {
       const product = await res.json();
       setProducts([product, ...products]);
-      setNewProduct("");
+      setName("");
+      setLogo(null);
+      setLogoUrl("");
+      setTitle("");
+      setSubtitle("");
+      setSubSubTitle("");
       showPopup("Product added successfully!");
     }
   };
@@ -161,23 +184,52 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         </div>
 
         {/* Add Product Form */}
-        <form
-          onSubmit={handleAddProduct}
-          className="mb-6 flex flex-col sm:flex-row gap-2 items-stretch sm:items-end"
-        >
-          <div className="flex-1 w-full">
-            <label className="block mb-1 font-semibold">Add New Product:</label>
-            <input
-              className="w-full p-2 border rounded"
-              value={newProduct}
-              onChange={(e) => setNewProduct(e.target.value)}
-              placeholder="Enter product name"
-              required
-            />
-          </div>
+        <form onSubmit={handleAddProduct} className="mb-6 flex flex-col gap-2">
+          <input
+            type="text"
+            placeholder="Product Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setLogo(e.target.files?.[0] || null)}
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="text"
+            placeholder="Logo URL"
+            value={logoUrl}
+            onChange={(e) => setLogoUrl(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="text"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="text"
+            placeholder="Subtitle"
+            value={subtitle}
+            onChange={(e) => setSubtitle(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="text"
+            placeholder="Sub-sub-title"
+            value={subSubTitle}
+            onChange={(e) => setSubSubTitle(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
           <button
             type="submit"
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full sm:w-auto"
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full"
           >
             Add Product
           </button>
@@ -214,7 +266,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="Enter coupon code"
-            required
           />
           <label className="block mb-1">Discount:</label>
           <input
@@ -251,8 +302,35 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
               <tbody>
                 {coupons.map((c) => (
                   <tr key={c.id} className="border-t">
-                    <td className="px-2 font-bold py-2">{c.product?.name}</td>
-                    <td className="px-2 py-2">{c.title}</td>
+                    <td className="px-2 font-bold py-2 flex items-center gap-2">
+                      {c.product?.logo || c.product?.logo_url ? (
+                        <img
+                          src={c.product.logo ?? c.product.logo_url ?? undefined}
+                          alt={c.product.name}
+                          className="w-6 h-6 object-contain rounded"
+                          style={{ minWidth: 24, minHeight: 24 }}
+                        />
+                      ) : null}
+                      {c.product?.name}
+                    </td>
+                    <td className="px-2 py-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        {c.product?.logo || c.product?.logo_url ? (
+                          <img
+                            src={c.product.logo ?? c.product.logo_url ?? undefined}
+                            alt={c.product.name}
+                            className="w-6 h-6 object-contain rounded"
+                            style={{ minWidth: 24, minHeight: 24 }}
+                          />
+                        ) : null}
+                        <span className="font-bold text-blue-700">{c.title}</span>
+                      </div>
+                      <div>
+                        <div className="font-bold">{c.product.title}</div>
+                        <div className="text-sm">{c.product.subtitle}</div>
+                        <div className="text-xs text-gray-500">{c.product.sub_subtitle}</div>
+                      </div>
+                    </td>
                     <td className="px-2 py-2">{c.code}</td>
                     <td className="px-2 py-2">{c.discount}</td>
                     <td className="px-2 py-2">{c.used_count}</td>
