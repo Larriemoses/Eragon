@@ -301,6 +301,7 @@ const Nav: React.FC = () => {
           </svg>
         </button>
       </form>
+      <hr className="border-t border-gray-200" />
     </header>
   );
 };

@@ -51,8 +51,16 @@ const ProductCouponsSection: React.FC = () => {
         return res.json();
       })
       .then(data => {
-        setProducts(data);
-        if (data.length > 0) setActiveProduct(data[0].id); // Set first product as active by default
+        // If your API returns { results: [...] }
+        if (Array.isArray(data)) {
+          setProducts(data);
+          if (data.length > 0) setActiveProduct(data[0].id);
+        } else if (Array.isArray(data.results)) {
+          setProducts(data.results);
+          if (data.results.length > 0) setActiveProduct(data.results[0].id);
+        } else {
+          setProducts([]);
+        }
       })
       .catch(err => setError(err.message));
 
@@ -60,14 +68,14 @@ const ProductCouponsSection: React.FC = () => {
   }, []);
 
   const handleLike = (id: number) => {
-    fetch(`https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/productcoupon/${id}/like/`, {
+    fetch(`https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products/productcoupon/${id}/like/`, {
       method: "POST",
       headers: { Authorization: `Token ${API_TOKEN}` },
     }).then(fetchCoupons);
   };
 
   const handleDislike = (id: number) => {
-    fetch(`https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/productcoupon/${id}/dislike/`, {
+    fetch(`https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products/productcoupon/${id}/dislike/`, {
       method: "POST",
       headers: { Authorization: `Token ${API_TOKEN}` },
     }).then(fetchCoupons);
@@ -75,7 +83,7 @@ const ProductCouponsSection: React.FC = () => {
 
   const handleCopy = (code: string, id: number) => {
     navigator.clipboard.writeText(code);
-    fetch(`https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/productcoupon/${id}/use/`, {
+    fetch(`https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products/productcoupon/${id}/use/`, {
       method: "POST",
       headers: { Authorization: `Token ${API_TOKEN}` },
     }).then(fetchCoupons);

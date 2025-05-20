@@ -7,6 +7,11 @@ import Nav from './components/Nav';
 import Login from './admin/Login';
 import AdminPage from './admin/AdminPage';
 import ProductStore from './pages/ProductStore';
+import Footer from './components/Footer';
+import SubmitStore from './pages/SubmitStore';
+import Contact from './pages/Contact';
+import TermsOfService from './pages/TermsOfService';
+import Privacy from './pages/Privacy';
 
 const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void }> = ({ token, setToken }) => {
   const location = useLocation();
@@ -19,6 +24,12 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
         <Route path="/" element={<Home />} />
         <Route path="/stores" element={<Stores />} />
         <Route path="/store/:id" element={<ProductStore />} /> {/* <-- Fix here */}
+        <Route path="/submit-store" element={<SubmitStore />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/privacy" element={<Privacy />} />
+    
+        
         <Route
           path="/admin-login"
           element={<Login onLogin={setToken} />}
@@ -30,6 +41,7 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
           }
         />
       </Routes>
+       {!hideNav && <Footer />}
     </>
   );
 };
