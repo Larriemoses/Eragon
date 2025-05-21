@@ -1,15 +1,32 @@
-databases:
-  - name: eragon-db
-    plan: free
-    databaseName: eragon
-    user: eragon_user
+# databases:
+#   - name: eragon-db
+#     plan: free
+#     databaseName: eragon
+#     user: eragon_user
+
+# services:
+#   - type: web
+#     name: eragon-backend
+#     env: python
+#     plan: free
+#     buildCommand: "cd coupon_backend && ./build.sh"
+#     startCommand: "cd coupon_backend && gunicorn coupon_backend.wsgi:application"
+#     envVars:
+#       - key: DATABASE_URL
+#         fromDatabase:
+#           name: eragon-db
+#           property: connectionString
+#       - key: SECRET_KEY
+#         generateValue: true
+#       - key: DEBUG
+#         value: "False"
 
 services:
   - type: web
     name: eragon-backend
     env: python
     plan: free
-    buildCommand: "cd coupon_backend && ./build.sh"
+    buildCommand: "cd coupon_backend && pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate"
     startCommand: "cd coupon_backend && gunicorn coupon_backend.wsgi:application"
     envVars:
       - key: DATABASE_URL
@@ -20,3 +37,9 @@ services:
         generateValue: true
       - key: DEBUG
         value: "False"
+
+databases:
+  - name: eragon-db
+    plan: free
+    databaseName: eragon
+    user: eragon_user
