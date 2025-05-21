@@ -7,7 +7,7 @@ type Product = {
   logo_url: string | null;
 };
 
-const BACKEND_URL = "http://127.0.0.1:8000";
+const BACKEND_URL = "https://eragon-backend.onrender.com";
 const TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4"; // Your API token
 
 const LOGO_WIDTH = 120; // px, should match min-w-[120px]

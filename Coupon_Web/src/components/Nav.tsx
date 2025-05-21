@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 const LOGO_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png"; // Replace with your Cloudinary logo link
 const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
-const API_URL = "http://127.0.0.1:8000/api/products/";
+const API_URL = "https://eragon-backend.onrender.com/api/products/";
 
 interface Product {
   id: number;

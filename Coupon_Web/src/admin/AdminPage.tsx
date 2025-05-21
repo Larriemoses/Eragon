@@ -50,13 +50,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
 
   // Fetch products and coupons
   useEffect(() => {
-    fetch("http://localhost:8000/api/products", {
+    fetch("hhttps://eragon-backend.onrender.com/api/products", {
       headers: { Authorization: `Token ${token}` },
     })
       .then((res) => res.json())
       .then(setProducts);
 
-    fetch("http://localhost:8000/api/productcoupon/", {
+    fetch("https://eragon-backend.onrender.com/api/productcoupon/", {
       headers: { Authorization: `Token ${token}` },
     })
       .then((res) => res.json())
@@ -74,7 +74,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       return;
     }
 
-    const res = await fetch("http://localhost:8000/api/productcoupon/", {
+    const res = await fetch("https://eragon-backend.onrender.com/api/productcoupon/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -124,7 +124,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     formData.append("subtitle", subtitle);
     formData.append("sub_subtitle", subSubTitle);
 
-    const res = await fetch("http://localhost:8000/api/products/", {
+    const res = await fetch("https://eragon-backend.onrender.com/api/products/", {
       method: "POST",
       headers: {
         Authorization: `Token ${token}`,
@@ -146,7 +146,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
 
   // Delete coupon
   const handleDelete = async (id: number) => {
-    await fetch(`http://localhost:8000/api/productcoupon/${id}/`, {
+    await fetch(`https://eragon-backend.onrender.com/api/productcoupon/${id}/`, {
       method: "DELETE",
       headers: { Authorization: `Token ${token}` },
     });
