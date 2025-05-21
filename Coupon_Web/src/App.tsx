@@ -13,6 +13,7 @@ import Contact from './pages/Contact';
 import TermsOfService from './pages/TermsOfService';
 import Privacy from './pages/Privacy';
 
+
 const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void }> = ({ token, setToken }) => {
   const location = useLocation();
   const hideNav = location.pathname === "/admin-login" || location.pathname === "/admin-dashboard";

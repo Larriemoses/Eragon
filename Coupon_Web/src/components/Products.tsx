@@ -29,7 +29,7 @@ const ProductCouponsSection: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchCoupons = () => {
-    fetch("https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/productcoupon/", {
+    fetch("http://127.0.0.1:8000/api/productcoupon/", {
       headers: { Authorization: `Token ${API_TOKEN}` },
     })
       .then(res => {
@@ -43,7 +43,7 @@ const ProductCouponsSection: React.FC = () => {
   useEffect(() => {
     setError(null);
 
-    fetch("https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products", {
+    fetch("http://127.0.0.1:8000/api/products", {
       headers: { Authorization: `Token ${API_TOKEN}` },
     })
       .then(res => {
@@ -68,14 +68,14 @@ const ProductCouponsSection: React.FC = () => {
   }, []);
 
   const handleLike = (id: number) => {
-    fetch(`https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products/productcoupon/${id}/like/`, {
+    fetch(`http://127.0.0.1:8000/api/products/productcoupon/${id}/like/`, {
       method: "POST",
       headers: { Authorization: `Token ${API_TOKEN}` },
     }).then(fetchCoupons);
   };
 
   const handleDislike = (id: number) => {
-    fetch(`https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products/productcoupon/${id}/dislike/`, {
+    fetch(`http://127.0.0.1:8000/api/products/productcoupon/${id}/dislike/`, {
       method: "POST",
       headers: { Authorization: `Token ${API_TOKEN}` },
     }).then(fetchCoupons);
@@ -83,7 +83,7 @@ const ProductCouponsSection: React.FC = () => {
 
   const handleCopy = (code: string, id: number) => {
     navigator.clipboard.writeText(code);
-    fetch(`https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products/productcoupon/${id}/use/`, {
+    fetch(`http://127.0.0.1:8000/api/products/productcoupon/${id}/use/`, {
       method: "POST",
       headers: { Authorization: `Token ${API_TOKEN}` },
     }).then(fetchCoupons);

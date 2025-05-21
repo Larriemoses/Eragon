@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import ProductFooter from "../components/ProductFooter";
 
 interface Product {
   id: number;
@@ -22,8 +23,8 @@ interface Coupon {
 }
 
 const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
-const PRODUCT_API = "https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products/";
-const COUPON_API = "https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/productcoupon/";
+const PRODUCT_API = "http://127.0.0.1:8000/api/products/";
+const COUPON_API = "http://127.0.0.1:8000/api/productcoupon/";
 
 const ProductStore: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -164,6 +165,7 @@ const ProductStore: React.FC = () => {
           )}
         </div>
       </div>
+      <ProductFooter />
     </div>
   );
 };

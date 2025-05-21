@@ -50,13 +50,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
 
   // Fetch products and coupons
   useEffect(() => {
-    fetch("https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products", {
+    fetch("http://localhost:8000/api/products", {
       headers: { Authorization: `Token ${token}` },
     })
       .then((res) => res.json())
       .then(setProducts);
 
-    fetch("https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/productcoupon/", {
+    fetch("http://localhost:8000/api/productcoupon/", {
       headers: { Authorization: `Token ${token}` },
     })
       .then((res) => res.json())
@@ -74,7 +74,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       return;
     }
 
-    const res = await fetch("https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/productcoupon/", {
+    const res = await fetch("http://localhost:8000/api/productcoupon/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -124,7 +124,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     formData.append("subtitle", subtitle);
     formData.append("sub_subtitle", subSubTitle);
 
-    const res = await fetch("https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/products/", {
+    const res = await fetch("http://localhost:8000/api/products/", {
       method: "POST",
       headers: {
         Authorization: `Token ${token}`,
@@ -146,7 +146,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
 
   // Delete coupon
   const handleDelete = async (id: number) => {
-    await fetch(`https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/productcoupon/${id}/`, {
+    await fetch(`http://localhost:8000/api/productcoupon/${id}/`, {
       method: "DELETE",
       headers: { Authorization: `Token ${token}` },
     });

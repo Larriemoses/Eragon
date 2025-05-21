@@ -16,7 +16,7 @@ const SubmitStore: React.FC = () => {
     setSubmitted(false);
 
     try {
-      const res = await fetch("https://upgraded-rotary-phone-jggv9pw6p56hxgq-8000.app.github.dev/api/submitstore/", {
+      const res = await fetch("http://127.0.0.1:8000/api/submitstore/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -67,7 +67,7 @@ const SubmitStore: React.FC = () => {
         <label className="font-medium">Store Name:</label>
         <input
           type="text"
-          className="p-2 bg-gray-100 rounded mb-2"
+          className="p-2 bg-gray-50 rounded mb-2"
           value={storeName}
           onChange={e => setStoreName(e.target.value)}
           required
@@ -77,7 +77,7 @@ const SubmitStore: React.FC = () => {
         <label className="font-medium">Store Website URL:</label>
         <input
           type="url"
-          className="p-2 bg-gray-100  rounded mb-2"
+          className="p-2 bg-gray-50  rounded mb-2"
           placeholder="https://www.examples.com"
           value={website}
           onChange={e => setWebsite(e.target.value)}
@@ -87,7 +87,7 @@ const SubmitStore: React.FC = () => {
         <label className="font-medium">Discount Code:</label>
         <input
           type="text"
-          className="p-2 bg-gray-100  rounded mb-2"
+          className="p-2 bg-gray-50  rounded mb-2"
           value={discountCode}
           onChange={e => setDiscountCode(e.target.value)}
           placeholder="e.g. 50% off"
@@ -95,7 +95,7 @@ const SubmitStore: React.FC = () => {
 
         <label className="font-medium">Description:</label>
         <textarea
-          className="p-2 bg-gray-100  rounded mb-2 min-h-[70px]"
+          className="p-2 bg-gray-50  rounded mb-2 min-h-[70px]"
           value={description}
           onChange={e => setDescription(e.target.value)}
           required
