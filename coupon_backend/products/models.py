@@ -7,6 +7,7 @@ class Product(models.Model):
     title = models.CharField(max_length=255, blank=True)
     subtitle = models.CharField(max_length=255, blank=True)
     sub_subtitle = models.CharField(max_length=255, blank=True)
+    approved = models.BooleanField(default=False)  # NEW FIELD merged here
 
     def __str__(self):
         return self.name

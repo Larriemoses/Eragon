@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated  # or AllowAny if you want public
 from django.core.mail import send_mail
 from .models import Product, ProductCoupon
@@ -54,3 +55,7 @@ class SubmitStoreView(APIView):
             return Response({"success": True})
         except Exception as e:
             return Response({"success": False, "error": str(e)}, status=500)
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.filter(approved=True)  # Only approved
+    serializer_class = ProductSerializer

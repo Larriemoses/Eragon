@@ -16,7 +16,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const res = await fetch("https://eragon-backend.onrender.com/api-token-auth/", {
+    const res = await fetch("https://eragon-backend1.onrender.com/api-token-auth/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),

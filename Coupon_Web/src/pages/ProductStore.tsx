@@ -23,8 +23,8 @@ interface Coupon {
 }
 
 const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
-const PRODUCT_API = "https://eragon-backend.onrender.com/api/products/";
-const COUPON_API = "https://eragon-backend.onrender.com/api/productcoupon/";
+const PRODUCT_API = "https://eragon-backend1.onrender.com/api/products/";
+const COUPON_API = "https://eragon-backend1.onrender.com/api/productcoupon/";
 
 const ProductStore: React.FC = () => {
   const { id } = useParams<{ id: string }>();

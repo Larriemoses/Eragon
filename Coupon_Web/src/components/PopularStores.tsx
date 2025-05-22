@@ -7,7 +7,7 @@ type Product = {
   logo_url: string | null;
 };
 
-const BACKEND_URL = "https://eragon-backend.onrender.com";
+const BACKEND_URL = "https://eragon-backend1.onrender.com";
 const TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4"; // Your API token
 
 const LOGO_WIDTH = 120; // px, should match min-w-[120px]
@@ -59,7 +59,7 @@ const PopularStores: React.FC = () => {
               ? `${BACKEND_URL}${product.logo}`
               : product.logo_url || "";
             return (
-              <div key={product.id + "-" + idx} className="flex flex-col items-center min-w-[120px]">
+              <div key={product.id + "-" + idx} className="flex flex-col items-center min-w-[80px]">
                 {logoSrc ? (
                   <img
                     src={logoSrc}

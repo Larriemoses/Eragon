@@ -18,7 +18,7 @@ export default function Coupon_Section() {
       const fetchCoupons = () => {
         const token = '5e94ab243b5cbc00546b6e026b51ba421550c5f4'; // API token
     
-        fetch('https://eragon-backend.onrender.com/api/coupons/', {
+        fetch('https://eragon-backend1.onrender.com/api/coupons/', {
           headers: {
             Authorization: `Token ${token}`,
           },

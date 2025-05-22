@@ -10,7 +10,9 @@ const Contact: React.FC = () => {
 
   const [submitted, setSubmitted] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -21,63 +23,58 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md">
+    <div className="w-full min-h-[60%] flex justify-center px-4 py-6">
+      <div className="w-[100%] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-[40%] bg-white rounded-xl shadow-md p-6 bg-gray-50  ">
         <h1 className="text-2xl font-bold text-center mb-2">Contact Us</h1>
-        <p className="text-center mb-4 text-gray-700 text-sm">
-          Have questions, feedback, or interested in partnering with Discount Region? Fill out the form below or reach out via email.
+        <p className="text-center mb-5 text-gray-700 text-sm">
+          Have questions, feedback, or want to partner with Discount Region? Fill out the form below or email us.
         </p>
-        <form
-          onSubmit={handleSubmit}
-          className="w-full flex flex-col gap-3 bg-white rounded-lg p-4 sm:p-6 shadow"
-        >
-          <label className="text-gray-700 text-sm">Your Name:</label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             type="text"
             name="name"
             value={form.name}
             onChange={handleChange}
-            className="bg-gray-100 rounded-full px-4 py-2 outline-none text-sm"
+            className="bg-gray-100 rounded-md px-4 py-2 outline-none text-sm"
+            placeholder="Your Name"
             required
           />
-
-          <label className="text-gray-700 text-sm">Your Email:</label>
           <input
             type="email"
             name="email"
             value={form.email}
             onChange={handleChange}
-            className="bg-gray-100 rounded-full px-4 py-2 outline-none text-sm"
+            className="bg-gray-100 rounded-md px-4 py-2 outline-none text-sm"
+            placeholder="Your Email"
             required
           />
-
-          <label className="text-gray-700 text-sm">Subject:</label>
           <input
             type="text"
             name="subject"
             value={form.subject}
             onChange={handleChange}
-            className="bg-gray-100 rounded-full px-4 py-2 outline-none text-sm"
+            className="bg-gray-100 rounded-md px-4 py-2 outline-none text-sm"
+            placeholder="Subject"
             required
           />
-
-          <label className="text-gray-700 text-sm">Message:</label>
           <textarea
             name="message"
             value={form.message}
             onChange={handleChange}
-            className="bg-gray-100 rounded-2xl px-4 py-2 outline-none min-h-[80px] resize-none text-sm"
+            className="bg-gray-100 rounded-md px-4 py-2 outline-none min-h-[80px] resize-none text-sm"
+            placeholder="Your Message"
             required
           />
-
           <button
             type="submit"
-            className="bg-green-500 text-white font-semibold rounded-full py-2 mt-2 hover:bg-green-600 transition text-sm"
+            className="bg-green-500 text-white font-semibold rounded-md py-2 hover:bg-green-600 transition"
           >
             Send Message
           </button>
           {submitted && (
-            <p className="text-green-600 text-center mt-2 text-sm">Thank you for contacting us!</p>
+            <p className="text-green-600 text-center mt-2 text-sm">
+              Thank you for contacting us!
+            </p>
           )}
         </form>
       </div>

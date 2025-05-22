@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
-const BACKEND_URL = "https://eragon-backend.onrender.com";
+const BACKEND_URL = "https://eragon-backend1.onrender.com";
 
 interface Product {
   id: number;

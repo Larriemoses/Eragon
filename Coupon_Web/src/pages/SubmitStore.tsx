@@ -16,7 +16,7 @@ const SubmitStore: React.FC = () => {
     setSubmitted(false);
 
     try {
-      const res = await fetch("https://eragon-backend.onrender.com/api/submitstore/", {
+      const res = await fetch("https://eragon-backend1.onrender.com/api/submitstore/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
