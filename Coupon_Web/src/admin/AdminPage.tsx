@@ -161,86 +161,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     window.location.reload();
   };
   
-
-  // FROM HERE+= = = = = = = = = =
-
-  // Define the allowed status values
-type RequestStatus = "approved" | "not_approved";
-
-// Define the structure of a single request
-interface RequestItem {
-  id: string;
-  status: RequestStatus;
-  message: string;
-  name: string;  // Add other fields as needed
-}
-
-// Assume this is your state setter (from useState or useReducer)
-const [requests, setRequests] = useState<RequestItem[]>([]);
-
-// The typed function
-const handleApproval = async (id: string, status: RequestStatus): Promise<void> => {
-  await fetch(`https://eragon-backend1.onrender.com/api/requests/${id}/status`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status }),
-  });
-
-  // Update local state
-  setRequests((prev: RequestItem[]) =>
-    prev.map(req => req.id === id ? { ...req, status } : req)
-  );
-};
-
-
-
-// NOtification
-
-interface RequestNotification {
-  id: number;
-  message: string;
-  // add other fields if needed
-}
-
-function useRequestNotifications(): RequestNotification[] {
-  const [notifications, setNotifications] = useState<RequestNotification[]>([]);
-
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch('/api/requests/new');
-        const newData: RequestNotification[] = await res.json();
-
-        if (newData.length > 0) {
-          setNotifications(prev => [...prev, ...newData]);
-          alert('You have a new request!');
-        }
-      } catch (error) {
-        console.error('Error fetching requests:', error);
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return notifications;
-}
-
-const notifications = useRequestNotifications();
-
-{notifications.length > 0 && (
-  <div className="bg-yellow-200 p-2 mb-4 rounded text-black">
-    🔔 You have {notifications.length} new request(s)!
-  </div>
-)}
-
-
-
-
-
-
-
-
+  
   return (
     <div className="p-4 max-w-4xl mx-auto">
       {/* Popup message */}
@@ -461,33 +382,6 @@ const notifications = useRequestNotifications();
             </div>
           </div>
         </div>
-
-        {notifications.length > 0 && (
-          <div className="bg-yellow-200 p-2 mb-4 rounded text-black">
-            🔔 You have {notifications.length} new request(s)!
-          </div>
-        )}
-
- {popup && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded shadow-lg z-50 transition-all">
-          {popup}
-        </div>
-      )}
-
-        <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">User Requests</h1>
-      {requests.map(req => (
-        <div key={req.id} className="bg-white p-4 mb-2 shadow rounded">
-          <p><strong>Name:</strong> {req.name}</p>
-          <p><strong>Message:</strong> {req.message}</p>
-          <p><strong>Status:</strong> <span className={`font-semibold ${req.status === 'approved' ? 'text-green-500' : req.status === 'not_approved' ? 'text-red-500' : 'text-gray-500'}`}>{req.status}</span></p>
-          <div className="mt-2 space-x-2">
-            <button onClick={() => handleApproval(req.id, 'approved')} className="bg-green-500 text-white px-3 py-1 rounded">Approve</button>
-            <button onClick={() => handleApproval(req.id, 'not_approved')} className="bg-red-500 text-white px-3 py-1 rounded">Not Approve</button>
-          </div>
-        </div>
-      ))}
-    </div>
       </div>
     </div>
   );

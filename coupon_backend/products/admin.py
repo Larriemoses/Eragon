@@ -3,8 +3,7 @@ from .models import Product, ProductCoupon
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'title', 'subtitle', 'sub_subtitle', 'logo', 'logo_url', 'approved')  # Combined
-    list_filter = ('approved',)
+    list_display = ('name', 'title', 'subtitle', 'sub_subtitle', 'logo', 'logo_url')
     search_fields = ('name', 'title', 'subtitle', 'sub_subtitle')
 
 @admin.register(ProductCoupon)
