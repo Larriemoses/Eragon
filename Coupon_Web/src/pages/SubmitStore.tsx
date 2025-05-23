@@ -1,113 +1,86 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import emailjs from '@emailjs/browser';
 
 const SubmitStore: React.FC = () => {
-  const [storeName, setStoreName] = useState("");
-  const [website, setWebsite] = useState("");
-  const [discountCode, setDiscountCode] = useState("");
-  const [description, setDescription] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    website: '',
+    description: '',
+  });
 
-  const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4"; // your token
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSubmitted(false);
 
-    try {
-      const res = await fetch("https://eragon-backend1.onrender.com/api/submitstore/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Token ${API_TOKEN}`,
-        },
-        body: JSON.stringify({
-          store_name: storeName,
-          website,
-          discount_code: discountCode,
-          description,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to submit. Please try again.");
-      }
-
-      setSubmitted(true);
-      setStoreName("");
-      setWebsite("");
-      setDiscountCode("");
-      setDescription("");
-    } catch (err: any) {
-      setError(err.message || "An error occurred.");
-    }
+    emailjs.send(
+      'service_49ootgt', // Service ID
+      'template_nu4grvn', // Template ID
+      form,
+      'vrm0ULFr3hVb65yYR' // Public Key
+    )
+    .then(() => {
+      setSuccess('Store submitted successfully!');
+      setForm({ name: '', email: '', website: '', description: '' });
+      setError(null);
+    })
+    .catch(() => {
+      setError('Failed to submit store. Please try again.');
+      setSuccess(null);
+    });
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-white pt-8">
-      <h1 className="text-3xl font-bold text-center mb-2">Submit a New Store</h1>
-      <p className="text-center text-gray-700 mb-6 max-w-xl">
-        Do you know a great prop firm, trading service, or affiliate brand that isn’t listed yet? Or have a new deal/code for an existing one? Suggest it here!
-      </p>
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white  rounded-md p-6 w-full max-w-md flex flex-col gap-3"
-      >
-        {submitted && (
-          <div className="text-green-600 text-center mb-2 font-semibold">
-            Thank you for your submission!
-          </div>
-        )}
-        {error && (
-          <div className="text-red-600 text-center mb-2 font-semibold">
-            {error}
-          </div>
-        )}
-        <label className="font-medium">Store Name:</label>
+    <div className="max-w-xl mx-auto p-4 bg-white shadow-lg rounded-lg mt-6">
+      <h2 className="text-xl font-bold mb-4">Submit Your Store</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
-          type="text"
-          className="p-2 bg-gray-50 rounded mb-2"
-          value={storeName}
-          onChange={e => setStoreName(e.target.value)}
+          name="name"
+          value={form.name}
+          onChange={handleChange}
           required
-          placeholder="e.g. Discount Region"
+          placeholder="Store Name"
+          className="w-full border px-4 py-2 rounded"
         />
-
-        <label className="font-medium">Store Website URL:</label>
         <input
-          type="url"
-          className="p-2 bg-gray-50  rounded mb-2"
-          placeholder="https://www.examples.com"
-          value={website}
-          onChange={e => setWebsite(e.target.value)}
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={handleChange}
           required
+          placeholder="Contact Email"
+          className="w-full border px-4 py-2 rounded"
         />
-
-        <label className="font-medium">Discount Code:</label>
         <input
-          type="text"
-          className="p-2 bg-gray-50  rounded mb-2"
-          value={discountCode}
-          onChange={e => setDiscountCode(e.target.value)}
-          placeholder="e.g. 50% off"
+          name="website"
+          value={form.website}
+          onChange={handleChange}
+          required
+          placeholder="Website URL"
+          className="w-full border px-4 py-2 rounded"
         />
-
-        <label className="font-medium">Description:</label>
         <textarea
-          className="p-2 bg-gray-50  rounded mb-2 min-h-[70px]"
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          required
-          placeholder="e.g. 50% off on all products"
-        />
-
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          placeholder="Short Description"
+          rows={4}
+          className="w-full border px-4 py-2 rounded"
+        ></textarea>
         <button
           type="submit"
-          className="w-full bg-green-500 text-white py-2 rounded-full font-semibold hover:bg-green-600 mt-2"
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
         >
           Submit Store
         </button>
+        {success && <p className="text-green-600 mt-2">{success}</p>}
+        {error && <p className="text-red-600 mt-2">{error}</p>}
       </form>
     </div>
   );
