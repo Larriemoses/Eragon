@@ -57,7 +57,7 @@ const Contact: React.FC = () => {
             name="name"
             value={form.name}
             onChange={handleChange}
-            className="bg-gray-100 rounded-md px-4 py-2 outline-none text-sm"
+            className="bg-gray-100 border border-gray-200 rounded-md px-4 py-2 outline-none text-sm"
             placeholder="Your Name"
             required
           />
@@ -66,7 +66,7 @@ const Contact: React.FC = () => {
             name="email"
             value={form.email}
             onChange={handleChange}
-            className="bg-gray-100 rounded-md px-4 py-2 outline-none text-sm"
+            className="bg-gray-100 rounded-md border border-gray-200  px-4 py-2 outline-none text-sm"
             placeholder="Your Email"
             required
           />
@@ -75,7 +75,7 @@ const Contact: React.FC = () => {
             name="subject"
             value={form.subject}
             onChange={handleChange}
-            className="bg-gray-100 rounded-md px-4 py-2 outline-none text-sm"
+            className="bg-gray-100 border border-gray-200  rounded-md px-4 py-2 outline-none text-sm"
             placeholder="Subject"
             required
           />
@@ -83,7 +83,7 @@ const Contact: React.FC = () => {
             name="message"
             value={form.message}
             onChange={handleChange}
-            className="bg-gray-100 rounded-md px-4 py-2 outline-none min-h-[80px] resize-none text-sm"
+            className="bg-gray-100 border border-gray-200  rounded-md px-4 py-2 outline-none min-h-[80px] resize-none text-sm"
             placeholder="Your Message"
             required
           />

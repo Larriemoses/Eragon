@@ -39,7 +39,7 @@ const SubmitStore: React.FC = () => {
 
   return (
     // Outer container to fill the screen and center content
-    <div className="min-h-screen flex items-start justify-center py-4 px-4 bg-gray-50">
+    <div className=" flex items-start justify-center py-4 px-4 bg-gray-50">
       {/* Inner container for the form, with max-width and centered */}
       <div className="w-full max-w-xl p-6 bg-white shadow-xl rounded-lg border border-gray-200">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Submit Your Store</h2>

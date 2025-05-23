@@ -41,7 +41,7 @@ const Nav: React.FC = () => {
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]); // Results for search dropdown
   const [showSearchResults, setShowSearchResults] = useState(false); // Visibility of search results dropdown
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null); // Ref for desktop search input
   const mobileSearchInputRef = useRef<HTMLInputElement>(null); // Ref for mobile search input
 
