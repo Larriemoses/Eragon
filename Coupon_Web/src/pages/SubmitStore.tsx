@@ -18,6 +18,8 @@ const SubmitStore: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccess(null); // Clear previous messages
+    setError(null);   // Clear previous messages
 
     emailjs.send(
       'service_49ootgt', // Service ID
@@ -28,60 +30,69 @@ const SubmitStore: React.FC = () => {
     .then(() => {
       setSuccess('Store submitted successfully!');
       setForm({ name: '', email: '', website: '', description: '' });
-      setError(null);
     })
-    .catch(() => {
-      setError('Failed to submit store. Please try again.');
-      setSuccess(null);
+    .catch((err) => {
+      console.error("EmailJS Error:", err); // Log the actual error for debugging
+      setError('Failed to submit store. Please try again. (Check console for details)');
     });
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4 bg-white shadow-lg rounded-lg mt-6">
-      <h2 className="text-xl font-bold mb-4">Submit Your Store</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          required
-          placeholder="Store Name"
-          className="w-full px-4 py-2 border-gray-200 border bg-gray-100 rounded"
-        />
-        <input
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          required
-          placeholder="Contact Email"
-          className="w-full bg-gray-100 border-gray-200 border   px-4 py-2 rounded"
-        />
-        <input
-          name="website"
-          value={form.website}
-          onChange={handleChange}
-          required
-          placeholder="Website URL"
-          className="w-full  border-gray-100 bg-gray-200 border px-4 py-2 rounded"
-        />
-        <textarea
-          name="description"
-          value={form.description}
-          onChange={handleChange}
-          placeholder="Short Description"
-          rows={4}
-          className="w-full bg-gray-100 border-gray-200 px-4 border  py-2 rounded"
-        ></textarea>
-        <button
-          type="submit"
-          className="bg-green-500 text-white px-6 py-2 rounded hover:bg-blue-600"
-        >
-          Submit Store
-        </button>
-        {success && <p className="text-green-600 mt-2">{success}</p>}
-        {error && <p className="text-red-600 mt-2">{error}</p>}
-      </form>
+    // Outer container to fill the screen and center content
+    <div className="min-h-screen flex items-start justify-center py-4 px-4 bg-gray-50">
+      {/* Inner container for the form, with max-width and centered */}
+      <div className="w-full max-w-xl p-6 bg-white shadow-xl rounded-lg border border-gray-200">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Submit Your Store</h2>
+        <form onSubmit={handleSubmit} className="space-y-5"> {/* Increased spacing */}
+          <input
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            required
+            placeholder="Store Name"
+            className="w-full px-4 py-2 border border-gray-300 bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+          />
+          <input
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            placeholder="Contact Email"
+            className="w-full px-4 py-2 border border-gray-300 bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+          />
+          <input
+            name="website"
+            value={form.website}
+            onChange={handleChange}
+            required
+            placeholder="Website URL"
+            className="w-full px-4 py-2 border border-gray-300 bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+          />
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            placeholder="Short Description"
+            rows={4}
+            className="w-full px-4 py-2 border border-gray-300 bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 resize-y"
+          ></textarea>
+          <div className="flex justify-center"> {/* Center the button */}
+            <button
+              type="submit"
+              className="bg-green-500 text-white px-8 py-3 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 text-lg"
+            >
+              Submit Store
+            </button>
+          </div>
+          {success && (
+            <p className="text-green-600 text-center font-medium mt-4">{success}</p>
+          )}
+          {error && (
+            <p className="text-red-600 text-center font-medium mt-4">{error}</p>
+          )}
+        </form>
+      </div>
     </div>
   );
 };
