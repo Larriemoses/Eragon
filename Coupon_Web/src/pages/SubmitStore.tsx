@@ -46,7 +46,7 @@ const SubmitStore: React.FC = () => {
           onChange={handleChange}
           required
           placeholder="Store Name"
-          className="w-full px-4 py-2 border-gray-100 border bg-gray-100 rounded"
+          className="w-full px-4 py-2 border-gray-200 border bg-gray-100 rounded"
         />
         <input
           name="email"
@@ -55,7 +55,7 @@ const SubmitStore: React.FC = () => {
           onChange={handleChange}
           required
           placeholder="Contact Email"
-          className="w-full bg-gray-100 border-gray-100 border   px-4 py-2 rounded"
+          className="w-full bg-gray-100 border-gray-200 border   px-4 py-2 rounded"
         />
         <input
           name="website"
@@ -63,7 +63,7 @@ const SubmitStore: React.FC = () => {
           onChange={handleChange}
           required
           placeholder="Website URL"
-          className="w-full  border-gray-100 bg-gray-100 border px-4 py-2 rounded"
+          className="w-full  border-gray-100 bg-gray-200 border px-4 py-2 rounded"
         />
         <textarea
           name="description"
@@ -71,7 +71,7 @@ const SubmitStore: React.FC = () => {
           onChange={handleChange}
           placeholder="Short Description"
           rows={4}
-          className="w-full bg-gray-100 border-gray-100 px-4 border  py-2 rounded"
+          className="w-full bg-gray-100 border-gray-200 px-4 border  py-2 rounded"
         ></textarea>
         <button
           type="submit"
