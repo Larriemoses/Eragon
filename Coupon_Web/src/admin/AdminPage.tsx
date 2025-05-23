@@ -33,7 +33,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState("");
   const [loading, setLoading] = useState(false);
-  const [newProduct, setNewProduct] = useState("");
+  // const [newProduct, setNewProduct] = useState("");
   const [popup, setPopup] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [logo, setLogo] = useState<File | null>(null);
@@ -161,7 +161,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     window.location.reload();
   };
   
-  
+
   return (
     <div className="p-4 max-w-4xl mx-auto">
       {/* Popup message */}

@@ -1,5 +1,4 @@
-import React from 'react'
-import Product from '../components/Products'
+
 import PopularStores from '../components/PopularStores'
 import TopDeals from '../components/TopDeals';
 import About from '../components/About';

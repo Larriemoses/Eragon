@@ -29,6 +29,7 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="*" element={<h2>Page Not Found</h2>} />
     
         
         <Route
