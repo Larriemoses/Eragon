@@ -1,74 +1,89 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import emailjs from '@emailjs/browser';
 
+const SubmitStore: React.FC = () => {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    website: '',
+    description: '',
+  });
 
-interface Product {
-  id: number;
-  name: string;
-  logo?: string | null;
-  logo_url?: string | null;
-  title?: string;
-  subtitle?: string;
-  sub_subtitle?: string;
-}
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
-const API_URL = "https://eragon-backend1.onrender.com/api/products/";
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-const Store: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  useEffect(() => {
-    fetch(API_URL, {
-      headers: { Authorization: `Token ${API_TOKEN}` },
+    emailjs.send(
+      'service_49ootgt', // Service ID
+      'template_nu4grvn', // Template ID
+      form,
+      'vrm0ULFr3hVb65yYR' // Public Key
+    )
+    .then(() => {
+      setSuccess('Store submitted successfully!');
+      setForm({ name: '', email: '', website: '', description: '' });
+      setError(null);
     })
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .finally(() => setLoading(false));
-  }, []);
-  
+    .catch(() => {
+      setError('Failed to submit store. Please try again.');
+      setSuccess(null);
+    });
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-50 py-6">
-      <h1 className="text-2xl font-bold mb-6">Stores</h1>
-      <div className="bg-gray-100 rounded-xl shadow p-6 w-full max-w-2xl">
-        {loading ? (
-          <div className="text-center py-12">Loading...</div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="flex flex-col items-center bg-gray-50 rounded-xl p-4 shadow hover:shadow-lg transition"
-              >
-                <div className="w-20 h-20 flex items-center justify-center bg-white rounded-lg mb-3 ">
-                  {product.logo || product.logo_url ? (
-                    <img
-                      src={product.logo ?? product.logo_url ?? undefined}
-                      alt={product.name}
-                      className="max-w-[60px] max-h-[60px] object-contain"
-                    />
-                  ) : (
-                    <span className="text-gray-400 text-2xl">?</span>
-                  )}
-                </div>
-                <div className="font-semibold text-center mb-2">{product.name}</div>
-                <button
-                  className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold transition"
-                  onClick={() => navigate(`/store/${product.id}`)}
-                >
-                  Open Store
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
+    <div className="max-w-xl mx-auto p-4 bg-white shadow-lg rounded-lg mt-6">
+      <h2 className="text-xl font-bold mb-4">Submit Your Store</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          required
+          placeholder="Store Name"
+          className="w-full border px-4 py-2 rounded"
+        />
+        <input
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={handleChange}
+          required
+          placeholder="Contact Email"
+          className="w-full border px-4 py-2 rounded"
+        />
+        <input
+          name="website"
+          value={form.website}
+          onChange={handleChange}
+          required
+          placeholder="Website URL"
+          className="w-full border px-4 py-2 rounded"
+        />
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          placeholder="Short Description"
+          rows={4}
+          className="w-full border px-4 py-2 rounded"
+        ></textarea>
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+        >
+          Submit Store
+        </button>
+        {success && <p className="text-green-600 mt-2">{success}</p>}
+        {error && <p className="text-red-600 mt-2">{error}</p>}
+      </form>
     </div>
   );
 };
 
-export default Store;
+export default SubmitStore;

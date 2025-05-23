@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import emailjs from "@emailjs/browser";
 
 const Contact: React.FC = () => {
   const [form, setForm] = useState({
@@ -9,6 +10,7 @@ const Contact: React.FC = () => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -18,13 +20,33 @@ const Contact: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    // You can add your email sending logic here
+
+    emailjs
+      .send(
+        "service_49ootgt",        // Service ID
+        "template_fitwejh",       // Template ID
+        form,                     // Form data (must match template variables)
+        "vrm0ULFr3hVb65yYR"       // Public Key
+      )
+      .then(() => {
+        setSubmitted(true);
+        setError(false);
+        setForm({
+          name: "",
+          email: "",
+          subject: "",
+          message: "",
+        });
+      })
+      .catch(() => {
+        setError(true);
+        setSubmitted(false);
+      });
   };
 
   return (
     <div className="w-full min-h-[60%] flex justify-center px-4 py-6">
-      <div className="w-[100%] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-[40%] bg-white rounded-xl shadow-md p-6 bg-gray-50  ">
+      <div className="w-[100%] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-[40%] bg-white rounded-xl shadow-md p-6 bg-gray-50">
         <h1 className="text-2xl font-bold text-center mb-2">Contact Us</h1>
         <p className="text-center mb-5 text-gray-700 text-sm">
           Have questions, feedback, or want to partner with Discount Region? Fill out the form below or email us.
@@ -73,7 +95,12 @@ const Contact: React.FC = () => {
           </button>
           {submitted && (
             <p className="text-green-600 text-center mt-2 text-sm">
-              Thank you for contacting us!
+              ✅ Thank you for contacting us! We'll get back to you shortly.
+            </p>
+          )}
+          {error && (
+            <p className="text-red-600 text-center mt-2 text-sm">
+              ❌ Failed to send message. Please try again.
             </p>
           )}
         </form>
