@@ -258,15 +258,7 @@ const Nav: React.FC = () => {
                   Contact Us
                 </Link>
               </li>
-               <li>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenu(false)}
-                  className="block text-center text-lg py-3 cursor-pointer"
-                >
-                  Admin Login
-                </Link>
-              </li>
+             
             </ul>
           </div>
         )}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ProductFooter from "../components/ProductFooter";
+import SubmitDeal from "../components/SubmitDeal";
 
 interface Product {
   id: number;
@@ -166,6 +167,9 @@ const ProductStore: React.FC = () => {
         </div>
       </div>
       <ProductFooter />
+      <SubmitDeal />
+
+
     </div>
   );
 };

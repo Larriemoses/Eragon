@@ -38,8 +38,10 @@ const SubmitStore: React.FC = () => {
 
   return (
     <div className="max-w-xl mx-auto p-4 bg-white shadow-lg rounded-lg mt-6">
-      <h2 className="text-xl font-bold mb-4">Submit Your Store</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <h2 className="text-2xl font-bold text-center mb-4">Submit a Code/Deal</h2>
+      <p className='text-sm text-center mb-4'>Found a great deal for this brand? Share it with the community! All submissions are manually reviewed before publishing</p>
+      <form onSubmit={handleSubmit} className="space-y-4 items-center justify-center">
+        {/* <h4 className="text-sm font-bold -mb-0">Store name</h4> */}
         <input
           name="name"
           value={form.name}
@@ -48,15 +50,17 @@ const SubmitStore: React.FC = () => {
           placeholder="Store Name"
           className="w-full px-4 py-2 border-gray-200 border bg-gray-100 rounded"
         />
+        {/* <h4 className="text-sm font-bold -mb-0 ">Discount Code</h4> */}
         <input
           name="email"
-          type="email"
+        //   type="email"
           value={form.email}
           onChange={handleChange}
           required
-          placeholder="Contact Email"
+          placeholder="Discount Code"
           className="w-full bg-gray-100 border-gray-200 border   px-4 py-2 rounded"
         />
+        {/* <h4 className="text-sm font-bold -mb-0 ">Website URL</h4> */}
         <input
           name="website"
           value={form.website}
@@ -65,17 +69,18 @@ const SubmitStore: React.FC = () => {
           placeholder="Website URL"
           className="w-full  border-gray-100 bg-gray-200 border px-4 py-2 rounded"
         />
+        {/* <h4 className="text-sm font-bold -mb-0">Description</h4> */}
         <textarea
           name="description"
           value={form.description}
           onChange={handleChange}
-          placeholder="Short Description"
+          placeholder="Description"
           rows={4}
           className="w-full bg-gray-100 border-gray-200 px-4 border  py-2 rounded"
         ></textarea>
         <button
           type="submit"
-          className="bg-green-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+          className="bg-green-500 text-white text-center px-6 py-2 rounded hover:bg-green-600"
         >
           Submit Store
         </button>
