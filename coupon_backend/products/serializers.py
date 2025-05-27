@@ -21,7 +21,7 @@ class StringToListField(serializers.CharField):
 
 class ProductSerializer(serializers.ModelSerializer):
     footer_section_how_to_use_steps = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    footer_section_tips_list = serializers.CharField(required=False, allow_null=True, allow_blank=True) 
+    footer_section_tips_list = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
 
     class Meta:

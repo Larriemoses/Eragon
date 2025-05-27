@@ -14,11 +14,13 @@ class Product(models.Model):
     footer_section_effortless_savings_description = models.TextField(blank=True, null=True)
 
     footer_section_how_to_use_title = models.CharField(max_length=255, blank=True, null=True)
-    footer_section_how_to_use_steps = models.JSONField(blank=True, null=True, default=list)
+    # CHANGED from models.JSONField to models.TextField
+    footer_section_how_to_use_steps = models.TextField(blank=True, null=True)
     footer_section_how_to_use_note = models.TextField(blank=True, null=True)
 
     footer_section_tips_title = models.CharField(max_length=255, blank=True, null=True)
-    footer_section_tips_list = models.JSONField(blank=True, null=True, default=list)
+    # CHANGED from models.JSONField to models.TextField
+    footer_section_tips_list = models.TextField(blank=True, null=True)
 
     footer_section_contact_title = models.CharField(max_length=255, blank=True, null=True)
     footer_section_contact_description = models.TextField(blank=True, null=True)
