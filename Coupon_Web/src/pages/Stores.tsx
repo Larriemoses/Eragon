@@ -11,14 +11,25 @@ interface Product {
   sub_subtitle?: string;
 }
 
-// const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4"; // Removed: No longer needed for public endpoint
+// Removed API_TOKEN constant
 const API_URL = "https://eragon-backend1.onrender.com/api/products/";
-const BACKEND_BASE_URL = "https://eragon-backend1.onrender.com"; // Added for logo URLs
+const BACKEND_BASE_URL = "https://eragon-backend1.onrender.com";
 
 const Store: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Helper function to get full logo URL (unified logic)
+  const getFullLogoUrl = (logoPath?: string | null) => {
+    if (logoPath) {
+      if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+        return logoPath;
+      }
+      return `${BACKEND_BASE_URL}${logoPath}`;
+    }
+    return undefined;
+  };
 
   useEffect(() => {
     // Removed Authorization header for public GET request
@@ -30,13 +41,12 @@ const Store: React.FC = () => {
         return res.json();
       })
       .then((data) => {
-        // Handle both paginated ({results: []}) and direct array responses
         const productData = Array.isArray(data) ? data : data.results || [];
         setProducts(productData);
       })
       .catch((error) => {
         console.error("Error fetching products in Store component:", error);
-        setProducts([]); // Set to empty array on error
+        setProducts([]);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -50,7 +60,7 @@ const Store: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {products.map((product) => {
-              const logoSrc = product.logo || product.logo_url; // Use logical OR for cleaner fallback
+              const logoSrc = product.logo || product.logo_url;
               return (
                 <div
                   key={product.id}
@@ -59,7 +69,7 @@ const Store: React.FC = () => {
                   <div className="w-20 h-20 flex items-center justify-center bg-white rounded-lg mb-3 ">
                     {logoSrc ? (
                       <img
-                        src={`${BACKEND_BASE_URL}${logoSrc}`} // Prepend base URL for full path
+                        src={getFullLogoUrl(logoSrc)} // Use helper for logo URL
                         alt={product.name}
                         className="max-w-[60px] max-h-[60px] object-contain"
                         onError={(e) => {
