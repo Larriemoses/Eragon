@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import SubmitDeal from "../components/SubmitDeal";
+import SubmitDeal from "../components/SubmitDeal"; // Make sure SubmitDeal itself doesn't have an auth issue
 
 interface Product {
   id: number;
@@ -37,9 +37,10 @@ interface Coupon {
   used_today: number;
 }
 
-const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
-const PRODUCT_API = "https://eragon-backend1.onrender.com/api/products/";
-const COUPON_API = "https://eragon-backend1.onrender.com/api/productcoupon/";
+// REMOVED API_TOKEN constant as it's no longer needed for public endpoints
+const BACKEND_URL = "https://eragon-backend1.onrender.com"; // Added for logo URLs
+const PRODUCT_API = `${BACKEND_URL}/api/products/`; // Changed to use BACKEND_URL
+const COUPON_API = `${BACKEND_URL}/api/productcoupon/`; // Changed to use BACKEND_URL
 
 const ProductStore: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,16 +51,22 @@ const ProductStore: React.FC = () => {
 
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);
-    await fetch(`${COUPON_API}${coupon.id}/use/`, {
+    // Removed headers: { Authorization: `Token ${API_TOKEN}` } for the 'use/' POST request
+    await fetch(`<span class="math-inline">\{COUPON\_API\}</span>{coupon.id}/use/`, {
       method: "POST",
-      headers: { Authorization: `Token ${API_TOKEN}` },
     });
     // Refresh coupons
-    fetch(COUPON_API, {
-      headers: { Authorization: `Token ${API_TOKEN}` },
-    })
-      .then(res => res.json())
-      .then(data => setCoupons(data.filter((c: Coupon) => c.product === Number(id))))
+    // Removed headers: { Authorization: `Token ${API_TOKEN}` } for refreshing coupons
+    fetch(COUPON_API)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status} when refreshing coupons`);
+        return res.json();
+      })
+      .then(data => {
+        // Handle paginated responses if the API sends them
+        const couponData = Array.isArray(data) ? data : data.results || [];
+        setCoupons(couponData.filter((c: Coupon) => c.product === Number(id)))
+      })
       .catch(error => console.error("Error refreshing coupons after copy:", error));
   };
 
@@ -67,9 +74,7 @@ const ProductStore: React.FC = () => {
     if (!id) return;
     setLoading(true);
 
-    const fetchProduct = fetch(`${PRODUCT_API}${id}/`, {
-      headers: { Authorization: `Token ${API_TOKEN}` },
-    })
+    const fetchProduct = fetch(`<span class="math-inline">\{PRODUCT\_API\}</span>{id}/`) // Removed headers: { Authorization: `Token ${API_TOKEN}` }
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -82,11 +87,16 @@ const ProductStore: React.FC = () => {
         setProduct(null); // Set product to null on error to trigger "Product not found"
       });
 
-    const fetchCoupons = fetch(COUPON_API, {
-      headers: { Authorization: `Token ${API_TOKEN}` },
-    })
-      .then(res => res.json())
-      .then(data => setCoupons(data.filter((c: Coupon) => c.product === Number(id))))
+    const fetchCoupons = fetch(COUPON_API) // Removed headers: { Authorization: `Token ${API_TOKEN}` }
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status} when fetching coupons`);
+        return res.json();
+      })
+      .then(data => {
+        // Handle paginated responses if the API sends them
+        const couponData = Array.isArray(data) ? data : data.results || [];
+        setCoupons(couponData.filter((c: Coupon) => c.product === Number(id)))
+      })
       .catch(error => console.error("Error fetching coupons:", error));
 
     Promise.all([fetchProduct, fetchCoupons])
@@ -112,6 +122,19 @@ const ProductStore: React.FC = () => {
     );
   }
 
+  // Helper function to get full logo URL
+  const getFullLogoUrl = (logoPath?: string | null) => {
+    if (logoPath) {
+      // Check if it's already a full URL (e.g., from Cloudinary)
+      if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+        return logoPath;
+      }
+      // Otherwise, prepend backend URL for relative paths
+      return `<span class="math-inline">\{BACKEND\_URL\}</span>{logoPath}`;
+    }
+    return undefined; // No logo
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-white py-8">
       <div className="max-w-xl w-[90%] flex flex-col items-center">
@@ -134,7 +157,7 @@ const ProductStore: React.FC = () => {
         <div className="flex justify-center mb-6">
           {product.logo || product.logo_url ? (
             <img
-              src={product.logo ?? product.logo_url ?? undefined}
+              src={getFullLogoUrl(product.logo ?? product.logo_url)} // Use helper for logo URL
               alt={product.name}
               className="w-30 h-30 object-contain rounded bg-white"
             />
@@ -153,7 +176,7 @@ const ProductStore: React.FC = () => {
                 <div className="flex justify-start mb-2">
                   {product.logo || product.logo_url ? (
                     <img
-                      src={product.logo ?? product.logo_url ?? undefined}
+                      src={getFullLogoUrl(product.logo ?? product.logo_url)} // Use helper for logo URL
                       alt={product.name}
                       className="w-18 h-18 object-contain rounded bg-white"
                     />
@@ -183,7 +206,7 @@ const ProductStore: React.FC = () => {
                   </div>
                 )}
                 <a
-                  href="#"
+                  href="#" // Consider a dynamic link to the actual store if you have a product.store_url field
                   className="block mt-2 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded font-bold"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -218,12 +241,21 @@ const ProductStore: React.FC = () => {
             className="text-2xl font-bold text-gray-800 mb-2"
             dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
           />
-          {product.footer_section_how_to_use_steps && Array.isArray(product.footer_section_how_to_use_steps) && product.footer_section_how_to_use_steps.length > 0 && (
+          {/* Note: if footer_section_how_to_use_steps is now plain text, this mapping won't work.
+             You'll need to render it directly. We'll assume for now it's still an array for display. */}
+          {product.footer_section_how_to_use_steps && Array.isArray(product.footer_section_how_to_use_steps) && product.footer_section_how_to_use_steps.length > 0 ? (
             <ol className="list-decimal list-inside text-gray-600 mb-4">
               {product.footer_section_how_to_use_steps.map((step, index) => (
                 <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: step }} />
               ))}
             </ol>
+          ) : (
+            product.footer_section_how_to_use_steps && (
+              <p
+                className="text-gray-600 leading-relaxed mb-4"
+                dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_steps }}
+              />
+            )
           )}
           {product.footer_section_how_to_use_note && (
             <p
@@ -241,12 +273,21 @@ const ProductStore: React.FC = () => {
             className="text-2xl font-bold text-gray-800 mb-2"
             dangerouslySetInnerHTML={{ __html: product.footer_section_tips_title || "" }}
           />
-          {product.footer_section_tips_list && Array.isArray(product.footer_section_tips_list) && product.footer_section_tips_list.length > 0 && (
+          {/* Note: if footer_section_tips_list is now plain text, this mapping won't work.
+             You'll need to render it directly. */}
+          {product.footer_section_tips_list && Array.isArray(product.footer_section_tips_list) && product.footer_section_tips_list.length > 0 ? (
             <ul className="list-disc list-inside text-gray-600">
               {product.footer_section_tips_list.map((tip, index) => (
                 <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: tip }} />
               ))}
             </ul>
+          ) : (
+            product.footer_section_tips_list && (
+              <p
+                className="text-gray-600 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: product.footer_section_tips_list }}
+              />
+            )
           )}
         </div>
       )}
