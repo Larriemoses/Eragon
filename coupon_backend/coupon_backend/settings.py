@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import dj_database_url
 from pathlib import Path
 import os
 
@@ -86,12 +86,13 @@ WSGI_APPLICATION = 'coupon_backend.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+     'default': dj_database_url.config(
+        # default is a fallback for local development if DATABASE_URL is not set
+        # For production on Render, DATABASE_URL will be provided by Render
+        default='sqlite:///db.sqlite3', # Keep this for local dev if you want
+        conn_max_age=600 # Optional: Reconnect to DB after 10 min to avoid stale connections
+    )
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
