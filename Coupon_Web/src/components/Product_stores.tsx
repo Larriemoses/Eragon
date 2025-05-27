@@ -1,187 +1,384 @@
-// ProductCouponsSection.tsx
 import React, { useEffect, useState } from "react";
-
+import { useParams, useNavigate } from "react-router-dom";
+import SubmitDeal from "../components/SubmitDeal";
 
 interface Product {
   id: number;
   name: string;
+  logo?: string | null;
+  logo_url?: string | null;
+  title?: string;
+  subtitle?: string;
+  sub_subtitle?: string;
+  footer_section_effortless_savings_title?: string;
+  footer_section_effortless_savings_description?: string;
+  // Updated types to reflect models.py change to TextField (plain string)
+  footer_section_how_to_use_title?: string;
+  footer_section_how_to_use_steps?: string; // Now a plain string
+  footer_section_how_to_use_note?: string;
+  footer_section_tips_title?: string;
+  footer_section_tips_list?: string; // Now a plain string
+  footer_section_contact_title?: string;
+  footer_section_contact_description?: string;
+  footer_contact_phone?: string;
+  footer_contact_email?: string;
+  footer_contact_whatsapp?: string;
+  social_facebook_url?: string | null;
+  social_twitter_url?: string | null;
+  social_instagram_url?: string | null;
 }
 
-interface ProductCoupon {
+interface Coupon {
   id: number;
   product: number;
   title: string;
   code: string;
   discount: string;
-  expiry_date: string;
-  likes: number;
-  dislikes: number;
   used_count: number;
   used_today: number;
 }
 
-// API_TOKEN is now completely unused if all endpoints are public
-// const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
+// Removed API_TOKEN constant as it's no longer needed for public endpoints
+const BACKEND_URL = "https://eragon-backend1.onrender.com";
+const PRODUCT_API = `${BACKEND_URL}/api/products/`;
+const COUPON_API = `${BACKEND_URL}/api/productcoupon/`;
 
-const ProductCouponsSection: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [coupons, setCoupons] = useState<ProductCoupon[]>([]);
-  const [activeProduct, setActiveProduct] = useState<number | null>(null);
-  const [filter, setFilter] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
+// Helper function to get full logo URL (unified logic)
+const getFullLogoUrl = (logoPath?: string | null) => {
+  if (logoPath) {
+    // Check if it's already a full URL (e.g., from Cloudinary or external source)
+    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+      return logoPath;
+    }
+    // Otherwise, prepend backend URL for relative paths (e.g., /media/...)
+    // Ensure no double slashes if logoPath already starts with '/'
+    if (logoPath.startsWith('/')) {
+        return `${BACKEND_URL}${logoPath}`;
+    }
+    return `${BACKEND_URL}/${logoPath}`; // Add a leading slash if missing
+  }
+  return undefined; // No logo path provided
+};
 
-  const fetchCoupons = () => {
-    // No Authorization header needed for GET request
-    fetch("https://eragon-backend1.onrender.com/api/productcoupon/")
+
+const ProductStore: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const handleCopy = async (coupon: Coupon) => {
+    navigator.clipboard.writeText(coupon.code);
+    // Removed headers: { Authorization: `Token ${API_TOKEN}` } for the 'use/' POST request
+    await fetch(`${COUPON_API}${coupon.id}/use/`, {
+      method: "POST",
+    });
+    // Refresh coupons
+    // Removed headers: { Authorization: `Token ${API_TOKEN}` } for refreshing coupons
+    fetch(COUPON_API)
       .then(res => {
-        if (!res.ok) throw new Error("Failed to fetch coupons");
-        return res.json();
-      })
-      .then(setCoupons)
-      .catch(err => setError(err.message));
-  };
-
-  useEffect(() => {
-    setError(null);
-
-    // No Authorization header needed for GET request
-    fetch("https://eragon-backend1.onrender.com/api/products")
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to fetch products");
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status} when refreshing coupons`);
         return res.json();
       })
       .then(data => {
-        const productData = Array.isArray(data) ? data : data.results || [];
-        setProducts(productData);
-        if (productData.length > 0) setActiveProduct(productData[0].id);
+        const couponData = Array.isArray(data) ? data : data.results || [];
+        setCoupons(couponData.filter((c: Coupon) => c.product === Number(id)))
       })
-      .catch(err => setError(err.message));
-
-    fetchCoupons(); // Call to fetch coupons
-  }, []);
-
-  const handleLike = (id: number) => {
-    // Removed Authorization header for POST request
-    fetch(`https://eragon-backend1.onrender.com/api/products/productcoupon/${id}/like/`, {
-      method: "POST",
-      // headers: { Authorization: `Token ${API_TOKEN}` }, // Removed
-    }).then(fetchCoupons);
+      .catch(error => console.error("Error refreshing coupons after copy:", error));
   };
 
-  const handleDislike = (id: number) => {
-    // Removed Authorization header for POST request
-    fetch(`https://eragon-backend1.onrender.com/api/products/productcoupon/${id}/dislike/`, {
-      method: "POST",
-      // headers: { Authorization: `Token ${API_TOKEN}` }, // Removed
-    }).then(fetchCoupons);
-  };
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
 
-  const handleCopy = (code: string, id: number) => {
-    navigator.clipboard.writeText(code);
-    // Removed Authorization header for POST request
-    fetch(`https://eragon-backend1.onrender.com/api/products/productcoupon/${id}/use/`, {
-      method: "POST",
-      // headers: { Authorization: `Token ${API_TOKEN}` }, // Removed
-    }).then(fetchCoupons);
-  };
+    const fetchProduct = fetch(`${PRODUCT_API}${id}/`) // Removed headers: { Authorization: `Token ${API_TOKEN}` }
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(setProduct)
+      .catch(error => {
+        console.error("Error fetching product:", error);
+        setProduct(null);
+      });
+
+    const fetchCoupons = fetch(COUPON_API) // Removed headers: { Authorization: `Token ${API_TOKEN}` }
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status} when fetching coupons`);
+        return res.json();
+      })
+      .then(data => {
+        const couponData = Array.isArray(data) ? data : data.results || [];
+        setCoupons(couponData.filter((c: Coupon) => c.product === Number(id)))
+      })
+      .catch(error => console.error("Error fetching coupons:", error));
+
+    Promise.all([fetchProduct, fetchCoupons])
+      .finally(() => setLoading(false));
+
+  }, [id]);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="text-xl mb-4">Product not found.</div>
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded"
+          onClick={() => navigate("/stores")}
+        >
+          Back to Stores
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 md:p-8 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-4">Products & Coupons</h2>
-      {error && <div className="text-red-600 mb-4">{error}</div>}
-
-      {/* Product Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
-        {products.map(product => (
-          <button
-            key={product.id}
-            className={`p-3 rounded shadow text-center font-semibold transition border
-              ${activeProduct === product.id
-                ? "bg-green-600 text-white border-green-700"
-                : "bg-gray-100 text-gray-800 border-gray-300 hover:bg-green-100"}
-            `}
-            onClick={() => setActiveProduct(product.id)}
-          >
-            {product.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Coupon Filter */}
-      <input
-        type="text"
-        placeholder="Filter by coupon code..."
-        className="mb-4 p-2 border rounded w-full"
-        value={filter}
-        onChange={e => setFilter(e.target.value)}
-      />
-
-      {/* Coupons for Active Product */}
-      <div>
-        {coupons
-          .filter(
-            coupon =>
-              coupon.product === activeProduct &&
-              coupon.code.toLowerCase().includes(filter.toLowerCase())
-          )
-          .map(coupon => (
-            <div
-              key={coupon.id}
-              className="flex flex-col md:flex-row md:items-center justify-between border-b py-4 gap-4"
-            >
-              <div>
-                <div className="font-bold text-lg">{coupon.title}</div>
-                <div className="text-sm text-gray-600">
-                  {coupon.discount}% Off — Expires: {coupon.expiry_date}
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <span
-                  className="bg-green-600 text-white px-6 py-2 rounded font-bold select-all cursor-default"
-                >
-                  {coupon.code}
-                </span>
-                <button
-                  className="mx-2 cursor-pointer text-gray-500 hover:text-gray-700"
-                  title="Copy"
-                  onClick={() => handleCopy(coupon.code, coupon.id)}
-                >
-                  <svg width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="5" y="5" width="10" height="10" rx="2" />
-                    <rect x="9" y="9" width="10" height="10" rx="2" />
-                  </svg>
-                </button>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleLike(coupon.id)}
-                    className="border p-2 cursor-pointer rounded hover:bg-gray-200"
-                    title="Like"
-                  >
-                    👍
-                  </button>
-                  <button
-                    onClick={() => handleDislike(coupon.id)}
-                    className="border p-2 cursor-pointer rounded hover:bg-gray-100"
-                    title="Dislike"
-                  >
-                    👎
-                  </button>
-                </div>
-                <span className="ml-2 text-green-700 font-semibold">
-                  {coupon.likes} 👍 / {coupon.dislikes} 👎
-                </span>
-                <span className="ml-2 text-gray-700">
-                  {coupon.used_count} Used - {coupon.used_today} Today
-                </span>
-              </div>
-            </div>
-          ))}
-        {coupons.filter(coupon => coupon.product === activeProduct && coupon.code.toLowerCase().includes(filter.toLowerCase())).length === 0 && (
-          <div className="text-gray-500 text-center py-8">No coupons for this product.</div>
+    <div className="min-h-screen flex flex-col items-center bg-white py-8">
+      <div className="max-w-xl w-[90%] flex flex-col items-center">
+        {/* Title */}
+        <h1 className="text-3xl font-bold text-center mb-1">
+          {product.title || product.name}
+        </h1>
+        {/* Subtitle */}
+        {product.subtitle && (
+          <div className="text-center text-lg text-gray-900 mb-1">
+            <h2 className="font-bold">{product.subtitle}</h2>
+          </div>
         )}
+        {/* Sub-sub-title */}
+        {product.sub_subtitle && (
+          <div className="text-center text-base text-gray-500 mb-4">
+            {product.sub_subtitle}
+          </div>
+        )}
+        <div className="flex justify-center mb-6">
+          {product.logo || product.logo_url ? (
+            <img
+              src={getFullLogoUrl(product.logo ?? product.logo_url)} // Use helper for logo URL
+              alt={product.name}
+              className="w-30 h-30 object-contain rounded bg-white"
+            />
+          ) : null}
+        </div>
+        <div className="w-full flex flex-col gap-6">
+          {coupons.length === 0 ? (
+            <div className="text-center text-gray-500">No coupons available for this store.</div>
+          ) : (
+            coupons.map((coupon) => (
+              <div
+                key={coupon.id}
+                className="bg-gray-100 rounded-xl shadow-xl p-4 flex flex-col gap-2"
+              >
+                {/* Product Logo */}
+                <div className="flex justify-start mb-2">
+                  {product.logo || product.logo_url ? (
+                    <img
+                      src={getFullLogoUrl(product.logo ?? product.logo_url)} // Use helper for logo URL
+                      alt={product.name}
+                      className="w-18 h-18 object-contain rounded bg-white"
+                    />
+                  ) : null}
+                </div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm text-gray-500">Discount is active</span>
+                  <span className="text-green-600 text-xs font-semibold">● Verified</span>
+                </div>
+                <div className="font-bold text-lg">{coupon.title}</div>
+                <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
+                  <span>{coupon.used_count} used</span>
+                  <span>{coupon.used_today} Today</span>
+                </div>
+                {/* Only show code and Copy button if coupon.code exists */}
+                {coupon.code && (
+                  <div className="flex gap-2">
+                    <span className="bg-gray-200 px-4 py-2 rounded font-bold text-lg select-all">
+                      {coupon.code}
+                    </span>
+                    <button
+                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold"
+                      onClick={() => handleCopy(coupon)}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                )}
+                <a
+                  href="#"
+                  className="block mt-2 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded font-bold"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Shop Now
+                </a>
+              </div>
+            ))
+          )}
+        </div>
       </div>
+
+      {/* --- Product Footer Content (embedded here) --- */}
+      {/* Footer Section: Effortless Savings */}
+      {(product.footer_section_effortless_savings_title || product.footer_section_effortless_savings_description) && (
+        <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
+          <h2
+            className="text-2xl font-bold text-gray-800 mb-2"
+            dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_title || "" }}
+          />
+          <p
+            className="text-gray-600 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_description || "" }}
+          />
+        </div>
+      )}
+
+      {/* Footer Section: How to Use (updated to handle plain text or array) */}
+      {(product.footer_section_how_to_use_title || product.footer_section_how_to_use_steps || product.footer_section_how_to_use_note) && (
+        <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
+          <h2
+            className="text-2xl font-bold text-gray-800 mb-2"
+            dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
+          />
+          {product.footer_section_how_to_use_steps && (
+            Array.isArray(product.footer_section_how_to_use_steps) ? (
+              <ol className="list-decimal list-inside text-gray-600 mb-4">
+                {product.footer_section_how_to_use_steps.map((step, index) => (
+                  <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: step }} />
+                ))}
+              </ol>
+            ) : (
+              <p
+                className="text-gray-600 leading-relaxed mb-4"
+                dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_steps }}
+              />
+            )
+          )}
+          {product.footer_section_how_to_use_note && (
+            <p
+              className="text-sm text-gray-500 italic"
+              dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_note }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Footer Section: Tips (updated to handle plain text or array) */}
+      {(product.footer_section_tips_title || product.footer_section_tips_list) && (
+        <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
+          <h2
+            className="text-2xl font-bold text-gray-800 mb-2"
+            dangerouslySetInnerHTML={{ __html: product.footer_section_tips_title || "" }}
+          />
+          {product.footer_section_tips_list && (
+            Array.isArray(product.footer_section_tips_list) ? (
+              <ul className="list-disc list-inside text-gray-600">
+                {product.footer_section_tips_list.map((tip, index) => (
+                  <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: tip }} />
+                ))}
+              </ul>
+            ) : (
+              <p
+                className="text-gray-600 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: product.footer_section_tips_list }}
+              />
+            )
+          )}
+        </div>
+      )}
+
+      {/* Footer Section: Contact */}
+      {(product.footer_section_contact_title || product.footer_section_contact_description || product.footer_contact_phone || product.footer_contact_email || product.footer_contact_whatsapp) && (
+        <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
+          <h2
+            className="text-2xl font-bold text-gray-800 mb-2"
+            dangerouslySetInnerHTML={{ __html: product.footer_section_contact_title || "" }}
+          />
+          {product.footer_section_contact_description && (
+            <p
+              className="text-gray-600 mb-4"
+              dangerouslySetInnerHTML={{ __html: product.footer_section_contact_description }}
+            />
+          )}
+          <div className="text-gray-700">
+            {product.footer_contact_phone && (
+              <p className="flex items-center mb-2">
+                <span className="font-semibold w-24">Phone:</span>
+                <a href={`tel:${product.footer_contact_phone}`} className="text-blue-600 hover:underline">
+                  {product.footer_contact_phone}
+                </a>
+              </p>
+            )}
+            {product.footer_contact_email && (
+              <p className="flex items-center mb-2">
+                <span className="font-semibold w-24">Email:</span>
+                <a href={`mailto:${product.footer_contact_email}`} className="text-blue-600 hover:underline">
+                  {product.footer_contact_email}
+                </a>
+              </p>
+            )}
+            {product.footer_contact_whatsapp && (
+              <p className="flex items-center">
+                <span className="font-semibold w-24">WhatsApp:</span>
+                <a
+                  href={`https://wa.me/${product.footer_contact_whatsapp?.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-600 hover:underline"
+                >
+                  {product.footer_contact_whatsapp}
+                </a>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+      {/* --- End of Product Footer Content --- */}
+
+      {/* --- Social Media Buttons --- */}
+      {(product.social_facebook_url || product.social_twitter_url || product.social_instagram_url) && (
+        <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-2 flex-wrap md:flex-nowrap">
+          {product.social_facebook_url && (
+            <a
+              href={product.social_facebook_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
+            >
+              Facebook
+            </a>
+          )}
+          {product.social_twitter_url && (
+            <a
+              href={product.social_twitter_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
+            >
+              Twitter
+            </a>
+          )}
+          {product.social_instagram_url && (
+            <a
+              href={product.social_instagram_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
+            >
+              Instagram
+            </a>
+          )}
+        </div>
+      )}
+      {/* --- End of Social Media Buttons --- */}
+      <SubmitDeal />
     </div>
   );
 };
 
-export default ProductCouponsSection;
+export default ProductStore;

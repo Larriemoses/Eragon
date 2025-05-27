@@ -2,10 +2,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // Constants for API and logo
-const LOGO_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png"; // Replace with your Cloudinary logo link
-// const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4"; // Removed: No longer needed for public endpoints
-const PRODUCT_API_URL = "https://eragon-backend1.onrender.com/api/products/";
-const COUPON_API_URL = "https://eragon-backend1.onrender.com/api/productcoupon/"; // Added COUPON_API_URL
+const BACKEND_URL = "https://eragon-backend1.onrender.com"; // Define backend URL
+const LOGO_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png"; // Your Cloudinary logo link
+const PRODUCT_API_URL = `${BACKEND_URL}/api/products/`; // Changed to use BACKEND_URL
+const COUPON_API_URL = `${BACKEND_URL}/api/productcoupon/`; // Changed to use BACKEND_URL
 
 // Interface for Product data
 interface Product {
@@ -31,6 +31,24 @@ interface SearchResultItem {
   link: string; // URL to navigate to (e.g., /store/:id)
   subText?: string; // e.g., "Coupon for [Product Name]"
 }
+
+// Helper function to get full logo URL (unified logic for all components)
+const getFullLogoUrl = (logoPath?: string | null) => {
+  if (logoPath) {
+    // Check if it's already a full URL (e.g., from Cloudinary)
+    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+      return logoPath;
+    }
+    // Otherwise, prepend backend URL for relative paths (e.g., /media/...)
+    // Ensure no double slashes if logoPath already starts with '/'
+    if (logoPath.startsWith('/')) {
+        return `<span class="math-inline">\{BACKEND\_URL\}</span>{logoPath}`;
+    }
+    return `<span class="math-inline">\{BACKEND\_URL\}/</span>{logoPath}`; // Add a leading slash if missing
+  }
+  return undefined; // No logo
+};
+
 
 const Nav: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -176,7 +194,7 @@ const Nav: React.FC = () => {
       <nav className="w-[90%] container mx-auto flex items-center justify-between py-3 px-4 relative">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <img src={LOGO_URL} alt="Discount Region" className="h-10 w-auto" />
+          <img src={LOGO_URL} alt="Discount Region" className="h-10 w-auto" /> {/* LOGO_URL is already absolute */}
         </Link>
 
         {/* Desktop Search Bar */}
@@ -227,7 +245,7 @@ const Nav: React.FC = () => {
             <div className="search-results-dropdown absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-2 z-40 max-h-80 overflow-y-auto">
               <ul className="py-1">
                 {searchResults.map((result) => (
-                  <li key={`${result.type}-${result.id}`}>
+                  <li key={`<span class="math-inline">\{result\.type\}\-</span>{result.id}`}>
                     <Link
                       to={result.link}
                       onClick={() => {
@@ -427,7 +445,7 @@ const Nav: React.FC = () => {
                 <div className="search-results-dropdown absolute top-full left-0 w-full bg-white border border-gray-200 rounded-b-md shadow-lg mt-2 z-40 max-h-60 overflow-y-auto">
                   <ul className="py-1">
                     {searchResults.map((result) => (
-                      <li key={`${result.type}-${result.id}`}>
+                      <li key={`<span class="math-inline">\{result\.type\}\-</span>{result.id}`}>
                         <Link
                           to={result.link}
                           onClick={() => {
