@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import SubmitDeal from "../components/SubmitDeal"; // Keep if you still need it
+import SubmitDeal from "../components/SubmitDeal";
 
 interface Product {
   id: number;
@@ -10,20 +10,18 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
-  // These fields must be present in your backend API response for the Product endpoint
   footer_section_effortless_savings_title?: string;
   footer_section_effortless_savings_description?: string;
   footer_section_how_to_use_title?: string;
-  footer_section_how_to_use_steps?: string[]; // Expecting array from backend
+  footer_section_how_to_use_steps?: string[];
   footer_section_how_to_use_note?: string;
   footer_section_tips_title?: string;
-  footer_section_tips_list?: string[]; // Expecting array from backend
+  footer_section_tips_list?: string[];
   footer_section_contact_title?: string;
   footer_section_contact_description?: string;
   footer_contact_phone?: string;
   footer_contact_email?: string;
   footer_contact_whatsapp?: string;
-  // NEW: Social Media Links
   social_facebook_url?: string | null;
   social_twitter_url?: string | null;
   social_instagram_url?: string | null;
@@ -207,7 +205,7 @@ const ProductStore: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center text-lg"
-              style={{ minWidth: '120px' }} // To match the image's button width
+              style={{ minWidth: '120px' }}
             >
               Facebook
             </a>
@@ -260,7 +258,8 @@ const ProductStore: React.FC = () => {
             className="text-2xl font-bold text-gray-800 mb-2"
             dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
           />
-          {product.footer_section_how_to_use_steps && product.footer_section_how_to_use_steps.length > 0 && (
+          {/* MODIFIED: Added Array.isArray check */}
+          {product.footer_section_how_to_use_steps && Array.isArray(product.footer_section_how_to_use_steps) && product.footer_section_how_to_use_steps.length > 0 && (
             <ol className="list-decimal list-inside text-gray-600 mb-4">
               {product.footer_section_how_to_use_steps.map((step, index) => (
                 <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: step }} />
@@ -283,7 +282,8 @@ const ProductStore: React.FC = () => {
             className="text-2xl font-bold text-gray-800 mb-2"
             dangerouslySetInnerHTML={{ __html: product.footer_section_tips_title || "" }}
           />
-          {product.footer_section_tips_list && product.footer_section_tips_list.length > 0 && (
+          {/* MODIFIED: Added Array.isArray check */}
+          {product.footer_section_tips_list && Array.isArray(product.footer_section_tips_list) && product.footer_section_tips_list.length > 0 && (
             <ul className="list-disc list-inside text-gray-600">
               {product.footer_section_tips_list.map((tip, index) => (
                 <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: tip }} />
@@ -327,7 +327,7 @@ const ProductStore: React.FC = () => {
               <p className="flex items-center">
                 <span className="font-semibold w-24">WhatsApp:</span>
                 <a
-                  href={`https://wa.me/${product.footer_contact_whatsapp.replace(/\D/g, '')}`} // Basic sanitization
+                  href={`https://wa.me/${product.footer_contact_whatsapp.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-green-600 hover:underline"
@@ -339,7 +339,6 @@ const ProductStore: React.FC = () => {
           </div>
         </div>
       )}
-      {/* --- End of Product Footer Content --- */}
       <SubmitDeal />
     </div>
   );
