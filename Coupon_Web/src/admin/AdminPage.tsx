@@ -23,6 +23,10 @@ interface Product {
   footer_contact_phone?: string | null;
   footer_contact_email?: string | null;
   footer_contact_whatsapp?: string | null;
+  // --- NEW: Social Media Links ---
+  social_facebook_url?: string | null;
+  social_twitter_url?: string | null;
+  social_instagram_url?: string | null;
   // --- End of new fields ---
 }
 
@@ -75,6 +79,12 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const [footerContactWhatsapp, setFooterContactWhatsapp] = useState("");
   // --- End of new state variables ---
 
+  // --- NEW: State variables for Social Media Links ---
+  const [socialFacebookUrl, setSocialFacebookUrl] = useState("");
+  const [socialTwitterUrl, setSocialTwitterUrl] = useState("");
+  const [socialInstagramUrl, setSocialInstagramUrl] = useState("");
+  // --- End of NEW state variables ---
+
   // Show popup for 2 seconds
   const showPopup = (msg: string) => {
     setPopup(msg);
@@ -101,6 +111,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setFooterContactPhone("");
     setFooterContactEmail("");
     setFooterContactWhatsapp("");
+    // --- NEW: Clear social media fields ---
+    setSocialFacebookUrl("");
+    setSocialTwitterUrl("");
+    setSocialInstagramUrl("");
+    // --- End of NEW ---
     setEditingProduct(null); // Clear editing state
   };
 
@@ -146,6 +161,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             footer_contact_phone: null,
             footer_contact_email: null,
             footer_contact_whatsapp: null,
+            // --- NEW: Default values for social media fields ---
+            social_facebook_url: null,
+            social_twitter_url: null,
+            social_instagram_url: null,
+            // --- End of NEW ---
           };
           return { ...coupon, product: productDetail };
         });
@@ -210,6 +230,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         footer_contact_phone: null,
         footer_contact_email: null,
         footer_contact_whatsapp: null,
+        // --- NEW: Default values for social media fields ---
+        social_facebook_url: null,
+        social_twitter_url: null,
+        social_instagram_url: null,
+        // --- End of NEW ---
       };
       setCoupons([
         { ...newCoupon, product: productObj },
@@ -267,6 +292,12 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     if (footerContactEmail) formData.append("footer_contact_email", footerContactEmail);
     if (footerContactWhatsapp) formData.append("footer_contact_whatsapp", footerContactWhatsapp);
     // --- End of new fields for Product Footer content ---
+
+    // --- NEW: Append social media URLs to formData ---
+    if (socialFacebookUrl) formData.append("social_facebook_url", socialFacebookUrl);
+    if (socialTwitterUrl) formData.append("social_twitter_url", socialTwitterUrl);
+    if (socialInstagramUrl) formData.append("social_instagram_url", socialInstagramUrl);
+    // --- End of NEW ---
 
     const method = editingProduct ? "PUT" : "POST";
     const url = editingProduct ? `https://eragon-backend1.onrender.com/api/products/${editingProduct.id}/` : "https://eragon-backend1.onrender.com/api/products/";
@@ -337,6 +368,12 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setFooterContactPhone(productToEdit.footer_contact_phone || '');
     setFooterContactEmail(productToEdit.footer_contact_email || '');
     setFooterContactWhatsapp(productToEdit.footer_contact_whatsapp || '');
+
+    // --- NEW: Populate social media fields for editing ---
+    setSocialFacebookUrl(productToEdit.social_facebook_url || '');
+    setSocialTwitterUrl(productToEdit.social_twitter_url || '');
+    setSocialInstagramUrl(productToEdit.social_instagram_url || '');
+    // --- End of NEW ---
   };
 
   // Delete product handler
@@ -431,6 +468,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         footer_contact_phone: null,
         footer_contact_email: null,
         footer_contact_whatsapp: null,
+        // --- NEW: Default values for social media fields ---
+        social_facebook_url: null,
+        social_twitter_url: null,
+        social_instagram_url: null,
+        // --- End of NEW ---
       };
 
       setCoupons(
@@ -629,6 +671,31 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             className="w-full p-2 border rounded"
           />
           {/* --- End of new fields for Product Footer content --- */}
+
+          {/* --- NEW: Social Media Links Section --- */}
+          <h3 className="text-lg font-semibold mt-4 mb-2">Social Media Links</h3>
+          <input
+            type="url"
+            placeholder="Facebook URL (e.g., https://facebook.com/yourpage)"
+            value={socialFacebookUrl}
+            onChange={(e) => setSocialFacebookUrl(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="url"
+            placeholder="Twitter URL (e.g., https://twitter.com/yourhandle)"
+            value={socialTwitterUrl}
+            onChange={(e) => setSocialTwitterUrl(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="url"
+            placeholder="Instagram URL (e.g., https://instagram.com/youraccount)"
+            value={socialInstagramUrl}
+            onChange={(e) => setSocialInstagramUrl(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+          {/* --- End of NEW Social Media Links Section --- */}
 
           <div className="flex gap-2">
             <button

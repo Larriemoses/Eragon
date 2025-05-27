@@ -23,6 +23,10 @@ interface Product {
   footer_contact_phone?: string;
   footer_contact_email?: string;
   footer_contact_whatsapp?: string;
+  // NEW: Social Media Links
+  social_facebook_url?: string | null;
+  social_twitter_url?: string | null;
+  social_instagram_url?: string | null;
 }
 
 interface Coupon {
@@ -193,6 +197,46 @@ const ProductStore: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* --- Social Media Buttons --- */}
+      {(product.social_facebook_url || product.social_twitter_url || product.social_instagram_url) && (
+        <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-4">
+          {product.social_facebook_url && (
+            <a
+              href={product.social_facebook_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center text-lg"
+              style={{ minWidth: '120px' }} // To match the image's button width
+            >
+              Facebook
+            </a>
+          )}
+          {product.social_twitter_url && (
+            <a
+              href={product.social_twitter_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center text-lg"
+              style={{ minWidth: '120px' }}
+            >
+              Twitter
+            </a>
+          )}
+          {product.social_instagram_url && (
+            <a
+              href={product.social_instagram_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center text-lg"
+              style={{ minWidth: '120px' }}
+            >
+              Instagram
+            </a>
+          )}
+        </div>
+      )}
+      {/* --- End of Social Media Buttons --- */}
 
       {/* --- Product Footer Content (embedded here) --- */}
       {/* Footer Section: Effortless Savings */}

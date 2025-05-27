@@ -14,12 +14,10 @@ class Product(models.Model):
     footer_section_effortless_savings_description = models.TextField(blank=True, null=True)
 
     footer_section_how_to_use_title = models.CharField(max_length=255, blank=True, null=True)
-    # JSONField to store a list of strings for steps
     footer_section_how_to_use_steps = models.JSONField(blank=True, null=True, default=list)
     footer_section_how_to_use_note = models.TextField(blank=True, null=True)
 
     footer_section_tips_title = models.CharField(max_length=255, blank=True, null=True)
-    # JSONField to store a list of strings for tips
     footer_section_tips_list = models.JSONField(blank=True, null=True, default=list)
 
     footer_section_contact_title = models.CharField(max_length=255, blank=True, null=True)
@@ -27,6 +25,11 @@ class Product(models.Model):
     footer_contact_phone = models.CharField(max_length=100, blank=True, null=True)
     footer_contact_email = models.EmailField(blank=True, null=True)
     footer_contact_whatsapp = models.CharField(max_length=100, blank=True, null=True)
+
+    # --- NEW: Social Media Links ---
+    social_facebook_url = models.URLField(blank=True, null=True)
+    social_twitter_url = models.URLField(blank=True, null=True)
+    social_instagram_url = models.URLField(blank=True, null=True)
     # --- End of new fields ---
 
     def __str__(self):
