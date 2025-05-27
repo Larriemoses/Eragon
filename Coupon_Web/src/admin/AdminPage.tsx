@@ -14,10 +14,10 @@ interface Product {
   footer_section_effortless_savings_title?: string | null;
   footer_section_effortless_savings_description?: string | null;
   footer_section_how_to_use_title?: string | null;
-  footer_section_how_to_use_steps?: string[];
+  footer_section_how_to_use_steps?: string[]; // Defined as string[], which is correct for array-like data
   footer_section_how_to_use_note?: string | null;
   footer_section_tips_title?: string | null;
-  footer_section_tips_list?: string[];
+  footer_section_tips_list?: string[]; // Defined as string[], which is correct for array-like data
   footer_section_contact_title?: string | null;
   footer_section_contact_description?: string | null;
   footer_contact_phone?: string | null;
@@ -135,10 +135,12 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             footer_section_effortless_savings_title: null,
             footer_section_effortless_savings_description: null,
             footer_section_how_to_use_title: null,
-            footer_section_how_to_use_steps: [], // Keep as empty array for rendering
+            // FIX: Ensure these defaults are arrays.
+            footer_section_how_to_use_steps: [],
             footer_section_how_to_use_note: null,
             footer_section_tips_title: null,
-            footer_section_tips_list: [], // Keep as empty array for rendering
+            // FIX: Ensure these defaults are arrays.
+            footer_section_tips_list: [],
             footer_section_contact_title: null,
             footer_section_contact_description: null,
             footer_contact_phone: null,
@@ -197,9 +199,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         footer_section_effortless_savings_title: null,
         footer_section_effortless_savings_description: null,
         footer_section_how_to_use_title: null,
+        // FIX: Ensure these defaults are arrays.
         footer_section_how_to_use_steps: [],
         footer_section_how_to_use_note: null,
         footer_section_tips_title: null,
+        // FIX: Ensure these defaults are arrays.
         footer_section_tips_list: [],
         footer_section_contact_title: null,
         footer_section_contact_description: null,
@@ -308,14 +312,26 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setSubtitle(productToEdit.subtitle || '');
     setSubSubTitle(productToEdit.sub_subtitle || '');
 
-    // Convert array fields back to newline-separated strings for textarea
+    // --- FIX START ---
+    // Ensure these are always treated as arrays before joining.
+    // This addresses the "map is not a function" error for existing data.
+    const howToUseSteps = Array.isArray(productToEdit.footer_section_how_to_use_steps)
+        ? productToEdit.footer_section_how_to_use_steps
+        : []; // Default to empty array if not an array
+
+    const tipsList = Array.isArray(productToEdit.footer_section_tips_list)
+        ? productToEdit.footer_section_tips_list
+        : []; // Default to empty array if not an array
+
     setFooterEffortlessSavingsTitle(productToEdit.footer_section_effortless_savings_title || '');
     setFooterEffortlessSavingsDescription(productToEdit.footer_section_effortless_savings_description || '');
     setFooterHowToUseTitle(productToEdit.footer_section_how_to_use_title || '');
-    setFooterHowToUseSteps(productToEdit.footer_section_how_to_use_steps?.join('\n') || '');
+    setFooterHowToUseSteps(howToUseSteps.join('\n')); // Now safe to call .join
     setFooterHowToUseNote(productToEdit.footer_section_how_to_use_note || '');
     setFooterTipsTitle(productToEdit.footer_section_tips_title || '');
-    setFooterTipsList(productToEdit.footer_section_tips_list?.join('\n') || '');
+    setFooterTipsList(tipsList.join('\n')); // Now safe to call .join
+    // --- FIX END ---
+
     setFooterContactTitle(productToEdit.footer_section_contact_title || '');
     setFooterContactDescription(productToEdit.footer_section_contact_description || '');
     setFooterContactPhone(productToEdit.footer_contact_phone || '');
@@ -404,9 +420,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         footer_section_effortless_savings_title: null,
         footer_section_effortless_savings_description: null,
         footer_section_how_to_use_title: null,
+        // FIX: Ensure these defaults are arrays.
         footer_section_how_to_use_steps: [],
         footer_section_how_to_use_note: null,
         footer_section_tips_title: null,
+        // FIX: Ensure these defaults are arrays.
         footer_section_tips_list: [],
         footer_section_contact_title: null,
         footer_section_contact_description: null,
@@ -449,9 +467,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
 
   // Logout handler
   const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    navigate("/admin-login");
-    window.location.reload();
+      localStorage.removeItem("adminToken");
+      navigate("/admin-login");
+      // Consider using navigate instead of window.location.reload() for a smoother SPA experience
+      // If your admin login route requires a full reload to reset auth state, it's fine.
+      // window.location.reload();
   };
 
   return (
