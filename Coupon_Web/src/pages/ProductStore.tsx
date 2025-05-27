@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import ProductFooter from "../components/ProductFooter";
-import SubmitDeal from "../components/SubmitDeal";
+import SubmitDeal from "../components/SubmitDeal"; // Keep if you still need it
 
 interface Product {
   id: number;
@@ -11,6 +10,19 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
+  // These fields must be present in your backend API response for the Product endpoint
+  footer_section_effortless_savings_title?: string;
+  footer_section_effortless_savings_description?: string;
+  footer_section_how_to_use_title?: string;
+  footer_section_how_to_use_steps?: string[]; // Expecting array from backend
+  footer_section_how_to_use_note?: string;
+  footer_section_tips_title?: string;
+  footer_section_tips_list?: string[]; // Expecting array from backend
+  footer_section_contact_title?: string;
+  footer_section_contact_description?: string;
+  footer_contact_phone?: string;
+  footer_contact_email?: string;
+  footer_contact_whatsapp?: string;
 }
 
 interface Coupon {
@@ -45,24 +57,39 @@ const ProductStore: React.FC = () => {
       headers: { Authorization: `Token ${API_TOKEN}` },
     })
       .then(res => res.json())
-      .then(data => setCoupons(data.filter((c: Coupon) => c.product === Number(id))));
+      .then(data => setCoupons(data.filter((c: Coupon) => c.product === Number(id))))
+      .catch(error => console.error("Error refreshing coupons after copy:", error));
   };
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetch(`${PRODUCT_API}${id}/`, {
+
+    const fetchProduct = fetch(`${PRODUCT_API}${id}/`, {
       headers: { Authorization: `Token ${API_TOKEN}` },
     })
-      .then(res => res.json())
-      .then(setProduct);
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(setProduct)
+      .catch(error => {
+        console.error("Error fetching product:", error);
+        setProduct(null); // Set product to null on error to trigger "Product not found"
+      });
 
-    fetch(COUPON_API, {
+    const fetchCoupons = fetch(COUPON_API, {
       headers: { Authorization: `Token ${API_TOKEN}` },
     })
       .then(res => res.json())
       .then(data => setCoupons(data.filter((c: Coupon) => c.product === Number(id))))
+      .catch(error => console.error("Error fetching coupons:", error));
+
+    Promise.all([fetchProduct, fetchCoupons])
       .finally(() => setLoading(false));
+
   }, [id]);
 
   if (loading) {
@@ -118,7 +145,7 @@ const ProductStore: React.FC = () => {
             coupons.map((coupon) => (
               <div
                 key={coupon.id}
-                className="bg-grey-100 rounded-xl shadow-xl p-4 flex flex-col gap-2"
+                className="bg-gray-100 rounded-xl shadow-xl p-4 flex flex-col gap-2"
               >
                 {/* Product Logo */}
                 <div className="flex justify-start mb-2">
@@ -142,7 +169,7 @@ const ProductStore: React.FC = () => {
                 {/* Only show code and Copy button if coupon.code exists */}
                 {coupon.code && (
                   <div className="flex gap-2">
-                    <span className="bg-gray-100 px-4 py-2 rounded font-bold text-lg select-all">
+                    <span className="bg-gray-200 px-4 py-2 rounded font-bold text-lg select-all">
                       {coupon.code}
                     </span>
                     <button
@@ -166,10 +193,110 @@ const ProductStore: React.FC = () => {
           )}
         </div>
       </div>
-      <ProductFooter />
+
+      {/* --- Product Footer Content (embedded here) --- */}
+      {/* Footer Section: Effortless Savings */}
+      {(product.footer_section_effortless_savings_title || product.footer_section_effortless_savings_description) && (
+        <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
+          <h2
+            className="text-2xl font-bold text-gray-800 mb-2"
+            dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_title || "" }}
+          />
+          <p
+            className="text-gray-600 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_description || "" }}
+          />
+        </div>
+      )}
+
+      {/* Footer Section: How to Use */}
+      {(product.footer_section_how_to_use_title || (product.footer_section_how_to_use_steps && product.footer_section_how_to_use_steps.length > 0) || product.footer_section_how_to_use_note) && (
+        <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
+          <h2
+            className="text-2xl font-bold text-gray-800 mb-2"
+            dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
+          />
+          {product.footer_section_how_to_use_steps && product.footer_section_how_to_use_steps.length > 0 && (
+            <ol className="list-decimal list-inside text-gray-600 mb-4">
+              {product.footer_section_how_to_use_steps.map((step, index) => (
+                <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: step }} />
+              ))}
+            </ol>
+          )}
+          {product.footer_section_how_to_use_note && (
+            <p
+              className="text-sm text-gray-500 italic"
+              dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_note }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Footer Section: Tips */}
+      {(product.footer_section_tips_title || (product.footer_section_tips_list && product.footer_section_tips_list.length > 0)) && (
+        <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
+          <h2
+            className="text-2xl font-bold text-gray-800 mb-2"
+            dangerouslySetInnerHTML={{ __html: product.footer_section_tips_title || "" }}
+          />
+          {product.footer_section_tips_list && product.footer_section_tips_list.length > 0 && (
+            <ul className="list-disc list-inside text-gray-600">
+              {product.footer_section_tips_list.map((tip, index) => (
+                <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: tip }} />
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* Footer Section: Contact */}
+      {(product.footer_section_contact_title || product.footer_section_contact_description || product.footer_contact_phone || product.footer_contact_email || product.footer_contact_whatsapp) && (
+        <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
+          <h2
+            className="text-2xl font-bold text-gray-800 mb-2"
+            dangerouslySetInnerHTML={{ __html: product.footer_section_contact_title || "" }}
+          />
+          {product.footer_section_contact_description && (
+            <p
+              className="text-gray-600 mb-4"
+              dangerouslySetInnerHTML={{ __html: product.footer_section_contact_description }}
+            />
+          )}
+          <div className="text-gray-700">
+            {product.footer_contact_phone && (
+              <p className="flex items-center mb-2">
+                <span className="font-semibold w-24">Phone:</span>
+                <a href={`tel:${product.footer_contact_phone}`} className="text-blue-600 hover:underline">
+                  {product.footer_contact_phone}
+                </a>
+              </p>
+            )}
+            {product.footer_contact_email && (
+              <p className="flex items-center mb-2">
+                <span className="font-semibold w-24">Email:</span>
+                <a href={`mailto:${product.footer_contact_email}`} className="text-blue-600 hover:underline">
+                  {product.footer_contact_email}
+                </a>
+              </p>
+            )}
+            {product.footer_contact_whatsapp && (
+              <p className="flex items-center">
+                <span className="font-semibold w-24">WhatsApp:</span>
+                <a
+                  href={`https://wa.me/${product.footer_contact_whatsapp.replace(/\D/g, '')}`} // Basic sanitization
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-600 hover:underline"
+                >
+                  {product.footer_contact_whatsapp}
+                </a>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+      {/* --- End of Product Footer Content --- */}
       <SubmitDeal />
-
-
     </div>
   );
 };

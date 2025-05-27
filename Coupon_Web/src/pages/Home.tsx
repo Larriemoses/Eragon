@@ -20,19 +20,19 @@ function Home() {
             </div>
           </div>
 
-          {/* Mobile View (full height with larger text) */}
-          <div className="sm:hidden flex items-center justify-center h-[50vh] p-6 text-start">
-            <div>
-              <h1 className="text-white text-3xl font-bold mb-4 leading-tight">
+          {/* Mobile View (taller, left-aligned, centered vertically) */}
+          <div className="sm:hidden flex items-center justify-center h-[63vh] py-6 px-6 pr-18">
+            <div className="w-full max-w-xs text-left">
+              <h1 className="text-white text-4xl font-bold mb-4 leading-tight">
                 Top Coupon Codes,<br />
                 Discount Codes<br />
                 &amp; Deals
               </h1>
-              <p className="text-white text-base font-medium">
+              <p className="text-white text-sm font-normal pr-12">
                 Your trusted source for the best promo codes at checkout.
               </p>
-              <p className="text-white text-base font-medium mt-2">
-                Verified discounts and exclusive offers from top brands.
+              <p className="text-white text-sm font-normal mt-2 pr-12">
+                Discount Region brings you verified discounts and exclusive offers from top brands and prop firms.
               </p>
             </div>
           </div>

@@ -26,7 +26,12 @@ SECRET_KEY = 'django-insecure-#x34@fh2g)qdt=w)*d84e_e=*rd%q74nn4red1tg802r=)p9-l
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.onrender.com']
+ALLOWED_HOSTS = ['.onrender.com',
+                 '127.0.0.1',
+    'localhost',
+    # Add your Render domain here for production!
+    'eragon-backend1.onrender.com'
+                 ]
 
 
 # Application definition
