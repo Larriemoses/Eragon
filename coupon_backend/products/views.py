@@ -4,8 +4,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated  # or AllowAny if you want public
+from rest_framework.permissions import  AllowAny 
 from django.core.mail import send_mail
+# from rest_framework.permissions import AllowAny, IsAuthenticated # Import AllowAny
+from rest_framework import generics
 from .models import Product, ProductCoupon
 from .serializers import ProductSerializer, ProductCouponSerializer
 
@@ -40,7 +42,7 @@ class ProductCouponViewSet(ModelViewSet):
         return Response({'used_count': coupon.used_count, 'used_today': coupon.used_today})
 
 class SubmitStoreView(APIView):
-    permission_classes = [IsAuthenticated]  # or [AllowAny]
+    permission_classes = [AllowAny]  # or [AllowAny]
 
     def post(self, request):
         data = request.data
