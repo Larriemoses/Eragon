@@ -196,46 +196,6 @@ const ProductStore: React.FC = () => {
         </div>
       </div>
 
-      {/* --- Social Media Buttons --- */}
-      {(product.social_facebook_url || product.social_twitter_url || product.social_instagram_url) && (
-        <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-4">
-          {product.social_facebook_url && (
-            <a
-              href={product.social_facebook_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center text-lg"
-              style={{ minWidth: '120px' }}
-            >
-              Facebook
-            </a>
-          )}
-          {product.social_twitter_url && (
-            <a
-              href={product.social_twitter_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center text-lg"
-              style={{ minWidth: '120px' }}
-            >
-              Twitter
-            </a>
-          )}
-          {product.social_instagram_url && (
-            <a
-              href={product.social_instagram_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center text-lg"
-              style={{ minWidth: '120px' }}
-            >
-              Instagram
-            </a>
-          )}
-        </div>
-      )}
-      {/* --- End of Social Media Buttons --- */}
-
       {/* --- Product Footer Content (embedded here) --- */}
       {/* Footer Section: Effortless Savings */}
       {(product.footer_section_effortless_savings_title || product.footer_section_effortless_savings_description) && (
@@ -258,7 +218,6 @@ const ProductStore: React.FC = () => {
             className="text-2xl font-bold text-gray-800 mb-2"
             dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
           />
-          {/* MODIFIED: Added Array.isArray check */}
           {product.footer_section_how_to_use_steps && Array.isArray(product.footer_section_how_to_use_steps) && product.footer_section_how_to_use_steps.length > 0 && (
             <ol className="list-decimal list-inside text-gray-600 mb-4">
               {product.footer_section_how_to_use_steps.map((step, index) => (
@@ -282,7 +241,6 @@ const ProductStore: React.FC = () => {
             className="text-2xl font-bold text-gray-800 mb-2"
             dangerouslySetInnerHTML={{ __html: product.footer_section_tips_title || "" }}
           />
-          {/* MODIFIED: Added Array.isArray check */}
           {product.footer_section_tips_list && Array.isArray(product.footer_section_tips_list) && product.footer_section_tips_list.length > 0 && (
             <ul className="list-disc list-inside text-gray-600">
               {product.footer_section_tips_list.map((tip, index) => (
@@ -339,6 +297,44 @@ const ProductStore: React.FC = () => {
           </div>
         </div>
       )}
+      {/* --- End of Product Footer Content --- */}
+
+      {/* --- Social Media Buttons --- */}
+      {(product.social_facebook_url || product.social_twitter_url || product.social_instagram_url) && (
+        <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-2 flex-wrap md:flex-nowrap">
+          {product.social_facebook_url && (
+            <a
+              href={product.social_facebook_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
+            >
+              Facebook
+            </a>
+          )}
+          {product.social_twitter_url && (
+            <a
+              href={product.social_twitter_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
+            >
+              Twitter
+            </a>
+          )}
+          {product.social_instagram_url && (
+            <a
+              href={product.social_instagram_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
+            >
+              Instagram
+            </a>
+          )}
+        </div>
+      )}
+      {/* --- End of Social Media Buttons --- */}
       <SubmitDeal />
     </div>
   );

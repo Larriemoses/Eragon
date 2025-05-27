@@ -9,25 +9,22 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
-  // --- New fields for dynamic footer content (matching backend model) ---
-  // When fetched, these will be string[] from JSONField
+  // When fetched from backend, these will be string (newline-separated) due to custom serializer
   footer_section_effortless_savings_title?: string | null;
   footer_section_effortless_savings_description?: string | null;
   footer_section_how_to_use_title?: string | null;
-  footer_section_how_to_use_steps?: string[]; // Defined as string[], which is correct for array-like data
+  footer_section_how_to_use_steps?: string | null; // Changed to string | null
   footer_section_how_to_use_note?: string | null;
   footer_section_tips_title?: string | null;
-  footer_section_tips_list?: string[]; // Defined as string[], which is correct for array-like data
+  footer_section_tips_list?: string | null; // Changed to string | null
   footer_section_contact_title?: string | null;
   footer_section_contact_description?: string | null;
   footer_contact_phone?: string | null;
   footer_contact_email?: string | null;
   footer_contact_whatsapp?: string | null;
-  // --- NEW: Social Media Links ---
   social_facebook_url?: string | null;
   social_twitter_url?: string | null;
   social_instagram_url?: string | null;
-  // --- End of new fields ---
 }
 
 interface AdminPageProps {
@@ -59,12 +56,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const [subtitle, setSubtitle] = useState("");
   const [subSubTitle, setSubSubTitle] = useState("");
   const [editingCoupon, setEditingCoupon] = useState<ProductCoupon | null>(null);
-  // Add a state for which product is being edited/created in the product form
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const navigate = useNavigate();
 
-  // --- New state variables for footer content (all plain strings now) ---
   const [footerEffortlessSavingsTitle, setFooterEffortlessSavingsTitle] = useState("");
   const [footerEffortlessSavingsDescription, setFooterEffortlessSavingsDescription] = useState("");
   const [footerHowToUseTitle, setFooterHowToUseTitle] = useState("");
@@ -77,21 +72,16 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const [footerContactPhone, setFooterContactPhone] = useState("");
   const [footerContactEmail, setFooterContactEmail] = useState("");
   const [footerContactWhatsapp, setFooterContactWhatsapp] = useState("");
-  // --- End of new state variables ---
 
-  // --- NEW: State variables for Social Media Links ---
   const [socialFacebookUrl, setSocialFacebookUrl] = useState("");
   const [socialTwitterUrl, setSocialTwitterUrl] = useState("");
   const [socialInstagramUrl, setSocialInstagramUrl] = useState("");
-  // --- End of NEW state variables ---
 
-  // Show popup for 2 seconds
   const showPopup = (msg: string) => {
     setPopup(msg);
     setTimeout(() => setPopup(null), 2000);
   };
 
-  // Helper to clear product form fields
   const clearProductForm = () => {
     setName("");
     setLogo(null);
@@ -111,61 +101,50 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setFooterContactPhone("");
     setFooterContactEmail("");
     setFooterContactWhatsapp("");
-    // --- NEW: Clear social media fields ---
     setSocialFacebookUrl("");
     setSocialTwitterUrl("");
     setSocialInstagramUrl("");
-    // --- End of NEW ---
-    setEditingProduct(null); // Clear editing state
+    setEditingProduct(null);
   };
 
-  // Fetch products and coupons
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        // Fetch products first
-        const productsRes = await fetch("https://eragon-backend1.onrender.com/api/products", {
+        const productsRes = await fetch("https://eragon-backend1.onrender.com/api/products/", { // Added trailing slash for consistency
           headers: { Authorization: `Token ${token}` },
         });
         const fetchedProducts: Product[] = await productsRes.json();
         setProducts(fetchedProducts);
 
-        // Then fetch coupons
         const couponsRes = await fetch("https://eragon-backend1.onrender.com/api/productcoupon/", {
           headers: { Authorization: `Token ${token}` },
         });
-        const fetchedCoupons: any[] = await couponsRes.json(); // Use any[] temporarily for the raw response
+        const fetchedCoupons: any[] = await couponsRes.json();
 
-        // Enrich coupons with product details
         const enrichedCoupons: ProductCoupon[] = fetchedCoupons.map(coupon => {
           const productDetail = fetchedProducts.find(p => p.id === coupon.product) || {
-            id: coupon.product, // Keep the ID even if product not found
-            name: "Unknown Product", // Default name if product not found
+            id: coupon.product,
+            name: "Unknown Product",
             logo: null,
             logo_url: null,
             title: "",
             subtitle: "",
             sub_subtitle: "",
-            // Provide default values for new footer fields to avoid undefined errors
             footer_section_effortless_savings_title: null,
             footer_section_effortless_savings_description: null,
             footer_section_how_to_use_title: null,
-            // FIX: Ensure these defaults are arrays.
-            footer_section_how_to_use_steps: [],
+            footer_section_how_to_use_steps: null, // Expecting string | null from backend
             footer_section_how_to_use_note: null,
             footer_section_tips_title: null,
-            // FIX: Ensure these defaults are arrays.
-            footer_section_tips_list: [],
+            footer_section_tips_list: null, // Expecting string | null from backend
             footer_section_contact_title: null,
             footer_section_contact_description: null,
             footer_contact_phone: null,
             footer_contact_email: null,
             footer_contact_whatsapp: null,
-            // --- NEW: Default values for social media fields ---
             social_facebook_url: null,
             social_twitter_url: null,
             social_instagram_url: null,
-            // --- End of NEW ---
           };
           return { ...coupon, product: productDetail };
         });
@@ -180,7 +159,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     fetchAdminData();
   }, [token]);
 
-  // Add coupon
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -200,13 +178,12 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       body: JSON.stringify({
         product: productId,
         title,
-        code, // code can be empty string or null
+        code,
         discount,
       }),
     });
     if (res.ok) {
       const newCoupon = await res.json();
-      // Ensure newCoupon.product is a full Product object
       const productObj = products.find((p) => p.id === newCoupon.product) || {
         id: newCoupon.product,
         name: "Unknown Product",
@@ -215,26 +192,21 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         title: "",
         subtitle: "",
         sub_subtitle: "",
-        // Default values for footer fields
         footer_section_effortless_savings_title: null,
         footer_section_effortless_savings_description: null,
         footer_section_how_to_use_title: null,
-        // FIX: Ensure these defaults are arrays.
-        footer_section_how_to_use_steps: [],
+        footer_section_how_to_use_steps: null, // Expecting string | null from backend
         footer_section_how_to_use_note: null,
         footer_section_tips_title: null,
-        // FIX: Ensure these defaults are arrays.
-        footer_section_tips_list: [],
+        footer_section_tips_list: null, // Expecting string | null from backend
         footer_section_contact_title: null,
         footer_section_contact_description: null,
         footer_contact_phone: null,
         footer_contact_email: null,
         footer_contact_whatsapp: null,
-        // --- NEW: Default values for social media fields ---
         social_facebook_url: null,
         social_twitter_url: null,
         social_instagram_url: null,
-        // --- End of NEW ---
       };
       setCoupons([
         { ...newCoupon, product: productObj },
@@ -246,7 +218,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       setProductId("");
       showPopup("Coupon added successfully!");
     } else {
-      // Show backend error
       const errorData = await res.json();
       showPopup(
         typeof errorData === "string"
@@ -257,7 +228,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setLoading(false);
   };
 
-  // Add/Update product handler
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -276,28 +246,24 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     if (subtitle) formData.append("subtitle", subtitle);
     if (subSubTitle) formData.append("sub_subtitle", subSubTitle);
 
-    // --- CRITICAL FIX: Sending newline-separated strings for JSONField ---
     if (footerEffortlessSavingsTitle) formData.append("footer_section_effortless_savings_title", footerEffortlessSavingsTitle);
     if (footerEffortlessSavingsDescription) formData.append("footer_section_effortless_savings_description", footerEffortlessSavingsDescription);
     if (footerHowToUseTitle) formData.append("footer_section_how_to_use_title", footerHowToUseTitle);
-    // Send plain string for JSONField, backend StringToListField will parse
+    // Send plain string, backend StringToListField will parse
     if (footerHowToUseSteps) formData.append("footer_section_how_to_use_steps", footerHowToUseSteps);
     if (footerHowToUseNote) formData.append("footer_section_how_to_use_note", footerHowToUseNote);
     if (footerTipsTitle) formData.append("footer_section_tips_title", footerTipsTitle);
-    // Send plain string for JSONField, backend StringToListField will parse
+    // Send plain string, backend StringToListField will parse
     if (footerTipsList) formData.append("footer_section_tips_list", footerTipsList);
     if (footerContactTitle) formData.append("footer_section_contact_title", footerContactTitle);
     if (footerContactDescription) formData.append("footer_section_contact_description", footerContactDescription);
     if (footerContactPhone) formData.append("footer_contact_phone", footerContactPhone);
     if (footerContactEmail) formData.append("footer_contact_email", footerContactEmail);
     if (footerContactWhatsapp) formData.append("footer_contact_whatsapp", footerContactWhatsapp);
-    // --- End of new fields for Product Footer content ---
 
-    // --- NEW: Append social media URLs to formData ---
     if (socialFacebookUrl) formData.append("social_facebook_url", socialFacebookUrl);
     if (socialTwitterUrl) formData.append("social_twitter_url", socialTwitterUrl);
     if (socialInstagramUrl) formData.append("social_instagram_url", socialInstagramUrl);
-    // --- End of NEW ---
 
     const method = editingProduct ? "PUT" : "POST";
     const url = editingProduct ? `https://eragon-backend1.onrender.com/api/products/${editingProduct.id}/` : "https://eragon-backend1.onrender.com/api/products/";
@@ -306,7 +272,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       method: method,
       headers: {
         Authorization: `Token ${token}`,
-        // Note: For FormData, browser automatically sets Content-Type: multipart/form-data with boundary
       },
       body: formData,
     });
@@ -320,7 +285,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         setProducts([product, ...products]);
         showPopup("Product added successfully!");
       }
-      clearProductForm(); // Clear all fields after successful operation
+      clearProductForm();
     } else {
       const errorData = await res.json();
       console.error(`Error ${editingProduct ? "updating" : "adding"} product:`, errorData);
@@ -333,35 +298,22 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setLoading(false);
   };
 
-  // Handler to set form fields for product editing
   const handleEditProduct = (productToEdit: Product) => {
     setEditingProduct(productToEdit);
     setName(productToEdit.name);
-    // Logo file cannot be pre-filled, but URL can be
     setLogoUrl(productToEdit.logo_url || productToEdit.logo || '');
     setTitle(productToEdit.title || '');
     setSubtitle(productToEdit.subtitle || '');
     setSubSubTitle(productToEdit.sub_subtitle || '');
 
-    // --- FIX START ---
-    // Ensure these are always treated as arrays before joining.
-    // This addresses the "map is not a function" error for existing data.
-    const howToUseSteps = Array.isArray(productToEdit.footer_section_how_to_use_steps)
-        ? productToEdit.footer_section_how_to_use_steps
-        : []; // Default to empty array if not an array
-
-    const tipsList = Array.isArray(productToEdit.footer_section_tips_list)
-        ? productToEdit.footer_section_tips_list
-        : []; // Default to empty array if not an array
-
+    // Now, these fields will be string or null directly from the backend
     setFooterEffortlessSavingsTitle(productToEdit.footer_section_effortless_savings_title || '');
     setFooterEffortlessSavingsDescription(productToEdit.footer_section_effortless_savings_description || '');
     setFooterHowToUseTitle(productToEdit.footer_section_how_to_use_title || '');
-    setFooterHowToUseSteps(howToUseSteps.join('\n')); // Now safe to call .join
+    setFooterHowToUseSteps(productToEdit.footer_section_how_to_use_steps || ''); // No .join() needed
     setFooterHowToUseNote(productToEdit.footer_section_how_to_use_note || '');
     setFooterTipsTitle(productToEdit.footer_section_tips_title || '');
-    setFooterTipsList(tipsList.join('\n')); // Now safe to call .join
-    // --- FIX END ---
+    setFooterTipsList(productToEdit.footer_section_tips_list || ''); // No .join() needed
 
     setFooterContactTitle(productToEdit.footer_section_contact_title || '');
     setFooterContactDescription(productToEdit.footer_section_contact_description || '');
@@ -369,14 +321,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setFooterContactEmail(productToEdit.footer_contact_email || '');
     setFooterContactWhatsapp(productToEdit.footer_contact_whatsapp || '');
 
-    // --- NEW: Populate social media fields for editing ---
     setSocialFacebookUrl(productToEdit.social_facebook_url || '');
     setSocialTwitterUrl(productToEdit.social_twitter_url || '');
     setSocialInstagramUrl(productToEdit.social_instagram_url || '');
-    // --- End of NEW ---
   };
 
-  // Delete product handler
   const handleDeleteProduct = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this product and all its associated coupons?")) {
       return;
@@ -389,7 +338,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       });
       if (res.ok) {
         setProducts(products.filter(p => p.id !== id));
-        setCoupons(coupons.filter(c => c.product.id !== id)); // Also remove associated coupons
+        setCoupons(coupons.filter(c => c.product.id !== id));
         showPopup("Product deleted successfully!");
       } else {
         const errorData = await res.json();
@@ -407,17 +356,14 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     }
   };
 
-
-  // Edit coupon handler (opens the modal/form)
   const handleEdit = (coupon: ProductCoupon) => {
     setEditingCoupon(coupon);
-    setProductId(coupon.product.id); // Use the ID from the enriched product object
+    setProductId(coupon.product.id);
     setTitle(coupon.title);
     setCode(coupon.code);
     setDiscount(coupon.discount);
   };
 
-  // Update coupon handler (submits the changes)
   const handleUpdateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -429,13 +375,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     }
 
     const res = await fetch(`https://eragon-backend1.onrender.com/api/productcoupon/${editingCoupon.id}/`, {
-      method: "PUT", // Use PUT for full updates, PATCH for partial
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Token ${token}`,
       },
       body: JSON.stringify({
-        product: productId, // Send the product ID back to the backend
+        product: productId,
         title,
         code,
         discount,
@@ -444,7 +390,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
 
     if (res.ok) {
       const updatedCoupon = await res.json();
-      // Enrich the updated coupon with full product details
       const productObj = products.find((p) => p.id === updatedCoupon.product) || {
         id: updatedCoupon.product,
         name: "Unknown Product",
@@ -453,26 +398,21 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         title: "",
         subtitle: "",
         sub_subtitle: "",
-        // Default values for footer fields
         footer_section_effortless_savings_title: null,
         footer_section_effortless_savings_description: null,
         footer_section_how_to_use_title: null,
-        // FIX: Ensure these defaults are arrays.
-        footer_section_how_to_use_steps: [],
+        footer_section_how_to_use_steps: null, // Expecting string | null from backend
         footer_section_how_to_use_note: null,
         footer_section_tips_title: null,
-        // FIX: Ensure these defaults are arrays.
-        footer_section_tips_list: [],
+        footer_section_tips_list: null, // Expecting string | null from backend
         footer_section_contact_title: null,
         footer_section_contact_description: null,
         footer_contact_phone: null,
         footer_contact_email: null,
         footer_contact_whatsapp: null,
-        // --- NEW: Default values for social media fields ---
         social_facebook_url: null,
         social_twitter_url: null,
         social_instagram_url: null,
-        // --- End of NEW ---
       };
 
       setCoupons(
@@ -480,7 +420,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
           c.id === updatedCoupon.id ? { ...updatedCoupon, product: productObj } : c
         )
       )
-      setEditingCoupon(null); // Close the edit form/modal
+      setEditingCoupon(null);
       setTitle("");
       setCode("");
       setDiscount("");
@@ -497,7 +437,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setLoading(false);
   };
 
-  // Delete coupon
   const handleDelete = async (id: number) => {
     await fetch(`https://eragon-backend1.onrender.com/api/productcoupon/${id}/`, {
       method: "DELETE",
@@ -507,18 +446,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     showPopup("Coupon deleted successfully!");
   };
 
-  // Logout handler
   const handleLogout = () => {
       localStorage.removeItem("adminToken");
       navigate("/admin-login");
-      // Consider using navigate instead of window.location.reload() for a smoother SPA experience
-      // If your admin login route requires a full reload to reset auth state, it's fine.
-      // window.location.reload();
   };
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      {/* Popup message */}
       {popup && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded shadow-lg z-50 transition-all">
           {popup}
@@ -528,7 +462,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         Admin Management Dashboard
       </div>
       <div className="bg-white p-4 sm:p-6 rounded-b shadow mb-6">
-        {/* Responsive Logout Button */}
         <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 mb-4">
           <button
             className="bg-red-500 px-4 py-2 rounded text-white w-full sm:w-auto"
@@ -538,7 +471,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
           </button>
         </div>
 
-        {/* Add/Edit Product Form */}
         <form onSubmit={handleAddProduct} className="mb-6 flex flex-col gap-2">
           <h2 className="text-xl font-semibold mb-2">{editingProduct ? `Edit Product: ${editingProduct.name}` : "Add New Product"}</h2>
           <input
@@ -555,7 +487,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             onChange={(e) => setLogo(e.target.files?.[0] || null)}
             className="w-full p-2 border rounded"
           />
-          {logoUrl && !logo && ( // Show existing logo URL if no new file is selected
+          {logoUrl && !logo && (
             <p className="text-sm text-gray-500">
               Current Logo URL: <a href={logoUrl} target="_blank" rel="noopener noreferrer" className="underline">{logoUrl}</a>
             </p>
@@ -589,7 +521,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             className="w-full p-2 border rounded"
           />
 
-          {/* --- New fields for Product Footer content (all plain text inputs) --- */}
           <h3 className="text-lg font-semibold mt-4 mb-2">Product Footer Content</h3>
           <input
             type="text"
@@ -670,9 +601,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             onChange={(e) => setFooterContactWhatsapp(e.target.value)}
             className="w-full p-2 border rounded"
           />
-          {/* --- End of new fields for Product Footer content --- */}
 
-          {/* --- NEW: Social Media Links Section --- */}
           <h3 className="text-lg font-semibold mt-4 mb-2">Social Media Links</h3>
           <input
             type="url"
@@ -695,7 +624,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             onChange={(e) => setSocialInstagramUrl(e.target.value)}
             className="w-full p-2 border rounded"
           />
-          {/* --- End of NEW Social Media Links Section --- */}
 
           <div className="flex gap-2">
             <button
@@ -718,7 +646,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
           </div>
         </form>
 
-        {/* Existing Products List */}
         <h2 className="text-xl font-semibold mb-2 mt-6">Existing Products</h2>
         <div className="overflow-x-auto mb-6">
             <table className="min-w-full bg-white border">
@@ -774,7 +701,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             </table>
         </div>
 
-        {/* Add Coupon Form */}
         <form onSubmit={handleAdd} className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Add New Coupon</h2>
           <label className="block mb-1">Product:</label>
@@ -823,7 +749,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
           </button>
         </form>
 
-        {/* Edit Coupon Modal/Form */}
         {editingCoupon && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
@@ -870,7 +795,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                   <button
                     type="button"
                     className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                    onClick={() => setEditingCoupon(null)} // Cancel editing
+                    onClick={() => setEditingCoupon(null)}
                   >
                     Cancel
                   </button>
@@ -890,7 +815,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         <div>
           <h2 className="text-xl font-semibold mb-2">All Coupons</h2>
           <div className="overflow-x-auto">
-            {/* Table for small screens and up */}
             <table className="min-w-full bg-white border hidden sm:table">
               <thead>
                 <tr className="bg-blue-500 text-white">
@@ -907,7 +831,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                 {coupons.map((c) => (
                   <tr key={c.id} className="border-t">
                     <td className="px-2 font-bold py-2 flex items-center gap-2">
-                      {/* Now c.product is guaranteed to be a Product object */}
                       {c.product?.logo || c.product?.logo_url ? (
                         <img
                           src={c.product.logo ?? c.product.logo_url ?? undefined}
@@ -920,12 +843,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                     </td>
                     <td className="px-2 py-2">
                       <div className="font-bold text-blue-700">{c.title}</div>
-                      {/* You can remove these lines if you don't want to display product details in the coupon table */}
-                      {/* <div>
-                        <div className="font-bold">{c.product.title}</div>
-                        <div className="text-sm">{c.product.subtitle}</div>
-                        <div className="text-xs text-gray-500">{c.product.sub_subtitle}</div>
-                      </div> */}
                     </td>
                     <td className="px-2 py-2">{c.code}</td>
                     <td className="px-2 py-2">{c.discount}</td>
@@ -957,7 +874,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
               </tbody>
             </table>
 
-            {/* Card layout for mobile */}
             <div className="sm:hidden flex flex-col gap-4">
               {coupons.length === 0 && (
                 <div className="text-center py-4 border rounded">No coupons found.</div>
