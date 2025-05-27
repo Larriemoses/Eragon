@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
+// const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4"; // Removed: No longer needed if all endpoints are public
 const BACKEND_URL = "https://eragon-backend1.onrender.com";
 
 interface Product {
@@ -15,7 +15,7 @@ interface Product {
 
 interface ProductCoupon {
   id: number;
-  product: Product;
+  product: Product; // Note: This product is an object, not just an ID
   title: string;
   code: string;
   discount: string;
@@ -41,22 +41,22 @@ const TopDeals: React.FC = () => {
     const fetchTopDealsData = async () => {
       setLoading(true);
       try {
-        const productsRes = await fetch(`${BACKEND_URL}/api/products`, {
-          headers: { Authorization: `Token ${API_TOKEN}` },
-        });
+        // Removed Authorization header for public GET requests
+        const productsRes = await fetch(`${BACKEND_URL}/api/products`);
+        if (!productsRes.ok) throw new Error(`HTTP error! status: ${productsRes.status} for products`);
         const productsData = await productsRes.json();
         const fetchedProducts: Product[] = Array.isArray(productsData) ? productsData : productsData.results || [];
         setProducts(fetchedProducts);
 
-        const couponsRes = await fetch(`${BACKEND_URL}/api/productcoupon/`, {
-          headers: { Authorization: `Token ${API_TOKEN}` },
-        });
+        // Removed Authorization header for public GET requests
+        const couponsRes = await fetch(`${BACKEND_URL}/api/productcoupon/`);
+        if (!couponsRes.ok) throw new Error(`HTTP error! status: ${couponsRes.status} for coupons`);
         const couponsData = await couponsRes.json();
         const fetchedCouponsRaw: any[] = Array.isArray(couponsData) ? couponsData : couponsData.results || [];
 
         const enrichedCoupons: ProductCoupon[] = fetchedCouponsRaw.map(coupon => {
           const productDetail = fetchedProducts.find(p => p.id === coupon.product) || {
-            id: coupon.product,
+            id: coupon.product, // Keep the product ID even if product details aren't found
             name: "Unknown Product",
             logo: null,
             logo_url: null,
@@ -102,7 +102,7 @@ const TopDeals: React.FC = () => {
           <div className="text-gray-500 text-center py-8">No top deals available.</div>
         )}
         {topDeals.map(({ product, coupon }) => {
-          const logoSrc = product.logo ? `${BACKEND_URL}${product.logo}` : product.logo_url || "";
+          const logoSrc = product.logo || product.logo_url; // Use logical OR for cleaner fallback
           return (
             <div
               key={coupon.id}
@@ -111,7 +111,7 @@ const TopDeals: React.FC = () => {
               <div className="flex items-start gap-3">
                 {logoSrc && (
                   <img
-                    src={logoSrc}
+                    src={`${BACKEND_URL}${logoSrc}`} // Prepend BACKEND_URL for full path
                     alt={product.name}
                     className="h-12 w-12 sm:h-16 sm:w-16 object-contain flex-shrink-0 rounded-lg"
                     draggable={false}
@@ -156,13 +156,20 @@ const TopDeals: React.FC = () => {
                   <button
                     className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 sm:py-1 rounded text-xs sm:text-sm transition-colors duration-200"
                     onClick={() => {
+                      // Removed token requirement for copy action if backend allows AllowAny
                       const tempInput = document.createElement('input');
                       tempInput.value = coupon.code;
                       document.body.appendChild(tempInput);
                       tempInput.select();
-                      document.execCommand('copy');
+                      document.execCommand('copy'); // Note: document.execCommand('copy') is deprecated, but still widely supported. For modern approach, use navigator.clipboard.writeText(text).
                       document.body.removeChild(tempInput);
                       showPopup("Code copied!");
+
+                      // If you want to increment 'used_count' via API on copy,
+                      // you'd need to make a separate fetch call here,
+                      // and that API endpoint also needs to be public (`AllowAny`).
+                      // For example:
+                      // fetch(`${BACKEND_URL}/api/products/productcoupon/${coupon.id}/use/`, { method: "POST" });
                     }}
                   >
                     Copy

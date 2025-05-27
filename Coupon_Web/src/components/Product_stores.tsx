@@ -20,7 +20,8 @@ interface ProductCoupon {
   used_today: number;
 }
 
-const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
+// API_TOKEN is now completely unused if all endpoints are public
+// const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
 
 const ProductCouponsSection: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -30,9 +31,8 @@ const ProductCouponsSection: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchCoupons = () => {
-    fetch("https://eragon-backend1.onrender.com/api/productcoupon/", {
-      headers: { Authorization: `Token ${API_TOKEN}` },
-    })
+    // No Authorization header needed for GET request
+    fetch("https://eragon-backend1.onrender.com/api/productcoupon/")
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch coupons");
         return res.json();
@@ -44,49 +44,44 @@ const ProductCouponsSection: React.FC = () => {
   useEffect(() => {
     setError(null);
 
-    fetch("https://eragon-backend1.onrender.com/api/products", {
-      headers: { Authorization: `Token ${API_TOKEN}` },
-    })
+    // No Authorization header needed for GET request
+    fetch("https://eragon-backend1.onrender.com/api/products")
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch products");
         return res.json();
       })
       .then(data => {
-        // If your API returns { results: [...] }
-        if (Array.isArray(data)) {
-          setProducts(data);
-          if (data.length > 0) setActiveProduct(data[0].id);
-        } else if (Array.isArray(data.results)) {
-          setProducts(data.results);
-          if (data.results.length > 0) setActiveProduct(data.results[0].id);
-        } else {
-          setProducts([]);
-        }
+        const productData = Array.isArray(data) ? data : data.results || [];
+        setProducts(productData);
+        if (productData.length > 0) setActiveProduct(productData[0].id);
       })
       .catch(err => setError(err.message));
 
-    fetchCoupons();
+    fetchCoupons(); // Call to fetch coupons
   }, []);
 
   const handleLike = (id: number) => {
+    // Removed Authorization header for POST request
     fetch(`https://eragon-backend1.onrender.com/api/products/productcoupon/${id}/like/`, {
       method: "POST",
-      headers: { Authorization: `Token ${API_TOKEN}` },
+      // headers: { Authorization: `Token ${API_TOKEN}` }, // Removed
     }).then(fetchCoupons);
   };
 
   const handleDislike = (id: number) => {
+    // Removed Authorization header for POST request
     fetch(`https://eragon-backend1.onrender.com/api/products/productcoupon/${id}/dislike/`, {
       method: "POST",
-      headers: { Authorization: `Token ${API_TOKEN}` },
+      // headers: { Authorization: `Token ${API_TOKEN}` }, // Removed
     }).then(fetchCoupons);
   };
 
   const handleCopy = (code: string, id: number) => {
     navigator.clipboard.writeText(code);
+    // Removed Authorization header for POST request
     fetch(`https://eragon-backend1.onrender.com/api/products/productcoupon/${id}/use/`, {
       method: "POST",
-      headers: { Authorization: `Token ${API_TOKEN}` },
+      // headers: { Authorization: `Token ${API_TOKEN}` }, // Removed
     }).then(fetchCoupons);
   };
 
@@ -185,7 +180,6 @@ const ProductCouponsSection: React.FC = () => {
           <div className="text-gray-500 text-center py-8">No coupons for this product.</div>
         )}
       </div>
- 
     </div>
   );
 };

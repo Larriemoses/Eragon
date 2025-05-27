@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 // Constants for API and logo
 const LOGO_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png"; // Replace with your Cloudinary logo link
-const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4";
+// const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4"; // Removed: No longer needed for public endpoints
 const PRODUCT_API_URL = "https://eragon-backend1.onrender.com/api/products/";
 const COUPON_API_URL = "https://eragon-backend1.onrender.com/api/productcoupon/"; // Added COUPON_API_URL
 
@@ -41,7 +41,6 @@ const Nav: React.FC = () => {
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]); // Results for search dropdown
   const [showSearchResults, setShowSearchResults] = useState(false); // Visibility of search results dropdown
 
-  // const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null); // Ref for desktop search input
   const mobileSearchInputRef = useRef<HTMLInputElement>(null); // Ref for mobile search input
 
@@ -52,10 +51,19 @@ const Nav: React.FC = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       try {
+        // Removed `headers: { Authorization: Token ${API_TOKEN} }` because endpoints are now public
         const [productsRes, couponsRes] = await Promise.all([
-          fetch(PRODUCT_API_URL, { headers: { Authorization: `Token ${API_TOKEN}` } }),
-          fetch(COUPON_API_URL, { headers: { Authorization: `Token ${API_TOKEN}` } }),
+          fetch(PRODUCT_API_URL),
+          fetch(COUPON_API_URL),
         ]);
+
+        // Check if responses are OK before parsing JSON
+        if (!productsRes.ok) {
+          throw new Error(`HTTP error! status: ${productsRes.status} for products`);
+        }
+        if (!couponsRes.ok) {
+          throw new Error(`HTTP error! status: ${couponsRes.status} for coupons`);
+        }
 
         const productsData: Product[] = await productsRes.json();
         const couponsData: Coupon[] = await couponsRes.json();
@@ -64,6 +72,7 @@ const Nav: React.FC = () => {
         setAllCoupons(couponsData);
       } catch (error) {
         console.error("Error fetching initial data for Nav:", error);
+        // You might want to set an error state here to show a message to the user
       }
     };
 
@@ -402,7 +411,6 @@ const Nav: React.FC = () => {
                     r="8"
                     stroke="currentColor"
                     strokeWidth="2"
-                    fill="none"
                   />
                   <line
                     x1="21"
