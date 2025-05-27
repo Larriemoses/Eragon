@@ -14,13 +14,13 @@ from .serializers import ProductSerializer, ProductCouponSerializer
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    # <<<--- ADD THIS LINE --->>>
+    # <<<--- VERIFY THIS LINE IS PRESENT AND CORRECT --->>>
     permission_classes = [AllowAny]
 
 class ProductCouponViewSet(ModelViewSet):
     queryset = ProductCoupon.objects.all()
     serializer_class = ProductCouponSerializer
-    # <<<--- ADD THIS LINE --->>>
+    # <<<--- VERIFY THIS LINE IS PRESENT AND CORRECT --->>>
     permission_classes = [AllowAny]
 
     @action(detail=True, methods=['post'], permission_classes=[AllowAny])
@@ -46,6 +46,7 @@ class ProductCouponViewSet(ModelViewSet):
         return Response({'used_count': coupon.used_count, 'used_today': coupon.used_today}, status=status.HTTP_200_OK)
 
 class SubmitStoreView(APIView):
+    # This was already correctly set to AllowAny, so no change needed here
     permission_classes = [AllowAny]
 
     def post(self, request):
