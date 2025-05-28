@@ -1,3 +1,4 @@
+// Nav.tsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom"; // Import useLocation
 
@@ -6,7 +7,6 @@ const BACKEND_URL = "https://eragon-backend1.onrender.com"; // Define backend UR
 const LOGO_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png"; // Your Cloudinary logo link
 
 // Helper function to get full logo URL (unified logic for all components)
-// (Note: This function is not directly used in Nav.tsx but kept for consistency if copied from other files)
 const getFullLogoUrl = (logoPath?: string | null) => {
   if (logoPath) {
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
@@ -22,12 +22,12 @@ const getFullLogoUrl = (logoPath?: string | null) => {
 
 
 const Nav: React.FC = () => {
-  const [products, setProducts] = useState<any[]>([]); // Simplified type as Product/Coupon interfaces are no longer directly used in Nav's logic
-  const [dropdown, setDropdown] = useState(false); // For "Stores" dropdown
-  const [mobileMenu, setMobileMenu] = useState(false); // For mobile hamburger menu
+  const [products, setProducts] = useState<any[]>([]);
+  const [dropdown, setDropdown] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation(); // To check current path
+  const location = useLocation();
 
   // Fetch all products for the "Stores" dropdown
   useEffect(() => {
@@ -38,41 +38,58 @@ const Nav: React.FC = () => {
           throw new Error(`HTTP error! status: ${productsRes.status} for products`);
         }
         const productsData = await productsRes.json();
-        setProducts(productsData);
+
+        // --- START OF NEW SORTING LOGIC ---
+        const sortedProducts = [...productsData].sort((a, b) => {
+          const nameA = a.name.toLowerCase();
+          const nameB = b.name.toLowerCase();
+
+          const isOraimoA = nameA.includes("oraimo");
+          const isOraimoB = nameB.includes("oraimo");
+
+          if (isOraimoA && !isOraimoB) {
+            return -1; // 'a' (Oraimo) comes before 'b'
+          }
+          if (!isOraimoA && isOraimoB) {
+            return 1; // 'b' (Oraimo) comes before 'a'
+          }
+          // If both are Oraimo or neither are Oraimo, sort alphabetically by name
+          return nameA.localeCompare(nameB);
+        });
+        // --- END OF NEW SORTING LOGIC ---
+
+        setProducts(sortedProducts); // Set the sorted products
       } catch (error) {
         console.error("Error fetching products for Nav:", error);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   // Handle smooth scroll for "Today Deals"
   useEffect(() => {
     if (location.hash === '#top-deals') {
       const element = document.getElementById('top-deals');
       if (element) {
-        // Use setTimeout to ensure the element is rendered and the page is ready
         setTimeout(() => {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100); // Small delay
+        }, 100);
       }
     }
-  }, [location]); // Re-run when location changes
+  }, [location]);
 
   const handleTodayDealsClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault(); // Prevent default link behavior
+    e.preventDefault();
     if (location.pathname === '/') {
-      // If already on homepage, just scroll
       const element = document.getElementById('top-deals');
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     } else {
-      // If not on homepage, navigate first, then scroll will be handled by useEffect
       navigate('/#top-deals');
     }
-    setMobileMenu(false); // Close mobile menu if open
+    setMobileMenu(false);
   };
 
   const visibleProducts = products.slice(0, 5); // Adjust the number of visible products as needed
@@ -97,9 +114,8 @@ const Nav: React.FC = () => {
             </Link>
           </li>
           <li>
-            {/* Modified: Link to Top Deals section on homepage with smooth scroll */}
             <a
-              href="/#top-deals" // Use href for semantic anchor link, handle with onClick
+              href="/#top-deals"
               onClick={handleTodayDealsClick}
               className="hover:text-gray-700 cursor-pointer"
             >
@@ -132,7 +148,7 @@ const Nav: React.FC = () => {
             {dropdown && (
               <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-md shadow-lg z-20">
                 <ul className="flex flex-col py-2">
-                  {visibleProducts.map((product: any) => ( // Use any for simplicity here
+                  {visibleProducts.map((product: any) => (
                     <li key={product.id} className="w-full">
                       <Link
                         to={`/store/${product.id}`}
@@ -235,7 +251,6 @@ const Nav: React.FC = () => {
                 </Link>
               </li>
               <li>
-                {/* Modified: Link to Top Deals section on homepage with smooth scroll */}
                 <a
                   href="/#top-deals"
                   onClick={handleTodayDealsClick}
@@ -251,7 +266,7 @@ const Nav: React.FC = () => {
                     Stores
                   </summary>
                   <ul className="flex flex-col items-center py-2 bg-gray-50 rounded-md mt-1">
-                    {visibleProducts.map((product: any) => ( // Use any for simplicity
+                    {visibleProducts.map((product: any) => (
                       <li key={product.id} className="w-full">
                         <Link
                           to={`/store/${product.id}`}
