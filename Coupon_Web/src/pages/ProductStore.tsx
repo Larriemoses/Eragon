@@ -10,9 +10,7 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
-  // ... other existing fields
-  main_affiliate_url?: string | null; // <--- ADD THIS FIELD
-  // ... existing footer and social media fields
+  main_affiliate_url?: string | null; // Correctly added this field
   footer_section_effortless_savings_title?: string;
   footer_section_effortless_savings_description?: string;
   footer_section_how_to_use_title?: string;
@@ -51,10 +49,11 @@ const getFullLogoUrl = (logoPath?: string | null) => {
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
       return logoPath;
     }
+    // CORRECTED: Use proper template literals
     if (logoPath.startsWith('/')) {
-        return `<span class="math-inline">\{BACKEND\_URL\}</span>{logoPath}`;
+        return `${BACKEND_URL}${logoPath}`;
     }
-    return `<span class="math-inline">\{BACKEND\_URL\}/</span>{logoPath}`;
+    return `${BACKEND_URL}/${logoPath}`;
   }
   return undefined;
 };
@@ -69,7 +68,8 @@ const ProductStore: React.FC = () => {
 
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);
-    await fetch(`<span class="math-inline">\{COUPON\_API\}</span>{coupon.id}/use/`, {
+    // CORRECTED: Use proper template literal for fetch URL
+    await fetch(`${COUPON_API}${coupon.id}/use/`, {
       method: "POST",
     });
     fetch(COUPON_API)
@@ -88,7 +88,8 @@ const ProductStore: React.FC = () => {
     if (!id) return;
     setLoading(true);
 
-    const fetchProduct = fetch(`<span class="math-inline">\{PRODUCT\_API\}</span>{id}/`)
+    // CORRECTED: Use proper template literal for fetch URL
+    const fetchProduct = fetch(`${PRODUCT_API}${id}/`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -135,10 +136,9 @@ const ProductStore: React.FC = () => {
     );
   }
 
-  // --- Use the new main_affiliate_url field ---
   const mainProductLinkUrl = product.main_affiliate_url && product.main_affiliate_url.trim() !== ''
     ? product.main_affiliate_url.trim()
-    : '#'; // Fallback to #
+    : '#';
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-white py-8">
@@ -163,7 +163,7 @@ const ProductStore: React.FC = () => {
         <div className="flex justify-center mb-6">
           {(product.logo || product.logo_url) ? (
             <a
-              href={mainProductLinkUrl} // Now using main_affiliate_url
+              href={mainProductLinkUrl}
               target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
               rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
             >
@@ -374,7 +374,7 @@ const ProductStore: React.FC = () => {
         <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-2 flex-wrap md:flex-nowrap">
           {product.social_facebook_url && (
             <a
-              href={mainProductLinkUrl} // Now using mainProductLinkUrl
+              href={mainProductLinkUrl}
               target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
               rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
@@ -384,7 +384,7 @@ const ProductStore: React.FC = () => {
           )}
           {product.social_twitter_url && (
             <a
-              href={mainProductLinkUrl} // Now using mainProductLinkUrl
+              href={mainProductLinkUrl}
               target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
               rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
@@ -394,7 +394,7 @@ const ProductStore: React.FC = () => {
           )}
           {product.social_instagram_url && (
             <a
-              href={mainProductLinkUrl} // Now using mainProductLinkUrl
+              href={mainProductLinkUrl}
               target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
               rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
