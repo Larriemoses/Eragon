@@ -9,14 +9,13 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
-  // When fetched from backend, these will be string (newline-separated) due to custom serializer
   footer_section_effortless_savings_title?: string | null;
   footer_section_effortless_savings_description?: string | null;
   footer_section_how_to_use_title?: string | null;
-  footer_section_how_to_use_steps?: string | null; // Changed to string | null
+  footer_section_how_to_use_steps?: string | null;
   footer_section_how_to_use_note?: string | null;
   footer_section_tips_title?: string | null;
-  footer_section_tips_list?: string | null; // Changed to string | null
+  footer_section_tips_list?: string | null;
   footer_section_contact_title?: string | null;
   footer_section_contact_description?: string | null;
   footer_contact_phone?: string | null;
@@ -39,6 +38,7 @@ interface ProductCoupon {
   discount: string;
   used_count: number;
   used_today: number;
+  shop_now_url?: string | null; // <--- ADDED: New field for ProductCoupon interface
 }
 
 const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
@@ -48,6 +48,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const [title, setTitle] = useState("");
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState("");
+  const [shopNowUrl, setShopNowUrl] = useState(""); // <--- ADDED: State for new URL field
   const [loading, setLoading] = useState(false);
   const [popup, setPopup] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -63,10 +64,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const [footerEffortlessSavingsTitle, setFooterEffortlessSavingsTitle] = useState("");
   const [footerEffortlessSavingsDescription, setFooterEffortlessSavingsDescription] = useState("");
   const [footerHowToUseTitle, setFooterHowToUseTitle] = useState("");
-  const [footerHowToUseSteps, setFooterHowToUseSteps] = useState(""); // Plain text (newline separated)
+  const [footerHowToUseSteps, setFooterHowToUseSteps] = useState("");
   const [footerHowToUseNote, setFooterHowToUseNote] = useState("");
   const [footerTipsTitle, setFooterTipsTitle] = useState("");
-  const [footerTipsList, setFooterTipsList] = useState(""); // Plain text (newline separated)
+  const [footerTipsList, setFooterTipsList] = useState("");
   const [footerContactTitle, setFooterContactTitle] = useState("");
   const [footerContactDescription, setFooterContactDescription] = useState("");
   const [footerContactPhone, setFooterContactPhone] = useState("");
@@ -107,10 +108,25 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setEditingProduct(null);
   };
 
+  // Helper function for full logo URL (unified logic)
+  const getFullLogoUrl = (logoPath?: string | null) => {
+    const BACKEND_URL = "https://eragon-backend1.onrender.com"; // Define here or import from constants
+    if (logoPath) {
+      if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+        return logoPath;
+      }
+      if (logoPath.startsWith('/')) {
+        return `${BACKEND_URL}${logoPath}`;
+      }
+      return `${BACKEND_URL}/${logoPath}`;
+    }
+    return undefined;
+  };
+
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const productsRes = await fetch("https://eragon-backend1.onrender.com/api/products/", { // Added trailing slash for consistency
+        const productsRes = await fetch("https://eragon-backend1.onrender.com/api/products/", {
           headers: { Authorization: `Token ${token}` },
         });
         const fetchedProducts: Product[] = await productsRes.json();
@@ -133,10 +149,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             footer_section_effortless_savings_title: null,
             footer_section_effortless_savings_description: null,
             footer_section_how_to_use_title: null,
-            footer_section_how_to_use_steps: null, // Expecting string | null from backend
+            footer_section_how_to_use_steps: null,
             footer_section_how_to_use_note: null,
             footer_section_tips_title: null,
-            footer_section_tips_list: null, // Expecting string | null from backend
+            footer_section_tips_list: null,
             footer_section_contact_title: null,
             footer_section_contact_description: null,
             footer_contact_phone: null,
@@ -180,6 +196,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         title,
         code,
         discount,
+        shop_now_url: shopNowUrl, // <--- ADDED: Include shop_now_url in POST body
       }),
     });
     if (res.ok) {
@@ -195,10 +212,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         footer_section_effortless_savings_title: null,
         footer_section_effortless_savings_description: null,
         footer_section_how_to_use_title: null,
-        footer_section_how_to_use_steps: null, // Expecting string | null from backend
+        footer_section_how_to_use_steps: null,
         footer_section_how_to_use_note: null,
         footer_section_tips_title: null,
-        footer_section_tips_list: null, // Expecting string | null from backend
+        footer_section_tips_list: null,
         footer_section_contact_title: null,
         footer_section_contact_description: null,
         footer_contact_phone: null,
@@ -216,6 +233,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       setCode("");
       setDiscount("");
       setProductId("");
+      setShopNowUrl(""); // <--- ADDED: Clear shopNowUrl after adding
       showPopup("Coupon added successfully!");
     } else {
       const errorData = await res.json();
@@ -249,11 +267,9 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     if (footerEffortlessSavingsTitle) formData.append("footer_section_effortless_savings_title", footerEffortlessSavingsTitle);
     if (footerEffortlessSavingsDescription) formData.append("footer_section_effortless_savings_description", footerEffortlessSavingsDescription);
     if (footerHowToUseTitle) formData.append("footer_section_how_to_use_title", footerHowToUseTitle);
-    // Send plain string, backend StringToListField will parse
     if (footerHowToUseSteps) formData.append("footer_section_how_to_use_steps", footerHowToUseSteps);
     if (footerHowToUseNote) formData.append("footer_section_how_to_use_note", footerHowToUseNote);
     if (footerTipsTitle) formData.append("footer_section_tips_title", footerTipsTitle);
-    // Send plain string, backend StringToListField will parse
     if (footerTipsList) formData.append("footer_section_tips_list", footerTipsList);
     if (footerContactTitle) formData.append("footer_section_contact_title", footerContactTitle);
     if (footerContactDescription) formData.append("footer_section_contact_description", footerContactDescription);
@@ -306,14 +322,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setSubtitle(productToEdit.subtitle || '');
     setSubSubTitle(productToEdit.sub_subtitle || '');
 
-    // Now, these fields will be string or null directly from the backend
     setFooterEffortlessSavingsTitle(productToEdit.footer_section_effortless_savings_title || '');
     setFooterEffortlessSavingsDescription(productToEdit.footer_section_effortless_savings_description || '');
     setFooterHowToUseTitle(productToEdit.footer_section_how_to_use_title || '');
-    setFooterHowToUseSteps(productToEdit.footer_section_how_to_use_steps || ''); // No .join() needed
+    setFooterHowToUseSteps(productToEdit.footer_section_how_to_use_steps || '');
     setFooterHowToUseNote(productToEdit.footer_section_how_to_use_note || '');
     setFooterTipsTitle(productToEdit.footer_section_tips_title || '');
-    setFooterTipsList(productToEdit.footer_section_tips_list || ''); // No .join() needed
+    setFooterTipsList(productToEdit.footer_section_tips_list || '');
 
     setFooterContactTitle(productToEdit.footer_section_contact_title || '');
     setFooterContactDescription(productToEdit.footer_section_contact_description || '');
@@ -362,6 +377,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setTitle(coupon.title);
     setCode(coupon.code);
     setDiscount(coupon.discount);
+    setShopNowUrl(coupon.shop_now_url || ''); // <--- ADDED: Set shopNowUrl when editing coupon
   };
 
   const handleUpdateCoupon = async (e: React.FormEvent) => {
@@ -385,6 +401,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         title,
         code,
         discount,
+        shop_now_url: shopNowUrl, // <--- ADDED: Include shop_now_url in PUT body
       }),
     });
 
@@ -401,10 +418,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         footer_section_effortless_savings_title: null,
         footer_section_effortless_savings_description: null,
         footer_section_how_to_use_title: null,
-        footer_section_how_to_use_steps: null, // Expecting string | null from backend
+        footer_section_how_to_use_steps: null,
         footer_section_how_to_use_note: null,
         footer_section_tips_title: null,
-        footer_section_tips_list: null, // Expecting string | null from backend
+        footer_section_tips_list: null,
         footer_section_contact_title: null,
         footer_section_contact_description: null,
         footer_contact_phone: null,
@@ -425,6 +442,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       setCode("");
       setDiscount("");
       setProductId("");
+      setShopNowUrl(""); // <--- ADDED: Clear shopNowUrl after update
       showPopup("Coupon updated successfully!");
     } else {
       const errorData = await res.json();
@@ -732,6 +750,16 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             onChange={(e) => setCode(e.target.value)}
             placeholder="Enter coupon code (optional)"
           />
+          {/* --- ADDED: Shop Now URL input field --- */}
+          <label className="block mb-1">Shop Now URL:</label>
+          <input
+            type="url" // Use type="url" for better validation and keyboard on mobile
+            className="w-full mb-4 p-2 border rounded"
+            value={shopNowUrl}
+            onChange={(e) => setShopNowUrl(e.target.value)}
+            placeholder="Enter full shop now URL (e.g., https://store.com/deal)"
+          />
+          {/* --- END ADDED --- */}
           <label className="block mb-1">Discount:</label>
           <input
             className="w-full mb-4 p-2 border rounded"
@@ -783,6 +811,16 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                   onChange={(e) => setCode(e.target.value)}
                   placeholder="Enter coupon code"
                 />
+                {/* --- ADDED: Shop Now URL input field to Edit form --- */}
+                <label className="block mb-1">Shop Now URL:</label>
+                <input
+                  type="url"
+                  className="w-full mb-4 p-2 border rounded"
+                  value={shopNowUrl}
+                  onChange={(e) => setShopNowUrl(e.target.value)}
+                  placeholder="Enter full shop now URL (e.g., https://store.com/deal)"
+                />
+                {/* --- END ADDED --- */}
                 <label className="block mb-1">Discount:</label>
                 <input
                   className="w-full mb-4 p-2 border rounded"
@@ -822,6 +860,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                   <th className="px-2 py-2">Offer</th>
                   <th className="px-2 py-2">Code</th>
                   <th className="px-2 py-2">Discount</th>
+                  <th className="px-2 py-2">Link</th> {/* <--- ADDED: Table header for link */}
                   <th className="px-2 py-2">Clicks</th>
                   <th className="px-2 py-2">Today</th>
                   <th className="px-2 py-2">Actions</th>
@@ -831,12 +870,14 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                 {coupons.map((c) => (
                   <tr key={c.id} className="border-t">
                     <td className="px-2 font-bold py-2 flex items-center gap-2">
+                      {/* Using getFullLogoUrl helper for product logo */}
                       {c.product?.logo || c.product?.logo_url ? (
                         <img
-                          src={c.product.logo ?? c.product.logo_url ?? undefined}
+                          src={getFullLogoUrl(c.product.logo ?? c.product.logo_url)}
                           alt={c.product.name}
                           className="w-6 h-6 object-contain rounded"
                           style={{ minWidth: 24, minHeight: 24 }}
+                          onError={(e) => { e.currentTarget.src = `https://placehold.co/24x24/cccccc/ffffff?text=${c.product.name.charAt(0)}`; e.currentTarget.onerror = null; }}
                         />
                       ) : null}
                       {c.product?.name}
@@ -846,6 +887,23 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                     </td>
                     <td className="px-2 py-2">{c.code}</td>
                     <td className="px-2 py-2">{c.discount}</td>
+                    {/* --- ADDED: Display Shop Now URL as a link --- */}
+                    <td className="px-2 py-2">
+                      {c.shop_now_url ? (
+                        <a
+                          href={c.shop_now_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline text-sm break-all"
+                          title={c.shop_now_url}
+                        >
+                          Link
+                        </a>
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
+                    {/* --- END ADDED --- */}
                     <td className="px-2 py-2">{c.used_count}</td>
                     <td className="px-2 py-2">{c.used_today}</td>
                     <td className="px-2 py-2 flex gap-2">
@@ -866,7 +924,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                 ))}
                 {coupons.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="text-center py-4">
+                    <td colSpan={8} className="text-center py-4"> {/* <--- Updated colspan */}
                       No coupons found.
                     </td>
                   </tr>
@@ -884,6 +942,24 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                   <div className="text-sm mb-1"><span className="font-semibold">Product:</span> {c.product?.name}</div>
                   <div className="text-sm mb-1"><span className="font-semibold">Code:</span> {c.code}</div>
                   <div className="text-sm mb-1"><span className="font-semibold">Discount:</span> {c.discount}</div>
+                  {/* --- ADDED: Display Shop Now URL in mobile view --- */}
+                  <div className="text-sm mb-1">
+                    <span className="font-semibold">Link:</span>{" "}
+                    {c.shop_now_url ? (
+                      <a
+                        href={c.shop_now_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline break-all"
+                        title={c.shop_now_url}
+                      >
+                        {c.shop_now_url}
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
+                  </div>
+                  {/* --- END ADDED --- */}
                   <div className="flex flex-wrap gap-2 text-xs mt-2">
                     <span className="bg-gray-100 px-2 py-1 rounded">Clicks: {c.used_count}</span>
                     <span className="bg-gray-100 px-2 py-1 rounded">Today: {c.used_today}</span>

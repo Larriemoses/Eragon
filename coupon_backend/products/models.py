@@ -14,12 +14,10 @@ class Product(models.Model):
     footer_section_effortless_savings_description = models.TextField(blank=True, null=True)
 
     footer_section_how_to_use_title = models.CharField(max_length=255, blank=True, null=True)
-    # CHANGED from models.JSONField to models.TextField
     footer_section_how_to_use_steps = models.TextField(blank=True, null=True)
     footer_section_how_to_use_note = models.TextField(blank=True, null=True)
 
     footer_section_tips_title = models.CharField(max_length=255, blank=True, null=True)
-    # CHANGED from models.JSONField to models.TextField
     footer_section_tips_list = models.TextField(blank=True, null=True)
 
     footer_section_contact_title = models.CharField(max_length=255, blank=True, null=True)
@@ -44,6 +42,9 @@ class ProductCoupon(models.Model):
     discount = models.DecimalField(max_digits=5, decimal_places=2)
     used_count = models.PositiveIntegerField(default=0)
     used_today = models.PositiveIntegerField(default=0)
+    # --- ADD THIS NEW FIELD ---
+    shop_now_url = models.URLField(blank=True, null=True, verbose_name="Shop Now Link")
+
 
     def __str__(self):
         return f"{self.title} ({self.product.name})"
