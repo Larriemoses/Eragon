@@ -38,7 +38,7 @@ function Home() {
             <div
               className="absolute inset-0 bg-gradient-to-br from-green-700 via-blue-900 to-black"
               style={{
-                opacity: 0.80, // 78% opacity
+                opacity: 0.90, // 78% opacity
                 mixBlendMode: 'multiply', // 'multiply' blend mode
               }}
             ></div>
