@@ -1,190 +1,79 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom"; // Import useLocation
 
 // Constants for API and logo
 const BACKEND_URL = "https://eragon-backend1.onrender.com"; // Define backend URL
 const LOGO_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png"; // Your Cloudinary logo link
-const PRODUCT_API_URL = `${BACKEND_URL}/api/products/`; // Changed to use BACKEND_URL
-const COUPON_API_URL = `${BACKEND_URL}/api/productcoupon/`; // Changed to use BACKEND_URL
-
-// Interface for Product data
-interface Product {
-  id: number;
-  name: string;
-  logo?: string | null;
-  logo_url?: string | null;
-}
-
-// Interface for Coupon data (needed for filtering)
-interface Coupon {
-  id: number;
-  product: number; // Foreign key to Product
-  title: string;
-  code: string;
-}
-
-// Interface for a combined search result item
-interface SearchResultItem {
-  type: 'product' | 'coupon';
-  id: number;
-  name: string; // Product name or coupon title
-  link: string; // URL to navigate to (e.g., /store/:id)
-  subText?: string; // e.g., "Coupon for [Product Name]"
-}
 
 // Helper function to get full logo URL (unified logic for all components)
+// (Note: This function is not directly used in Nav.tsx but kept for consistency if copied from other files)
 const getFullLogoUrl = (logoPath?: string | null) => {
   if (logoPath) {
-    // Check if it's already a full URL (e.g., from Cloudinary)
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
       return logoPath;
     }
-    // Otherwise, prepend backend URL for relative paths (e.g., /media/...)
-    // Ensure no double slashes if logoPath already starts with '/'
     if (logoPath.startsWith('/')) {
-        return `<span class="math-inline">\{BACKEND\_URL\}</span>{logoPath}`;
+        return `${BACKEND_URL}${logoPath}`;
     }
-    return `<span class="math-inline">\{BACKEND\_URL\}/</span>{logoPath}`; // Add a leading slash if missing
+    return `${BACKEND_URL}/${logoPath}`;
   }
-  return undefined; // No logo
+  return undefined;
 };
 
 
 const Nav: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [allCoupons, setAllCoupons] = useState<Coupon[]>([]); // Store all coupons for client-side search
+  const [products, setProducts] = useState<any[]>([]); // Simplified type as Product/Coupon interfaces are no longer directly used in Nav's logic
   const [dropdown, setDropdown] = useState(false); // For "Stores" dropdown
   const [mobileMenu, setMobileMenu] = useState(false); // For mobile hamburger menu
-  const [search, setSearch] = useState(""); // Current search input value
-  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]); // Results for search dropdown
-  const [showSearchResults, setShowSearchResults] = useState(false); // Visibility of search results dropdown
 
-  const searchInputRef = useRef<HTMLInputElement>(null); // Ref for desktop search input
-  const mobileSearchInputRef = useRef<HTMLInputElement>(null); // Ref for mobile search input
+  const navigate = useNavigate();
+  const location = useLocation(); // To check current path
 
-  // Debounce mechanism for live search
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Fetch all products and coupons on component mount
+  // Fetch all products for the "Stores" dropdown
   useEffect(() => {
-    const fetchAllData = async () => {
+    const fetchProducts = async () => {
       try {
-        // Removed `headers: { Authorization: Token ${API_TOKEN} }` because endpoints are now public
-        const [productsRes, couponsRes] = await Promise.all([
-          fetch(PRODUCT_API_URL),
-          fetch(COUPON_API_URL),
-        ]);
-
-        // Check if responses are OK before parsing JSON
+        const productsRes = await fetch(`${BACKEND_URL}/api/products/`);
         if (!productsRes.ok) {
           throw new Error(`HTTP error! status: ${productsRes.status} for products`);
         }
-        if (!couponsRes.ok) {
-          throw new Error(`HTTP error! status: ${couponsRes.status} for coupons`);
-        }
-
-        const productsData: Product[] = await productsRes.json();
-        const couponsData: Coupon[] = await couponsRes.json();
-
+        const productsData = await productsRes.json();
         setProducts(productsData);
-        setAllCoupons(couponsData);
       } catch (error) {
-        console.error("Error fetching initial data for Nav:", error);
-        // You might want to set an error state here to show a message to the user
+        console.error("Error fetching products for Nav:", error);
       }
     };
 
-    fetchAllData();
+    fetchProducts();
   }, []);
 
-  // Function to perform the search and update searchResults
-  const performSearch = (query: string) => {
-    if (query.trim() === "") {
-      setSearchResults([]);
-      setShowSearchResults(false);
-      return;
-    }
-
-    const lowerCaseQuery = query.toLowerCase();
-    const foundResults: SearchResultItem[] = [];
-
-    // Search products by name
-    products.forEach(product => {
-      if (product.name.toLowerCase().includes(lowerCaseQuery)) {
-        foundResults.push({
-          type: 'product',
-          id: product.id,
-          name: product.name,
-          link: `/store/${product.id}`,
-        });
-      }
-    });
-
-    // Search coupons by title or code
-    allCoupons.forEach(coupon => {
-      if (coupon.title.toLowerCase().includes(lowerCaseQuery) || coupon.code.toLowerCase().includes(lowerCaseQuery)) {
-        const associatedProduct = products.find(p => p.id === coupon.product);
-        foundResults.push({
-          type: 'coupon',
-          id: coupon.id,
-          name: coupon.title,
-          link: `/store/${coupon.product}`,
-          subText: associatedProduct ? `for ${associatedProduct.name}` : 'Unknown Store',
-        });
-      }
-    });
-
-    setSearchResults(foundResults);
-    setShowSearchResults(true);
-  };
-
-  // Handle search input change (with debounce for live search)
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearch(value);
-
-    // Clear previous debounce timeout
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    // Set a new debounce timeout
-    debounceTimeoutRef.current = setTimeout(() => {
-      performSearch(value);
-    }, 300); // 300ms debounce time
-  };
-
-  // Handle search form submission (e.g., pressing Enter or clicking search button)
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current); // Clear any pending debounced search
-    }
-    performSearch(search); // Perform search immediately on submit
-    // Optionally, navigate to a dedicated search results page if no specific result is clicked
-    // navigate(`/search?q=${encodeURIComponent(search)}`);
-  };
-
-  // Close search results when clicking outside
+  // Handle smooth scroll for "Today Deals"
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchInputRef.current &&
-        !searchInputRef.current.contains(event.target as Node) &&
-        mobileSearchInputRef.current &&
-        !mobileSearchInputRef.current.contains(event.target as Node) &&
-        !(event.target as HTMLElement).closest('.search-results-dropdown')
-      ) {
-        setShowSearchResults(false);
+    if (location.hash === '#top-deals') {
+      const element = document.getElementById('top-deals');
+      if (element) {
+        // Use setTimeout to ensure the element is rendered and the page is ready
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100); // Small delay
       }
-    };
+    }
+  }, [location]); // Re-run when location changes
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
+  const handleTodayDealsClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault(); // Prevent default link behavior
+    if (location.pathname === '/') {
+      // If already on homepage, just scroll
+      const element = document.getElementById('top-deals');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      // If not on homepage, navigate first, then scroll will be handled by useEffect
+      navigate('/#top-deals');
+    }
+    setMobileMenu(false); // Close mobile menu if open
+  };
 
   const visibleProducts = products.slice(0, 5); // Adjust the number of visible products as needed
   const hasMoreProducts = products.length > 5;
@@ -194,83 +83,11 @@ const Nav: React.FC = () => {
       <nav className="w-[90%] container mx-auto flex items-center justify-between py-3 px-4 relative">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <img src={LOGO_URL} alt="Discount Region" className="h-10 w-auto" /> {/* LOGO_URL is already absolute */}
+          <img src={LOGO_URL} alt="Discount Region" className="h-10 w-auto" />
         </Link>
 
-        {/* Desktop Search Bar */}
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex-1 mx-4 max-w-lg hidden md:flex relative" // Added relative for dropdown positioning
-        >
-          <input
-            ref={searchInputRef} // Attach ref
-            type="text"
-            className="w-full border border-gray-200 rounded-l-full px-4 py-2 outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200"
-            placeholder="Search products or coupons..."
-            value={search}
-            onChange={handleSearchInputChange}
-            onFocus={() => search.trim() !== "" && performSearch(search)} // Show results on focus if search is not empty
-          />
-          <button
-            type="submit"
-            className="bg-green-500 rounded-r-full px-4 flex items-center justify-center hover:bg-green-600 transition-colors duration-200"
-          >
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <circle
-                cx="11"
-                cy="11"
-                r="8"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
-              />
-              <line
-                x1="21"
-                y1="21"
-                x2="16.65"
-                y2="16.65"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-            </svg>
-          </button>
-          {/* Desktop Search Results Dropdown */}
-          {showSearchResults && searchResults.length > 0 && (
-            <div className="search-results-dropdown absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-2 z-40 max-h-80 overflow-y-auto">
-              <ul className="py-1">
-                {searchResults.map((result) => (
-                  <li key={`<span class="math-inline">\{result\.type\}\-</span>{result.id}`}>
-                    <Link
-                      to={result.link}
-                      onClick={() => {
-                        setShowSearchResults(false);
-                        setSearch(""); // Clear search input on click
-                      }}
-                      className="flex flex-col px-4 py-2 hover:bg-gray-100 transition-colors duration-150"
-                    >
-                      <span className="font-semibold text-gray-800">
-                        {result.name}
-                        {result.type === 'coupon' && <span className="ml-2 text-xs text-gray-500">({result.subText})</span>}
-                      </span>
-                      <span className="text-xs text-gray-500 capitalize">{result.type}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {showSearchResults && searchResults.length === 0 && search.trim() !== "" && (
-            <div className="search-results-dropdown absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-2 z-40 p-4 text-center text-gray-500">
-              No results found.
-            </div>
-          )}
-        </form>
+        {/* Removed Desktop Search Bar */}
+        {/* Removed Mobile Search Bar */}
 
         {/* Desktop Nav Links */}
         <ul className="hidden md:flex items-center gap-6 font-normal text-black">
@@ -280,15 +97,19 @@ const Nav: React.FC = () => {
             </Link>
           </li>
           <li>
-            <Link to="/today-deals" className=" hover:text-gray-700 cursor-pointer">
+            {/* Modified: Link to Top Deals section on homepage with smooth scroll */}
+            <a
+              href="/#top-deals" // Use href for semantic anchor link, handle with onClick
+              onClick={handleTodayDealsClick}
+              className="hover:text-gray-700 cursor-pointer"
+            >
               Today Deals
-            </Link>
+            </a>
           </li>
           <li
             className="relative"
             onMouseEnter={() => setDropdown(true)}
             onMouseLeave={() => setDropdown(false)}
-            // onClick handler for better mobile/tablet touch experience
             onClick={() => setDropdown(!dropdown)}
           >
             <button className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
@@ -311,7 +132,7 @@ const Nav: React.FC = () => {
             {dropdown && (
               <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-md shadow-lg z-20">
                 <ul className="flex flex-col py-2">
-                  {visibleProducts.map((product) => (
+                  {visibleProducts.map((product: any) => ( // Use any for simplicity here
                     <li key={product.id} className="w-full">
                       <Link
                         to={`/store/${product.id}`}
@@ -401,77 +222,7 @@ const Nav: React.FC = () => {
                 </svg>
               </button>
             </div>
-            {/* Mobile Search Bar inside menu */}
-            <form onSubmit={handleSearchSubmit} className="flex p-4 relative">
-              <input
-                ref={mobileSearchInputRef} // Attach ref
-                type="text"
-                className="w-full border border-gray-200 rounded-l-full px-4 py-2 outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200"
-                placeholder="Search products or coupons..."
-                value={search}
-                onChange={handleSearchInputChange}
-                onFocus={() => search.trim() !== "" && performSearch(search)} // Show results on focus if search is not empty
-              />
-              <button
-                type="submit"
-                className="bg-green-500 rounded-r-full px-4 flex items-center justify-center hover:bg-green-600 transition-colors duration-200"
-              >
-                <svg
-                  className="w-5 h-5 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    cx="11"
-                    cy="11"
-                    r="8"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <line
-                    x1="21"
-                    y1="21"
-                    x2="16.65"
-                    y2="16.65"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                </svg>
-              </button>
-              {/* Mobile Search Results Dropdown */}
-              {showSearchResults && searchResults.length > 0 && (
-                <div className="search-results-dropdown absolute top-full left-0 w-full bg-white border border-gray-200 rounded-b-md shadow-lg mt-2 z-40 max-h-60 overflow-y-auto">
-                  <ul className="py-1">
-                    {searchResults.map((result) => (
-                      <li key={`<span class="math-inline">\{result\.type\}\-</span>{result.id}`}>
-                        <Link
-                          to={result.link}
-                          onClick={() => {
-                            setShowSearchResults(false);
-                            setMobileMenu(false); // Close mobile menu
-                            setSearch(""); // Clear search input
-                          }}
-                          className="flex flex-col px-4 py-2 hover:bg-gray-100 transition-colors duration-150"
-                        >
-                          <span className="font-semibold text-gray-800">
-                            {result.name}
-                            {result.type === 'coupon' && <span className="ml-2 text-xs text-gray-500">({result.subText})</span>}
-                          </span>
-                          <span className="text-xs text-gray-500 capitalize">{result.type}</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {showSearchResults && searchResults.length === 0 && search.trim() !== "" && (
-                <div className="search-results-dropdown absolute top-full left-0 w-full bg-white border border-gray-200 rounded-b-md shadow-lg mt-2 z-40 p-4 text-center text-gray-500">
-                  No results found.
-                </div>
-              )}
-            </form>
+            {/* Removed Mobile Search Bar inside menu */}
 
             <ul className="flex flex-col gap-2 p-4 font-medium overflow-y-auto flex-grow">
               <li>
@@ -484,13 +235,14 @@ const Nav: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/today-deals"
-                  onClick={() => setMobileMenu(false)}
+                {/* Modified: Link to Top Deals section on homepage with smooth scroll */}
+                <a
+                  href="/#top-deals"
+                  onClick={handleTodayDealsClick}
                   className="block text-center text-lg py-3 cursor-pointer hover:bg-gray-100 rounded-md transition-colors duration-150"
                 >
                   Today Deals
-                </Link>
+                </a>
               </li>
               <li>
                 {/* Using details/summary for mobile dropdown */}
@@ -499,7 +251,7 @@ const Nav: React.FC = () => {
                     Stores
                   </summary>
                   <ul className="flex flex-col items-center py-2 bg-gray-50 rounded-md mt-1">
-                    {visibleProducts.map((product) => (
+                    {visibleProducts.map((product: any) => ( // Use any for simplicity
                       <li key={product.id} className="w-full">
                         <Link
                           to={`/store/${product.id}`}

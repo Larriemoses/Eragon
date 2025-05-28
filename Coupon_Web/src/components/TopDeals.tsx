@@ -96,12 +96,34 @@ const TopDeals: React.FC = () => {
     fetchTopDealsData();
   }, []);
 
-  // Filter and sort coupons for 'Top Deals' section
-  const topDealsCoupons = coupons
-    .filter(coupon => coupon.code) // Only show coupons with a code
-    .sort((a, b) => (b.used_count + b.used_today) - (a.used_count + a.used_today)) // Example: sort by total usage
-    .slice(0, 6); // Show top 6 deals (adjust as needed)
+  // --- MODIFIED LOGIC FOR topDealsCoupons: REMOVED .slice(0, 6) ---
+  const topDealsCoupons: ProductCoupon[] = React.useMemo(() => {
+    const productToBestCouponMap = new Map<number, ProductCoupon>();
 
+    // Group coupons by product ID and find the best one for each
+    coupons.forEach(coupon => {
+      // Only consider coupons with a code for "deals"
+      if (!coupon.code) {
+        return;
+      }
+
+      const currentBest = productToBestCouponMap.get(coupon.product.id);
+
+      // If no coupon yet for this product, or if this coupon is better
+      if (!currentBest || (coupon.used_count + coupon.used_today) > (currentBest.used_count + currentBest.used_today)) {
+        productToBestCouponMap.set(coupon.product.id, coupon);
+      }
+    });
+
+    // Convert map values to an array
+    let selectedCoupons = Array.from(productToBestCouponMap.values());
+
+    // Sort the selected coupons by overall usage (most popular first)
+    selectedCoupons.sort((a, b) => (b.used_count + b.used_today) - (a.used_count + a.used_today));
+
+    // REMOVED: .slice(0, 6) to show all unique-product coupons
+    return selectedCoupons;
+  }, [coupons]); // Recalculate only when 'coupons' data changes
 
   if (loading) {
     return <div className="text-center py-8">Loading top deals...</div>;
@@ -115,22 +137,21 @@ const TopDeals: React.FC = () => {
         </div>
       )}
 
-{/* <a href="" =></a> */}
       <h2 className="text-2xl font-bold text-center">Top Deals</h2>
-      {/* Changed to match ProductStore's coupon list container: w-full flex flex-col gap-6 */}
-      <div className="w-full flex flex-col justify-center gap-6">
+      {/* Container for the coupon cards - now a simple vertical flex column */}
+      {/* Set a max-width and center it for a cleaner stacked look */}
+      <div className="max-w-xl w-[90%] mx-auto flex flex-col gap-6">
         {topDealsCoupons.length === 0 && (
-          <div className="text-gray-500 text-center py-8 col-span-full">No top deals available.</div>
+          <div className="text-gray-500 text-center py-8">No top deals available from unique products.</div>
         )}
         {topDealsCoupons.map((coupon) => {
-          const product = coupon.product; // The product object is already embedded
+          const product = coupon.product;
           const logoSrc = getFullLogoUrl(product.logo ?? product.logo_url);
 
           return (
             <div
               key={coupon.id}
-              // Changed to match ProductStore's individual coupon card width: w-full or w-[90%] as it's within max-w-xl
-              className="bg-white rounded-xl shadow-xl p-4 w-[90%] md:w-[30%] justify-center self-center flex flex-col gap-2" // Removed specific width classes
+              className="bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2"
             >
               {/* Product Logo */}
               <div className="flex justify-start mb-2">
@@ -138,7 +159,7 @@ const TopDeals: React.FC = () => {
                   <img
                     src={logoSrc}
                     alt={product.name}
-                    className="w-16 h-16 object-contain rounded-lg" // Adjusted size to fit layout
+                    className="w-16 h-16 object-contain rounded-lg"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.src = `https://placehold.co/64x64/cccccc/ffffff?text=${product.name.charAt(0)}`;
@@ -146,7 +167,6 @@ const TopDeals: React.FC = () => {
                     }}
                   />
                 ) : (
-                  // Placeholder if no logo is available
                   <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xs">
                     {product.name.charAt(0)}
                   </div>
@@ -170,7 +190,7 @@ const TopDeals: React.FC = () => {
 
               {/* Coupon Code and Copy Button */}
               {coupon.code && (
-                <div className="flex flex-wrap gap-2 items-center mt-auto"> {/* mt-auto pushes to bottom */}
+                <div className="flex flex-wrap gap-2 items-center mt-auto">
                   <span className="bg-gray-200 px-4 py-2 rounded font-bold text-lg select-all">
                     {coupon.code}
                   </span>
@@ -179,7 +199,6 @@ const TopDeals: React.FC = () => {
                     onClick={() => {
                       navigator.clipboard.writeText(coupon.code);
                       showPopup("Code copied!");
-                      // Optionally, increment 'used_count' via API here (if backend endpoint is public)
                       fetch(`${BACKEND_URL}/api/products/productcoupon/${coupon.id}/use/`, { method: "POST" })
                         .then(() => { /* Maybe refresh data or update state if needed */ })
                         .catch(err => console.error("Error updating coupon usage:", err));
@@ -201,7 +220,6 @@ const TopDeals: React.FC = () => {
                   Shop Now
                 </a>
               ) : (
-                // Optional: Render a disabled button or nothing if no shop_now_url
                 <button
                   className="block mt-2 bg-gray-300 text-gray-600 text-center py-2 rounded font-bold cursor-not-allowed"
                   disabled

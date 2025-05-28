@@ -1,3 +1,4 @@
+// Home.tsx
 import PopularStores from '../components/PopularStores';
 import TopDeals from '../components/TopDeals';
 import About from '../components/About';
@@ -40,7 +41,10 @@ function Home() {
       </div>
 
       <PopularStores />
-      <TopDeals />
+      {/* ADD THE ID HERE */}
+      <div id="top-deals" className="w-full flex justify-center mt-8"> {/* You might already have a wrapper div for TopDeals, just add the ID to it */}
+        <TopDeals />
+      </div>
       <About />
     </div>
   );
