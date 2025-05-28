@@ -10,7 +10,7 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
-  country?: string; // Keep country field, as it might be used elsewhere, but not for this specific sort priority
+  country?: string;
 }
 
 const API_URL = "https://eragon-backend1.onrender.com/api/products/";
@@ -22,7 +22,11 @@ const getFullLogoUrl = (logoPath?: string | null) => {
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
       return logoPath;
     }
-    return `${BACKEND_BASE_URL}${logoPath}`;
+    // Ensure no double slashes if logoPath already starts with '/'
+    if (logoPath.startsWith('/')) {
+        return `${BACKEND_BASE_URL}${logoPath}`;
+    }
+    return `${BACKEND_BASE_URL}/${logoPath}`; // Add a leading slash if missing
   }
   return undefined;
 };
@@ -43,40 +47,66 @@ const Store: React.FC = () => {
       .then((data) => {
         const productData: Product[] = Array.isArray(data) ? data : data.results || [];
 
-        // --- START OF REVISED NAME-BASED SORTING LOGIC ---
+        // --- START OF REVISED SORTING LOGIC FOR HARDCODED PRIORITY ---
+        const specificPriorities = [
+          "Oraimo Nigeria",
+          "Oraimo Ghana",
+          "Oraimo Morocco",
+          "FundedNext",
+          "Maven Trading", // CORRECTED: Changed from "Maven" to "Maven Trading"
+        ];
+
         const sortedProducts = [...productData].sort((a, b) => {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
 
-          // Determine priority score for product 'a'
+          // Get the index in the specificPriorities array (case-insensitive)
+          const indexA = specificPriorities.findIndex(
+            (priorityName) => priorityName.toLowerCase() === nameA
+          );
+          const indexB = specificPriorities.findIndex(
+            (priorityName) => priorityName.toLowerCase() === nameB
+          );
+
+          // If both are in the specific priorities list, sort by their index
+          if (indexA !== -1 && indexB !== -1) {
+            return indexA - indexB;
+          }
+
+          // If only 'a' is in the specific priorities list, 'a' comes first
+          if (indexA !== -1) {
+            return -1;
+          }
+
+          // If only 'b' is in the specific priorities list, 'b' comes first
+          if (indexB !== -1) {
+            return 1;
+          }
+
+          // If neither is in the specific priorities list, then apply the Oraimo/alphabetical logic
           let scoreA: number;
-          if (nameA.includes("oraimo nigeria")) {
-            scoreA = 1; // Highest priority: "Oraimo Nigeria" specifically
-          } else if (nameA.includes("oraimo")) {
-            scoreA = 2; // Medium priority: Other "Oraimo" products
+          if (nameA.includes("oraimo")) {
+            scoreA = 1;
           } else {
-            scoreA = 3; // Lowest priority: Non-"Oraimo" products
+            scoreA = 2;
           }
 
-          // Determine priority score for product 'b'
           let scoreB: number;
-          if (nameB.includes("oraimo nigeria")) {
+          if (nameB.includes("oraimo")) {
             scoreB = 1;
-          } else if (nameB.includes("oraimo")) {
-            scoreB = 2;
           } else {
-            scoreB = 3;
+            scoreB = 2;
           }
 
-          // 1. Compare by score first
+          // 1. Compare by score first (Oraimo vs. Others)
           if (scoreA !== scoreB) {
-            return scoreA - scoreB; // Lower score means higher priority
+            return scoreA - scoreB;
           }
 
-          // 2. If scores are equal, sort alphabetically by name
+          // 2. If scores are equal (both Oraimo or both Others), sort alphabetically by name
           return nameA.localeCompare(nameB);
         });
-        // --- END OF REVISED NAME-BASED SORTING LOGIC ---
+        // --- END OF REVISED SORTING LOGIC ---
 
         setProducts(sortedProducts);
       })

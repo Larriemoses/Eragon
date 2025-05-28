@@ -20,11 +20,16 @@ const getFullLogoUrl = (logoPath?: string | null) => {
   return undefined;
 };
 
+// Define a type for the product data received from the API
+interface NavProduct {
+  id: number;
+  name: string;
+  country?: string;
+  // Add other properties if they are expected in the API response and used
+}
+
 const Nav: React.FC = () => {
-  // Update the type for products to include 'country'
-  const [products, setProducts] = useState<
-    { id: number; name: string; country?: string }[] // Keep country for consistency if API returns it
-  >([]);
+  const [products, setProducts] = useState<NavProduct[]>([]);
   const [dropdown, setDropdown] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
 
@@ -39,42 +44,72 @@ const Nav: React.FC = () => {
         if (!productsRes.ok) {
           throw new Error(`HTTP error! status: ${productsRes.status} for products`);
         }
-        const productsData = await productsRes.json();
+        const rawProductsData: NavProduct[] = await productsRes.json(); // Explicitly type raw data
 
-        // --- START OF REVISED NAME-BASED SORTING LOGIC ---
-        const sortedProducts = [...productsData].sort((a, b) => {
+        // Ensure the data is an array and handle potential .results if API structure varies
+        const fetchedProducts: NavProduct[] = Array.isArray(rawProductsData) ? rawProductsData : (rawProductsData as any).results || [];
+
+
+        // --- START OF REVISED SORTING LOGIC FOR HARDCODED PRIORITY (Copied from Store.tsx) ---
+        const specificPriorities = [
+          "Oraimo Nigeria",
+          "Oraimo Ghana",
+          "Oraimo Morocco",
+          "FundedNext",
+          "Maven Trading",
+        ];
+
+        const sortedProducts = [...fetchedProducts].sort((a, b) => { // Use fetchedProducts for sorting
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
 
-          // Determine priority score for product 'a'
+          // Get the index in the specificPriorities array (case-insensitive)
+          const indexA = specificPriorities.findIndex(
+            (priorityName) => priorityName.toLowerCase() === nameA
+          );
+          const indexB = specificPriorities.findIndex(
+            (priorityName) => priorityName.toLowerCase() === nameB
+          );
+
+          // If both are in the specific priorities list, sort by their index
+          if (indexA !== -1 && indexB !== -1) {
+            return indexA - indexB;
+          }
+
+          // If only 'a' is in the specific priorities list, 'a' comes first
+          if (indexA !== -1) {
+            return -1;
+          }
+
+          // If only 'b' is in the specific priorities list, 'b' comes first
+          if (indexB !== -1) {
+            return 1;
+          }
+
+          // If neither is in the specific priorities list, then apply the general Oraimo/alphabetical logic
           let scoreA: number;
-          if (nameA.includes("oraimo nigeria")) {
-            scoreA = 1; // Highest priority: "Oraimo Nigeria" specifically
-          } else if (nameA.includes("oraimo")) {
-            scoreA = 2; // Medium priority: Other "Oraimo" products
+          if (nameA.includes("oraimo")) {
+            scoreA = 1;
           } else {
-            scoreA = 3; // Lowest priority: Non-"Oraimo" products
+            scoreA = 2;
           }
 
-          // Determine priority score for product 'b'
           let scoreB: number;
-          if (nameB.includes("oraimo nigeria")) {
+          if (nameB.includes("oraimo")) {
             scoreB = 1;
-          } else if (nameB.includes("oraimo")) {
-            scoreB = 2;
           } else {
-            scoreB = 3;
+            scoreB = 2;
           }
 
-          // 1. Compare by score first
+          // 1. Compare by score first (General Oraimo vs. Others)
           if (scoreA !== scoreB) {
-            return scoreA - scoreB; // Lower score means higher priority
+            return scoreA - scoreB;
           }
 
           // 2. If scores are equal, sort alphabetically by name
           return nameA.localeCompare(nameB);
         });
-        // --- END OF REVISED NAME-BASED SORTING LOGIC ---
+        // --- END OF REVISED SORTING LOGIC ---
 
         setProducts(sortedProducts);
       } catch (error) {
@@ -173,13 +208,13 @@ const Nav: React.FC = () => {
                   ))}
                   {hasMoreProducts && (
                     <li className="w-full">
-                      <Link // FIXED: Added closing ">" to the Link tag
+                      <Link
                         to="/stores"
                         className="block px-4 py-2 text-green-500 font-medium hover:underline transition-colors duration-150 text-base"
                         onClick={() => setDropdown(false)}
                       >
                         See More Stores
-                      </Link> {/* FIXED: Added closing </Link> tag */}
+                      </Link>
                     </li>
                   )}
                 </ul>
@@ -295,7 +330,7 @@ const Nav: React.FC = () => {
                           onClick={() => setMobileMenu(false)}
                         >
                           See More Stores
-                        </Link> {/* FIXED: Added closing </Link> tag */}
+                        </Link>
                       </li>
                     )}
                   </ul>

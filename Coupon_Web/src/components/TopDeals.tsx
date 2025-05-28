@@ -96,20 +96,21 @@ const TopDeals: React.FC = () => {
     fetchTopDealsData();
   }, []);
 
-  // --- MODIFIED LOGIC FOR topDealsCoupons: REMOVED .slice(0, 6) ---
+  // --- MODIFIED LOGIC FOR topDealsCoupons: REMOVED !coupon.code check ---
   const topDealsCoupons: ProductCoupon[] = React.useMemo(() => {
     const productToBestCouponMap = new Map<number, ProductCoupon>();
 
     // Group coupons by product ID and find the best one for each
     coupons.forEach(coupon => {
-      // Only consider coupons with a code for "deals"
-      if (!coupon.code) {
-        return;
-      }
+      // MODIFIED: Removed the check for `!coupon.code`.
+      // Now, all coupons are considered, regardless of whether they have a code.
+      // The assumption is that even deals without a direct code (e.g., "Shop Now" links)
+      // are valid "top deals" for their respective products.
 
       const currentBest = productToBestCouponMap.get(coupon.product.id);
 
       // If no coupon yet for this product, or if this coupon is better
+      // "Better" is defined by higher combined used_count + used_today
       if (!currentBest || (coupon.used_count + coupon.used_today) > (currentBest.used_count + currentBest.used_today)) {
         productToBestCouponMap.set(coupon.product.id, coupon);
       }
@@ -121,7 +122,7 @@ const TopDeals: React.FC = () => {
     // Sort the selected coupons by overall usage (most popular first)
     selectedCoupons.sort((a, b) => (b.used_count + b.used_today) - (a.used_count + a.used_today));
 
-    // REMOVED: .slice(0, 6) to show all unique-product coupons
+    // This now returns one coupon per product, sorted by usage, without a hard limit.
     return selectedCoupons;
   }, [coupons]); // Recalculate only when 'coupons' data changes
 
@@ -189,7 +190,7 @@ const TopDeals: React.FC = () => {
               </div>
 
               {/* Coupon Code and Copy Button */}
-              {coupon.code && (
+              {coupon.code && ( // Only show if code exists
                 <div className="flex flex-wrap gap-2 items-center mt-auto">
                   <span className="bg-gray-200 px-4 py-2 rounded font-bold text-lg select-all">
                     {coupon.code}
@@ -210,7 +211,7 @@ const TopDeals: React.FC = () => {
               )}
 
               {/* Shop Now Button */}
-              {coupon.shop_now_url ? (
+              {coupon.shop_now_url ? ( // Only show if shop_now_url exists
                 <a
                   href={coupon.shop_now_url}
                   className="block mt-2 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded font-bold"
@@ -220,12 +221,15 @@ const TopDeals: React.FC = () => {
                   Shop Now
                 </a>
               ) : (
-                <button
-                  className="block mt-2 bg-gray-300 text-gray-600 text-center py-2 rounded font-bold cursor-not-allowed"
-                  disabled
-                >
-                  Shop Now (Link N/A)
-                </button>
+                // Only show disabled button if no shop_now_url AND no code
+                !coupon.code && (
+                    <button
+                        className="block mt-2 bg-gray-300 text-gray-600 text-center py-2 rounded font-bold cursor-not-allowed"
+                        disabled
+                    >
+                        Shop Now (Link N/A)
+                    </button>
+                )
               )}
             </div>
           );

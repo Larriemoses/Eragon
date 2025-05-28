@@ -5,4 +5,18 @@
 @tailwind components;
 @tailwind utilities;    
 
-
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); } /* Changed back to -50% for this setup */
+        }
+        .animate-marquee {
+          /*
+            The total width of the content inside `.animate-marquee` will be effectively
+            twice the width of the original `products` list.
+            When we animate from 0% to -50%, we are moving half of its *total* width,
+            which is exactly the width of one full set of `products`.
+            This allows the second set of products to slide into place seamlessly.
+          */
+          animation: marquee 8s linear infinite; /* Adjust duration as needed */
+        }
+     

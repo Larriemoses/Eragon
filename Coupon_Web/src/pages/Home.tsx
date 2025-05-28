@@ -26,8 +26,8 @@ function Home() {
 
           {/* Mobile View (taller, left-aligned, centered vertically) - MODIFIED */}
           <div
-            className="sm:hidden flex items-center justify-center h-[63vh] py-6 px-6 pr-18 relative" // Added 'relative' for z-index control if needed later
-            style={{ // Using inline style for background image, opacity, and blend mode
+            className="sm:hidden flex items-center justify-center h-[63vh] py-6 px-4 relative"
+            style={{
               backgroundImage: `url(${MOBILE_HERO_BG_URL})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
@@ -38,22 +38,27 @@ function Home() {
             <div
               className="absolute inset-0 bg-gradient-to-br from-green-700 via-blue-900 to-black"
               style={{
-                opacity: 0.90, // 78% opacity
-                mixBlendMode: 'multiply', // 'multiply' blend mode
+                opacity: 0.90,
+                mixBlendMode: 'multiply',
               }}
             ></div>
 
-            {/* Content (text) positioned on top of the overlay */}
-            <div className="w-full max-w-xs text-left relative z-10 p-4 pl-0"> {/* Added z-10 to ensure text is above overlay, adjusted padding */}
-              <h1 className="text-white text-4xl font-bold mb-4 leading-tight">
-                Top Coupon Codes,<br />
-                Discount Codes<br />
-                &amp; Deals
+            {/* Content (text) positioned on top of the overlay - MODIFIED */}
+            {/*
+              To achieve:
+              1. Block of text is centered horizontally on the screen.
+              2. Text *within* the block remains left-aligned.
+              We keep the outer flex `justify-center` on the mobile hero container
+              and use `mx-auto` on the text content div, and ensure it has a max-width.
+            */}
+            <div className="w-full max-w-xs text-left relative z-10 px-3 pr-7 mx-auto"> {/* Changed text-center back to text-left, added mx-auto */}
+              <h1 className="text-white text-4xl sm:text-3xl font-bold t">
+                Top <br/>Coupon Codes, <br/>Discount Codes <br/> &amp; Deals
               </h1>
-              <p className="text-white text-sm font-normal"> {/* Removed specific pr-12 as content looks good without it */}
+              <p className="text-white text-sm font-normal">
                 Your trusted source for the best promo codes at checkout.
               </p>
-              <p className="text-white text-sm font-normal mt-2"> {/* Removed specific pr-12 */}
+              <p className="text-white text-sm font-normal mt-2">
                 Discount Region brings you verified discounts and exclusive offers from top brands and prop firms.
               </p>
             </div>

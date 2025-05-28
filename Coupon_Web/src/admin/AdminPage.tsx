@@ -24,6 +24,7 @@ interface Product {
   social_facebook_url?: string | null;
   social_twitter_url?: string | null;
   social_instagram_url?: string | null;
+  main_affiliate_url?: string | null; // <--- ADDED: New field for Product interface
 }
 
 interface AdminPageProps {
@@ -38,7 +39,7 @@ interface ProductCoupon {
   discount: string;
   used_count: number;
   used_today: number;
-  shop_now_url?: string | null; // <--- ADDED: New field for ProductCoupon interface
+  shop_now_url?: string | null;
 }
 
 const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
@@ -48,7 +49,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const [title, setTitle] = useState("");
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState("");
-  const [shopNowUrl, setShopNowUrl] = useState(""); // <--- ADDED: State for new URL field
+  const [shopNowUrl, setShopNowUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [popup, setPopup] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -77,6 +78,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const [socialFacebookUrl, setSocialFacebookUrl] = useState("");
   const [socialTwitterUrl, setSocialTwitterUrl] = useState("");
   const [socialInstagramUrl, setSocialInstagramUrl] = useState("");
+  const [mainAffiliateUrl, setMainAffiliateUrl] = useState(""); // <--- ADDED: New state for main affiliate URL
 
   const showPopup = (msg: string) => {
     setPopup(msg);
@@ -105,12 +107,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setSocialFacebookUrl("");
     setSocialTwitterUrl("");
     setSocialInstagramUrl("");
+    setMainAffiliateUrl(""); // <--- ADDED: Clear mainAffiliateUrl
     setEditingProduct(null);
   };
 
   // Helper function for full logo URL (unified logic)
   const getFullLogoUrl = (logoPath?: string | null) => {
-    const BACKEND_URL = "https://eragon-backend1.onrender.com"; // Define here or import from constants
+    const BACKEND_URL = "https://eragon-backend1.onrender.com";
     if (logoPath) {
       if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
         return logoPath;
@@ -129,7 +132,8 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         const productsRes = await fetch("https://eragon-backend1.onrender.com/api/products/", {
           headers: { Authorization: `Token ${token}` },
         });
-        const fetchedProducts: Product[] = await productsRes.json();
+        // Ensure that fetchedProducts is an array of Product type
+        const fetchedProducts: Product[] = (await productsRes.json()) as Product[];
         setProducts(fetchedProducts);
 
         const couponsRes = await fetch("https://eragon-backend1.onrender.com/api/productcoupon/", {
@@ -161,6 +165,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             social_facebook_url: null,
             social_twitter_url: null,
             social_instagram_url: null,
+            main_affiliate_url: null, // <--- ADDED: Default for new field
           };
           return { ...coupon, product: productDetail };
         });
@@ -180,7 +185,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setLoading(true);
 
     if (!productId || !title || !discount) {
-      showPopup("All fields are required.");
+      showPopup("Product, Title, and Discount are required for coupons.");
       setLoading(false);
       return;
     }
@@ -196,7 +201,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         title,
         code,
         discount,
-        shop_now_url: shopNowUrl, // <--- ADDED: Include shop_now_url in POST body
+        shop_now_url: shopNowUrl,
       }),
     });
     if (res.ok) {
@@ -224,6 +229,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         social_facebook_url: null,
         social_twitter_url: null,
         social_instagram_url: null,
+        main_affiliate_url: null, // <--- ADDED: Default for new field
       };
       setCoupons([
         { ...newCoupon, product: productObj },
@@ -233,7 +239,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       setCode("");
       setDiscount("");
       setProductId("");
-      setShopNowUrl(""); // <--- ADDED: Clear shopNowUrl after adding
+      setShopNowUrl("");
       showPopup("Coupon added successfully!");
     } else {
       const errorData = await res.json();
@@ -280,6 +286,9 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     if (socialFacebookUrl) formData.append("social_facebook_url", socialFacebookUrl);
     if (socialTwitterUrl) formData.append("social_twitter_url", socialTwitterUrl);
     if (socialInstagramUrl) formData.append("social_instagram_url", socialInstagramUrl);
+    // <--- ADDED: Append main_affiliate_url to formData ---
+    if (mainAffiliateUrl) formData.append("main_affiliate_url", mainAffiliateUrl);
+    // <--- END ADDED ---
 
     const method = editingProduct ? "PUT" : "POST";
     const url = editingProduct ? `https://eragon-backend1.onrender.com/api/products/${editingProduct.id}/` : "https://eragon-backend1.onrender.com/api/products/";
@@ -339,6 +348,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setSocialFacebookUrl(productToEdit.social_facebook_url || '');
     setSocialTwitterUrl(productToEdit.social_twitter_url || '');
     setSocialInstagramUrl(productToEdit.social_instagram_url || '');
+    setMainAffiliateUrl(productToEdit.main_affiliate_url || ''); // <--- ADDED: Set mainAffiliateUrl when editing
   };
 
   const handleDeleteProduct = async (id: number) => {
@@ -377,7 +387,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setTitle(coupon.title);
     setCode(coupon.code);
     setDiscount(coupon.discount);
-    setShopNowUrl(coupon.shop_now_url || ''); // <--- ADDED: Set shopNowUrl when editing coupon
+    setShopNowUrl(coupon.shop_now_url || '');
   };
 
   const handleUpdateCoupon = async (e: React.FormEvent) => {
@@ -401,7 +411,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         title,
         code,
         discount,
-        shop_now_url: shopNowUrl, // <--- ADDED: Include shop_now_url in PUT body
+        shop_now_url: shopNowUrl,
       }),
     });
 
@@ -430,6 +440,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         social_facebook_url: null,
         social_twitter_url: null,
         social_instagram_url: null,
+        main_affiliate_url: null, // <--- ADDED: Default for new field
       };
 
       setCoupons(
@@ -442,7 +453,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       setCode("");
       setDiscount("");
       setProductId("");
-      setShopNowUrl(""); // <--- ADDED: Clear shopNowUrl after update
+      setShopNowUrl("");
       showPopup("Coupon updated successfully!");
     } else {
       const errorData = await res.json();
@@ -538,6 +549,17 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             onChange={(e) => setSubSubTitle(e.target.value)}
             className="w-full p-2 border rounded"
           />
+
+          {/* --- ADDED: Input for Main Affiliate URL --- */}
+          <h3 className="text-lg font-semibold mt-4 mb-2">Main Affiliate Link (for logo/socials)</h3>
+          <input
+            type="url"
+            placeholder="Main Affiliate URL (e.g., https://yourbrand.com/affiliate/)"
+            value={mainAffiliateUrl}
+            onChange={(e) => setMainAffiliateUrl(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+          {/* --- END ADDED --- */}
 
           <h3 className="text-lg font-semibold mt-4 mb-2">Product Footer Content</h3>
           <input
@@ -673,13 +695,14 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                         <th className="px-2 py-2 text-left">Name</th>
                         <th className="px-2 py-2 text-left">Logo</th>
                         <th className="px-2 py-2 text-left">Title</th>
+                        <th className="px-2 py-2 text-left">Main Link</th> {/* <--- ADDED: Table header for Main Link */}
                         <th className="px-2 py-2 text-left">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {products.length === 0 ? (
                         <tr>
-                            <td colSpan={5} className="text-center py-4">No products added yet.</td>
+                            <td colSpan={6} className="text-center py-4">No products added yet.</td> {/* <--- Updated colspan */}
                         </tr>
                     ) : (
                         products.map(p => (
@@ -698,6 +721,23 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                                     )}
                                 </td>
                                 <td className="px-2 py-2">{p.title}</td>
+                                {/* --- ADDED: Display Main Affiliate URL in table --- */}
+                                <td className="px-2 py-2">
+                                    {p.main_affiliate_url ? (
+                                        <a
+                                            href={p.main_affiliate_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-500 hover:underline text-sm break-all"
+                                            title={p.main_affiliate_url}
+                                        >
+                                            Link
+                                        </a>
+                                    ) : (
+                                        "N/A"
+                                    )}
+                                </td>
+                                {/* --- END ADDED --- */}
                                 <td className="px-2 py-2 flex gap-2">
                                     <button
                                         className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
@@ -753,7 +793,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
           {/* --- ADDED: Shop Now URL input field --- */}
           <label className="block mb-1">Shop Now URL:</label>
           <input
-            type="url" // Use type="url" for better validation and keyboard on mobile
+            type="url"
             className="w-full mb-4 p-2 border rounded"
             value={shopNowUrl}
             onChange={(e) => setShopNowUrl(e.target.value)}
@@ -860,7 +900,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                   <th className="px-2 py-2">Offer</th>
                   <th className="px-2 py-2">Code</th>
                   <th className="px-2 py-2">Discount</th>
-                  <th className="px-2 py-2">Link</th> {/* <--- ADDED: Table header for link */}
+                  <th className="px-2 py-2">Link</th>
                   <th className="px-2 py-2">Clicks</th>
                   <th className="px-2 py-2">Today</th>
                   <th className="px-2 py-2">Actions</th>
@@ -887,7 +927,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                     </td>
                     <td className="px-2 py-2">{c.code}</td>
                     <td className="px-2 py-2">{c.discount}</td>
-                    {/* --- ADDED: Display Shop Now URL as a link --- */}
                     <td className="px-2 py-2">
                       {c.shop_now_url ? (
                         <a
@@ -903,7 +942,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                         "N/A"
                       )}
                     </td>
-                    {/* --- END ADDED --- */}
                     <td className="px-2 py-2">{c.used_count}</td>
                     <td className="px-2 py-2">{c.used_today}</td>
                     <td className="px-2 py-2 flex gap-2">
@@ -924,7 +962,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                 ))}
                 {coupons.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="text-center py-4"> {/* <--- Updated colspan */}
+                    <td colSpan={8} className="text-center py-4">
                       No coupons found.
                     </td>
                   </tr>
@@ -942,7 +980,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                   <div className="text-sm mb-1"><span className="font-semibold">Product:</span> {c.product?.name}</div>
                   <div className="text-sm mb-1"><span className="font-semibold">Code:</span> {c.code}</div>
                   <div className="text-sm mb-1"><span className="font-semibold">Discount:</span> {c.discount}</div>
-                  {/* --- ADDED: Display Shop Now URL in mobile view --- */}
                   <div className="text-sm mb-1">
                     <span className="font-semibold">Link:</span>{" "}
                     {c.shop_now_url ? (
@@ -959,7 +996,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                       "N/A"
                     )}
                   </div>
-                  {/* --- END ADDED --- */}
                   <div className="flex flex-wrap gap-2 text-xs mt-2">
                     <span className="bg-gray-100 px-2 py-1 rounded">Clicks: {c.used_count}</span>
                     <span className="bg-gray-100 px-2 py-1 rounded">Today: {c.used_today}</span>

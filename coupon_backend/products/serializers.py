@@ -6,28 +6,34 @@ from .models import Product, ProductCoupon
 class ProductSerializer(serializers.ModelSerializer):
     footer_section_how_to_use_steps = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     footer_section_tips_list = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    # ADD THIS LINE: Add a SerializerMethodField to get a shop_now_url for the product
-    # This will expose a 'product_shop_now_url' field in the Product API response
+
+    # REVISED: product_shop_now_url should now prioritize the new main_affiliate_url
     product_shop_now_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = '__all__' # This will automatically include all fields + product_shop_now_url
+        # '__all__' will include main_affiliate_url automatically.
+        # If you were listing fields explicitly, you'd add 'main_affiliate_url' here.
+        fields = '__all__'
 
-    # DEFINE THE METHOD TO GET THE SHOP NOW URL
+    # REVISED: DEFINE THE METHOD TO GET THE SHOP NOW URL
+    # This method should now prioritize main_affiliate_url
     def get_product_shop_now_url(self, obj):
-        # Try to get the shop_now_url from the first coupon associated with this product
-        # You might want more complex logic here (e.g., newest coupon, highest discount, etc.)
+        # 1. Prioritize the new main_affiliate_url field
+        if obj.main_affiliate_url:
+            return obj.main_affiliate_url
+
+        # 2. If main_affiliate_url is not set, fallback to the shop_now_url of the first available coupon
         first_coupon = obj.coupons.filter(shop_now_url__isnull=False).first()
         if first_coupon:
             return first_coupon.shop_now_url
-        return None # Return None if no coupon or no shop_now_url found
+
+        return None # Return None if no suitable URL is found
 
 # Your existing ProductCouponSerializer
 class ProductCouponSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductCoupon
         fields = '__all__'
-    # Removed any custom validation for 'code' as it's no longer unique
-    # The default ModelSerializer behavior with blank=True, null=True in model
-    # will handle it correctly without raising 500 errors.
+    # No changes needed here for the 'discount' field type change,
+    # as ModelSerializer infers it correctly from the model.

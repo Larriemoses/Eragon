@@ -9,7 +9,16 @@ class Product(models.Model):
     subtitle = models.CharField(max_length=255, blank=True)
     sub_subtitle = models.CharField(max_length=255, blank=True)
 
-    # --- New fields for Product Footer content ---
+    # --- New field for Product's main affiliate link ---
+    main_affiliate_url = models.URLField(
+        blank=True,
+        null=True,
+        verbose_name="Main Product Affiliate Link",
+        help_text="Primary affiliate link for the product (e.g., used on logo, social buttons)"
+    )
+    # --- End of new field ---
+
+    # --- Existing fields for Product Footer content ---
     footer_section_effortless_savings_title = models.CharField(max_length=255, blank=True, null=True)
     footer_section_effortless_savings_description = models.TextField(blank=True, null=True)
 
@@ -18,7 +27,7 @@ class Product(models.Model):
     footer_section_how_to_use_note = models.TextField(blank=True, null=True)
 
     footer_section_tips_title = models.CharField(max_length=255, blank=True, null=True)
-    footer_section_tips_list = models.TextField(blank=True, null=True)
+    footer_section_tips_list = models.TextField(blank=True, null=True) # This remains text for tips
 
     footer_section_contact_title = models.CharField(max_length=255, blank=True, null=True)
     footer_section_contact_description = models.TextField(blank=True, null=True)
@@ -26,11 +35,11 @@ class Product(models.Model):
     footer_contact_email = models.EmailField(blank=True, null=True)
     footer_contact_whatsapp = models.CharField(max_length=100, blank=True, null=True)
 
-    # --- NEW: Social Media Links ---
+    # --- Social Media Links (these will still be available for specific social links if needed elsewhere) ---
     social_facebook_url = models.URLField(blank=True, null=True)
     social_twitter_url = models.URLField(blank=True, null=True)
     social_instagram_url = models.URLField(blank=True, null=True)
-    # --- End of new fields ---
+    # --- End of Product model ---
 
     def __str__(self):
         return self.name
@@ -38,9 +47,8 @@ class Product(models.Model):
 class ProductCoupon(models.Model):
     product = models.ForeignKey(Product, related_name='coupons', on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    # --- IMPORTANT CHANGE HERE: REMOVED unique=True ---
-    code = models.CharField(max_length=50, blank=True, null=True) # Now allows multiple identical or null codes
-    discount = models.DecimalField(max_digits=5, decimal_places=2)
+    code = models.CharField(max_length=50, blank=True, null=True)
+    discount = models.CharField(max_length=50)
     used_count = models.PositiveIntegerField(default=0)
     used_today = models.PositiveIntegerField(default=0)
     shop_now_url = models.URLField(blank=True, null=True, verbose_name="Shop Now Link")

@@ -10,13 +10,16 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
+  // ... other existing fields
+  main_affiliate_url?: string | null; // <--- ADD THIS FIELD
+  // ... existing footer and social media fields
   footer_section_effortless_savings_title?: string;
   footer_section_effortless_savings_description?: string;
   footer_section_how_to_use_title?: string;
-  footer_section_how_to_use_steps?: string; // Now a plain string
+  footer_section_how_to_use_steps?: string;
   footer_section_how_to_use_note?: string;
   footer_section_tips_title?: string;
-  footer_section_tips_list?: string; // Now a plain string
+  footer_section_tips_list?: string;
   footer_section_contact_title?: string;
   footer_section_contact_description?: string;
   footer_contact_phone?: string;
@@ -35,7 +38,7 @@ interface Coupon {
   discount: string;
   used_count: number;
   used_today: number;
-  shop_now_url?: string | null; // <--- ADDED: Include shop_now_url in Coupon interface
+  shop_now_url?: string | null;
 }
 
 const BACKEND_URL = "https://eragon-backend1.onrender.com";
@@ -45,18 +48,15 @@ const COUPON_API = `${BACKEND_URL}/api/productcoupon/`;
 // Helper function to get full logo URL (unified logic)
 const getFullLogoUrl = (logoPath?: string | null) => {
   if (logoPath) {
-    // Check if it's already a full URL (e.g., from Cloudinary or external source)
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
       return logoPath;
     }
-    // Otherwise, prepend backend URL for relative paths (e.g., /media/...)
-    // Ensure no double slashes if logoPath already starts with '/'
     if (logoPath.startsWith('/')) {
-        return `${BACKEND_URL}${logoPath}`;
+        return `<span class="math-inline">\{BACKEND\_URL\}</span>{logoPath}`;
     }
-    return `${BACKEND_URL}/${logoPath}`; // Add a leading slash if missing
+    return `<span class="math-inline">\{BACKEND\_URL\}/</span>{logoPath}`;
   }
-  return undefined; // No logo path provided
+  return undefined;
 };
 
 
@@ -69,7 +69,7 @@ const ProductStore: React.FC = () => {
 
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);
-    await fetch(`${COUPON_API}${coupon.id}/use/`, {
+    await fetch(`<span class="math-inline">\{COUPON\_API\}</span>{coupon.id}/use/`, {
       method: "POST",
     });
     fetch(COUPON_API)
@@ -88,7 +88,7 @@ const ProductStore: React.FC = () => {
     if (!id) return;
     setLoading(true);
 
-    const fetchProduct = fetch(`${PRODUCT_API}${id}/`)
+    const fetchProduct = fetch(`<span class="math-inline">\{PRODUCT\_API\}</span>{id}/`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -135,6 +135,11 @@ const ProductStore: React.FC = () => {
     );
   }
 
+  // --- Use the new main_affiliate_url field ---
+  const mainProductLinkUrl = product.main_affiliate_url && product.main_affiliate_url.trim() !== ''
+    ? product.main_affiliate_url.trim()
+    : '#'; // Fallback to #
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-white py-8">
       <div className="max-w-xl w-[90%] flex flex-col items-center">
@@ -154,13 +159,20 @@ const ProductStore: React.FC = () => {
             {product.sub_subtitle}
           </div>
         )}
+        {/* Product Logo with Link */}
         <div className="flex justify-center mb-6">
-          {product.logo || product.logo_url ? (
-            <img
-              src={getFullLogoUrl(product.logo ?? product.logo_url)} // Use helper for logo URL
-              alt={product.name}
-              className="w-30 h-30 object-contain rounded bg-white"
-            />
+          {(product.logo || product.logo_url) ? (
+            <a
+              href={mainProductLinkUrl} // Now using main_affiliate_url
+              target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
+              rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
+            >
+              <img
+                src={getFullLogoUrl(product.logo ?? product.logo_url)}
+                alt={product.name}
+                className="w-30 h-30 object-contain rounded bg-white"
+              />
+            </a>
           ) : null}
         </div>
         {/* Coupon list container and individual coupon card widths */}
@@ -171,14 +183,13 @@ const ProductStore: React.FC = () => {
             coupons.map((coupon) => (
               <div
                 key={coupon.id}
-                // Reduced width for desktop, maintaining w-[90%] for mobile
-                className="w-[90%] sm:w-[80%] md:w-[100%]  max-w-xs rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden"
+                className="w-[90%] sm:w-[80%] md:w-[100%] max-w-xs rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden"
               >
                 {/* Product Logo */}
                 <div className="flex justify-start mb-2">
                   {product.logo || product.logo_url ? (
                     <img
-                      src={getFullLogoUrl(product.logo ?? product.logo_url)} // Use helper for logo URL
+                      src={getFullLogoUrl(product.logo ?? product.logo_url)}
                       alt={product.name}
                       className="w-18 h-18 object-contain rounded bg-white"
                     />
@@ -207,7 +218,7 @@ const ProductStore: React.FC = () => {
                     </button>
                   </div>
                 )}
-                {/* --- UPDATED: Shop Now button uses coupon.shop_now_url --- */}
+                {/* Shop Now button uses coupon.shop_now_url */}
                 {coupon.shop_now_url && (
                   <a
                     href={coupon.shop_now_url}
@@ -218,7 +229,6 @@ const ProductStore: React.FC = () => {
                     Shop Now
                   </a>
                 )}
-                {/* --- END UPDATED --- */}
               </div>
             ))
           )}
@@ -228,7 +238,7 @@ const ProductStore: React.FC = () => {
       {/* --- Product Footer Content (embedded here) --- */}
       {/* Footer Section: Effortless Savings */}
       {(product.footer_section_effortless_savings_title || product.footer_section_effortless_savings_description) && (
-        <div className="max-w-xl w-[90%] mt-8  p-6 rounded-lg shadow">
+        <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
           <h2
             className="text-2xl font-bold text-gray-800 mb-2 text-center"
             dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_title || "" }}
@@ -242,7 +252,7 @@ const ProductStore: React.FC = () => {
 
       {/* Footer Section: How to Use (updated to handle plain text or array) */}
       {(product.footer_section_how_to_use_title || product.footer_section_how_to_use_steps || product.footer_section_how_to_use_note) && (
-        <div className="max-w-xl w-[90%] mt-8  p-6 rounded-lg shadow">
+        <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
           <h2
             className="text-2xl font-bold text-gray-800 mb-2 text-center"
             dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
@@ -272,7 +282,7 @@ const ProductStore: React.FC = () => {
 
       {/* Footer Section: Tips (updated to handle plain text or array) */}
       {(product.footer_section_tips_title || product.footer_section_tips_list) && (
-        <div className="max-w-xl w-[90%] mt-8  p-6 rounded-lg shadow">
+        <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
           <h2
             className="text-2xl font-bold text-gray-800 mb-2 text-center"
             dangerouslySetInnerHTML={{ __html: product.footer_section_tips_title || "" }}
@@ -296,14 +306,14 @@ const ProductStore: React.FC = () => {
 
       {/* Footer Section: Contact - Styled to match the image */}
       {(product.footer_section_contact_title || product.footer_section_contact_description || product.footer_contact_phone || product.footer_contact_email || product.footer_contact_whatsapp) && (
-        <div className="max-w-xl w-[90%] mt-8  p-6 rounded-lg shadow">
+        <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
           <h2
-            className="text-2xl font-bold text-gray-800 mb-4 text-center" // Increased mb for title
+            className="text-2xl font-bold text-gray-800 mb-4 text-center"
             dangerouslySetInnerHTML={{ __html: product.footer_section_contact_title || "" }}
           />
           {product.footer_section_contact_description && (
             <p
-              className="text-gray-600 mb-6 text-center" // Added text-center for description
+              className="text-gray-600 mb-6 text-center"
               dangerouslySetInnerHTML={{ __html: product.footer_section_contact_description }}
             />
           )}
@@ -314,40 +324,33 @@ const ProductStore: React.FC = () => {
             {product.footer_contact_phone && (
               <div className="flex flex-col items-center text-center">
                 <p className="font-bold text-lg mb-2">📞 Phone Support</p>
-                {/* Assuming footer_contact_phone might contain multiple numbers separated by newline or similar */}
                 {product.footer_contact_phone.split('\n').map((num, index) => (
                   <a key={index} href={`tel:${num.replace(/\D/g, '')}`} className="text-blue-600 hover:underline mb-1 last:mb-0">
                     {num.trim()}
                   </a>
                 ))}
-                {/* Placeholder for "First Choice" if needed, assuming it's part of the number string or a separate field */}
-                {/* <span className="text-sm text-gray-500">(First Choice)</span> */}
               </div>
             )}
 
             {/* Email Support */}
             {product.footer_contact_email && (
-              <div className="flex flex-col items-center text-center md:col-span-1"> {/* md:col-span-1 ensures it sits nicely if only 1 of 3 present */}
+              <div className="flex flex-col items-center text-center md:col-span-1">
                 <p className="font-bold text-lg mb-2">✉️ Email Support</p>
-                {/* Assuming footer_contact_email might contain multiple emails */}
                 {product.footer_contact_email.split('\n').map((email, index) => (
-                    <p key={index} className="mb-1 last:mb-0"> {/* Use p for email addresses */}
+                    <p key={index} className="mb-1 last:mb-0">
                       <a href={`mailto:${email.trim()}`} className="text-blue-600 hover:underline">
                         {email.trim()}
                       </a>
                     </p>
                 ))}
-                {/* Placeholder for "First Choice for Logistics Issue" if needed */}
-                {/* <p className="text-sm text-gray-500">(First Choice for Logistics Issue)</p> */}
               </div>
             )}
 
             {/* WhatsApp Support */}
             {product.footer_contact_whatsapp && (
-              <div className="flex flex-col items-center text-center md:col-start-2 md:row-start-1"> {/* Position WhatsApp to the right of Phone on desktop */}
+              <div className="flex flex-col items-center text-center md:col-start-2 md:row-start-1">
                 <p className="font-bold text-lg mb-2">💬 Whatsapp Support</p>
                 <p className="text-gray-800 mb-1">Chat with a rep:</p>
-                {/* Assuming footer_contact_whatsapp might contain multiple numbers */}
                 {product.footer_contact_whatsapp.split('\n').map((num, index) => (
                   <a
                     key={index}
@@ -371,9 +374,9 @@ const ProductStore: React.FC = () => {
         <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-2 flex-wrap md:flex-nowrap">
           {product.social_facebook_url && (
             <a
-              href={product.social_facebook_url}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={mainProductLinkUrl} // Now using mainProductLinkUrl
+              target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
+              rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
             >
               Facebook
@@ -381,9 +384,9 @@ const ProductStore: React.FC = () => {
           )}
           {product.social_twitter_url && (
             <a
-              href={product.social_twitter_url}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={mainProductLinkUrl} // Now using mainProductLinkUrl
+              target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
+              rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
             >
               Twitter
@@ -391,9 +394,9 @@ const ProductStore: React.FC = () => {
           )}
           {product.social_instagram_url && (
             <a
-              href={product.social_instagram_url}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={mainProductLinkUrl} // Now using mainProductLinkUrl
+              target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
+              rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
             >
               Instagram
