@@ -28,6 +28,7 @@ interface ProductCoupon {
 }
 
 // Helper function to get full logo URL (unified logic)
+// / Helper function to get full logo URL (unified logic)
 const getFullLogoUrl = (logoPath?: string | null) => {
   if (logoPath) {
     // Check if it's already a full URL (e.g., from Cloudinary or external source)
@@ -108,7 +109,7 @@ const TopDeals: React.FC = () => {
   }
 
   return (
-    <div className="p-4 w-[full] mb:[80%] mx-auto">
+    <div className="p-4 w-[50%] mx-auto">
       {popup && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded shadow-lg z-50 transition-all">
           {popup}
@@ -116,7 +117,8 @@ const TopDeals: React.FC = () => {
       )}
 
       <h2 className="text-2xl font-bold text-center mb-6">Top Deals</h2>
-      <div className="w-full flex justify-center md:flex "> {/* Changed to grid for layout */}
+      {/* Changed to grid for layout. Adjusted width for mobile to w-4/5 (80%) */}
+      <div className="w-full flex flex-col items-center justify-center gap-4 md:flex-row md:flex-wrap">
         {topDealsCoupons.length === 0 && (
           <div className="text-gray-500 text-center py-8 col-span-full">No top deals available.</div>
         )}
@@ -127,7 +129,8 @@ const TopDeals: React.FC = () => {
           return (
             <div
               key={coupon.id}
-              className="w-[70%] bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden" // Added relative for position
+              // Adjust width for mobile to w-4/5 (80%), and maintain existing desktop width
+              className="w-4/5 sm:w-3/5 md:w-1/3 lg:w-1/4 xl:w-1/5 max-w-sm bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden" // Added relative for position
             >
               {/* Product Logo */}
               <div className="flex justify-start mb-2">
