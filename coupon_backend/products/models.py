@@ -38,13 +38,12 @@ class Product(models.Model):
 class ProductCoupon(models.Model):
     product = models.ForeignKey(Product, related_name='coupons', on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    code = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    # --- IMPORTANT CHANGE HERE: REMOVED unique=True ---
+    code = models.CharField(max_length=50, blank=True, null=True) # Now allows multiple identical or null codes
     discount = models.DecimalField(max_digits=5, decimal_places=2)
     used_count = models.PositiveIntegerField(default=0)
     used_today = models.PositiveIntegerField(default=0)
-    # --- ADD THIS NEW FIELD ---
     shop_now_url = models.URLField(blank=True, null=True, verbose_name="Shop Now Link")
-
 
     def __str__(self):
         return f"{self.title} ({self.product.name})"

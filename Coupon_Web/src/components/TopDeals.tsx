@@ -108,14 +108,15 @@ const TopDeals: React.FC = () => {
   }
 
   return (
-    <div className="w-full flex flex-col gap-6 mb-3">
+    <div className="w-full flex flex-col gap-4 mb-3">
       {popup && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded shadow-lg z-50 transition-all">
           {popup}
         </div>
       )}
 
-      <h2 className="text-2xl font-bold text-center mb-6">Top Deals</h2>
+{/* <a href="" =></a> */}
+      <h2 className="text-2xl font-bold text-center">Top Deals</h2>
       {/* Changed to match ProductStore's coupon list container: w-full flex flex-col gap-6 */}
       <div className="w-full flex flex-col justify-center gap-6">
         {topDealsCoupons.length === 0 && (

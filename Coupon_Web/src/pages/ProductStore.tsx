@@ -172,7 +172,7 @@ const ProductStore: React.FC = () => {
               <div
                 key={coupon.id}
                 // Reduced width for desktop, maintaining w-[90%] for mobile
-                className="w-[90%] sm:w-[80%] md:w-[45%] lg:w-[30%] xl:w-[23%] max-w-xs rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden"
+                className="w-[90%] sm:w-[80%] md:w-[100%]  max-w-xs rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden"
               >
                 {/* Product Logo */}
                 <div className="flex justify-start mb-2">

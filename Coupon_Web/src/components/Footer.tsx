@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const LOGO_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png";
 
 const Footer: React.FC = () => (
-  <footer className="bg-[#232323] text-white pt-10 pb-4 mt-10">
+  <footer className="bg-[#232323] text-white pt-10 pb-4 mt-4">
     <div className="max-w-3xl mx-auto px-4">
       {/* Mobile layout - centered two columns without logo */}
       <div className="md:hidden flex flex-col items-center">

@@ -28,3 +28,6 @@ class ProductCouponSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductCoupon
         fields = '__all__'
+    # Removed any custom validation for 'code' as it's no longer unique
+    # The default ModelSerializer behavior with blank=True, null=True in model
+    # will handle it correctly without raising 500 errors.

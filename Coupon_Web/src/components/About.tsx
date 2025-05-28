@@ -23,23 +23,23 @@ const About: React.FC = () => (
         <p className="text-base md:text-lg text-gray-800 mb-4">
           Your go-to source for the best promo codes and verified discounts from top brands around the world. Whether you're shopping for gadgets, trading tools, or everyday essentials, we've got deals to help you save more every time you shop.
         </p>
-        <div className="mb-2 font-semibold">How It Works</div>
-        <ul className="list-disc pl-5 text-gray-700 mb-2">
+        <div className="mb-2 font-semibold text-gray-800">How It Works</div>
+        <ul className="list-disc pl-5 mb-2">
           <li>
-            <span className="font-medium">Browse Top Brands</span>
-            <span className="block ml-2 text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Browse Top Brands</span>
+            <span className="block ml-2 text-gray-800">
               From tech stores like Oraimo to trading prop firms, explore deals that match your needs.
             </span>
           </li>
           <li>
-            <span className="font-medium">Get a Verified Code or Link</span>
-            <span className="block ml-2 text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Get a Verified Code or Link</span>
+            <span className="block ml-2  text-gray-800">
               Click to copy a working discount code or use our link to the store.
             </span>
           </li>
           <li>
-            <span className="font-medium">Shop or Register Directly</span>
-            <span className="block ml-2 text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Shop or Register Directly</span>
+            <span className="block ml-2 text-gray-800">
               Use the code at checkout or sign up through the link and enjoy instant savings.
             </span>
           </li>
