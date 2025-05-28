@@ -163,7 +163,7 @@ const ProductStore: React.FC = () => {
             />
           ) : null}
         </div>
-        {/* Adjusted coupon list container for responsiveness */}
+        {/* Coupon list container and individual coupon card widths */}
         <div className="w-full flex flex-col items-center gap-6 md:flex-row md:flex-wrap md:justify-center">
           {coupons.length === 0 ? (
             <div className="text-center text-gray-500">No coupons available for this store.</div>
@@ -171,7 +171,7 @@ const ProductStore: React.FC = () => {
             coupons.map((coupon) => (
               <div
                 key={coupon.id}
-                // Reduced width for desktop, maintaining w-[90%] for mobile
+                // *** ADJUSTED COUPON CARD WIDTHS HERE ***
                 className="w-[90%] sm:w-[80%] md:w-[45%] lg:w-[30%] xl:w-[23%] max-w-xs bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden"
               >
                 {/* Product Logo */}
@@ -307,10 +307,10 @@ const ProductStore: React.FC = () => {
               dangerouslySetInnerHTML={{ __html: product.footer_section_contact_description }}
             />
           )}
-          {/* Adjusted contact section for grid layout on mobile */}
-          <div className="grid grid-cols-1 gap-4 text-gray-700 md:grid-cols-2">
+          {/* *** ADJUSTED CONTACT SECTION FOR MOBILE GRID LAYOUT WITH CENTERED TEXT *** */}
+          <div className="grid grid-cols-1 gap-y-4 md:grid-cols-2 md:gap-x-4 md:gap-y-0 text-gray-700">
             {product.footer_contact_phone && (
-              <div className="flex flex-col mb-2"> {/* Changed from p to div, added flex-col */}
+              <div className="flex flex-col items-center text-center"> {/* Added items-center and text-center */}
                 <span className="font-semibold">Phone:</span>
                 <a href={`tel:${product.footer_contact_phone}`} className="text-blue-600 hover:underline">
                   {product.footer_contact_phone}
@@ -318,7 +318,7 @@ const ProductStore: React.FC = () => {
               </div>
             )}
             {product.footer_contact_email && (
-              <div className="flex flex-col mb-2"> {/* Changed from p to div, added flex-col */}
+              <div className="flex flex-col items-center text-center"> {/* Added items-center and text-center */}
                 <span className="font-semibold">Email:</span>
                 <a href={`mailto:${product.footer_contact_email}`} className="text-blue-600 hover:underline">
                   {product.footer_contact_email}
@@ -326,7 +326,7 @@ const ProductStore: React.FC = () => {
               </div>
             )}
             {product.footer_contact_whatsapp && (
-              <div className="flex flex-col"> {/* Changed from p to div, added flex-col */}
+              <div className="flex flex-col items-center text-center"> {/* Added items-center and text-center */}
                 <span className="font-semibold">WhatsApp:</span>
                 <a
                   href={`https://wa.me/${product.footer_contact_whatsapp?.replace(/\D/g, '')}`}
@@ -339,6 +339,7 @@ const ProductStore: React.FC = () => {
               </div>
             )}
           </div>
+          {/* *** END ADJUSTED CONTACT SECTION *** */}
         </div>
       )}
       {/* --- End of Product Footer Content --- */}
