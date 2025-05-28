@@ -9,30 +9,34 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
+  // Add the new field coming from the backend ProductSerializer
+  product_shop_now_url?: string | null; // <--- ADD THIS LINE
 }
 
-// Removed API_TOKEN constant
 const API_URL = "https://eragon-backend1.onrender.com/api/products/";
 const BACKEND_BASE_URL = "https://eragon-backend1.onrender.com";
+
+// Helper function to get full logo URL (unified logic)
+const getFullLogoUrl = (logoPath?: string | null) => {
+  if (logoPath) {
+    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+      return logoPath;
+    }
+    // Ensure no double slashes if logoPath already starts with '/'
+    if (logoPath.startsWith('/')) {
+        return `${BACKEND_BASE_URL}${logoPath}`;
+    }
+    return `${BACKEND_BASE_URL}/${logoPath}`;
+  }
+  return undefined;
+};
 
 const Store: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Helper function to get full logo URL (unified logic)
-  const getFullLogoUrl = (logoPath?: string | null) => {
-    if (logoPath) {
-      if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
-        return logoPath;
-      }
-      return `${BACKEND_BASE_URL}${logoPath}`;
-    }
-    return undefined;
-  };
-
   useEffect(() => {
-    // Removed Authorization header for public GET request
     fetch(API_URL)
       .then((res) => {
         if (!res.ok) {
@@ -69,7 +73,7 @@ const Store: React.FC = () => {
                   <div className="w-20 h-20 flex items-center justify-center bg-white rounded-lg mb-3 ">
                     {logoSrc ? (
                       <img
-                        src={getFullLogoUrl(logoSrc)} // Use helper for logo URL
+                        src={getFullLogoUrl(logoSrc)}
                         alt={product.name}
                         className="max-w-[60px] max-h-[60px] object-contain"
                         onError={(e) => {
@@ -82,12 +86,25 @@ const Store: React.FC = () => {
                     )}
                   </div>
                   <div className="font-semibold text-center mb-2">{product.name}</div>
-                  <button
-                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold transition"
-                    onClick={() => navigate(`/store/${product.id}`)}
-                  >
-                    Open Store
-                  </button>
+                  {/* Conditionally render button as <a> if product_shop_now_url exists, else as <button> */}
+                  {product.product_shop_now_url ? (
+                    <a
+                      href={product.product_shop_now_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold transition text-center w-auto"
+                      style={{display: 'inline-block'}} // Ensure it behaves like a button
+                    >
+                      Shop Now
+                    </a>
+                  ) : (
+                    <button
+                      className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold transition"
+                      onClick={() => navigate(`/store/${product.id}`)}
+                    >
+                      Open Store
+                    </button>
+                  )}
                 </div>
               );
             })}
