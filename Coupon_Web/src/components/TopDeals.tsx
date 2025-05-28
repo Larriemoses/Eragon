@@ -127,7 +127,7 @@ const TopDeals: React.FC = () => {
           return (
             <div
               key={coupon.id}
-              className="bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden" // Added relative for position
+              className="w-[70%] bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden" // Added relative for position
             >
               {/* Product Logo */}
               <div className="flex justify-start mb-2">
