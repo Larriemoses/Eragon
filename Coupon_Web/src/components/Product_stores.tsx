@@ -228,7 +228,7 @@ const ProductStore: React.FC = () => {
       {(product.footer_section_effortless_savings_title || product.footer_section_effortless_savings_description) && (
         <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
           <h2
-            className="text-2xl font-bold text-gray-800 mb-2"
+            className="text-2xl font-bold text-gray-800 mb-2 text-center" // Added text-center here
             dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_title || "" }}
           />
           <p
@@ -242,7 +242,7 @@ const ProductStore: React.FC = () => {
       {(product.footer_section_how_to_use_title || product.footer_section_how_to_use_steps || product.footer_section_how_to_use_note) && (
         <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
           <h2
-            className="text-2xl font-bold text-gray-800 mb-2"
+            className="text-2xl font-bold text-gray-800 mb-2 text-center" // Added text-center here
             dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
           />
           {product.footer_section_how_to_use_steps && (
@@ -272,7 +272,7 @@ const ProductStore: React.FC = () => {
       {(product.footer_section_tips_title || product.footer_section_tips_list) && (
         <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
           <h2
-            className="text-2xl font-bold text-gray-800 mb-2"
+            className="text-2xl font-bold text-gray-800 mb-2 text-center" // Added text-center here
             dangerouslySetInnerHTML={{ __html: product.footer_section_tips_title || "" }}
           />
           {product.footer_section_tips_list && (
@@ -296,7 +296,7 @@ const ProductStore: React.FC = () => {
       {(product.footer_section_contact_title || product.footer_section_contact_description || product.footer_contact_phone || product.footer_contact_email || product.footer_contact_whatsapp) && (
         <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
           <h2
-            className="text-2xl font-bold text-gray-800 mb-2"
+            className="text-2xl font-bold text-gray-800 mb-2 text-center" // Added text-center here
             dangerouslySetInnerHTML={{ __html: product.footer_section_contact_title || "" }}
           />
           {product.footer_section_contact_description && (
