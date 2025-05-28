@@ -18,13 +18,32 @@ interface ProductCoupon {
   product: Product; // Note: This product is an object, not just an ID
   title: string;
   code: string;
-  discount: string;
-  expiry_date: string;
+  discount: string; // Assuming this is a string like "10%" or "20.00"
+  expiry_date?: string; // Add expiry_date as optional
   likes: number;
   dislikes: number;
   used_count: number;
   used_today: number;
+  shop_now_url?: string | null; // <--- ADDED: New field for ProductCoupon interface
 }
+
+// Helper function to get full logo URL (unified logic)
+const getFullLogoUrl = (logoPath?: string | null) => {
+  if (logoPath) {
+    // Check if it's already a full URL (e.g., from Cloudinary or external source)
+    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+      return logoPath;
+    }
+    // Otherwise, prepend backend URL for relative paths (e.g., /media/...)
+    // Ensure no double slashes if logoPath already starts with '/'
+    if (logoPath.startsWith('/')) {
+        return `${BACKEND_URL}${logoPath}`;
+    }
+    return `${BACKEND_URL}/${logoPath}`; // Add a leading slash if missing
+  }
+  return undefined; // No logo path provided
+};
+
 
 const TopDeals: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -41,14 +60,12 @@ const TopDeals: React.FC = () => {
     const fetchTopDealsData = async () => {
       setLoading(true);
       try {
-        // Removed Authorization header for public GET requests
         const productsRes = await fetch(`${BACKEND_URL}/api/products`);
         if (!productsRes.ok) throw new Error(`HTTP error! status: ${productsRes.status} for products`);
         const productsData = await productsRes.json();
         const fetchedProducts: Product[] = Array.isArray(productsData) ? productsData : productsData.results || [];
         setProducts(fetchedProducts);
 
-        // Removed Authorization header for public GET requests
         const couponsRes = await fetch(`${BACKEND_URL}/api/productcoupon/`);
         if (!couponsRes.ok) throw new Error(`HTTP error! status: ${couponsRes.status} for coupons`);
         const couponsData = await couponsRes.json();
@@ -79,10 +96,12 @@ const TopDeals: React.FC = () => {
     fetchTopDealsData();
   }, []);
 
-  const topDeals = products.map(product => {
-    const firstCoupon = coupons.find(coupon => coupon.product.id === product.id);
-    return firstCoupon ? { product, coupon: firstCoupon } : null;
-  }).filter(Boolean) as { product: Product; coupon: ProductCoupon }[];
+  // Filter and sort coupons for 'Top Deals' section
+  const topDealsCoupons = coupons
+    .filter(coupon => coupon.code) // Only show coupons with a code
+    .sort((a, b) => (b.used_count + b.used_today) - (a.used_count + a.used_today)) // Example: sort by total usage
+    .slice(0, 6); // Show top 6 deals (adjust as needed)
+
 
   if (loading) {
     return <div className="text-center py-8">Loading top deals...</div>;
@@ -97,88 +116,96 @@ const TopDeals: React.FC = () => {
       )}
 
       <h2 className="text-2xl font-bold text-center mb-6">Top Deals</h2>
-      <div className="w-full flex flex-col items-center gap-8">
-        {topDeals.length === 0 && (
-          <div className="text-gray-500 text-center py-8">No top deals available.</div>
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Changed to grid for layout */}
+        {topDealsCoupons.length === 0 && (
+          <div className="text-gray-500 text-center py-8 col-span-full">No top deals available.</div>
         )}
-        {topDeals.map(({ product, coupon }) => {
-          const logoSrc = product.logo || product.logo_url; // Use logical OR for cleaner fallback
+        {topDealsCoupons.map((coupon) => {
+          const product = coupon.product; // The product object is already embedded
+          const logoSrc = getFullLogoUrl(product.logo ?? product.logo_url);
+
           return (
             <div
               key={coupon.id}
-              className="w-full max-w-xs sm:max-w-xl bg-white rounded-2xl shadow-xl p-4 sm:px-6 sm:py-5 flex flex-col gap-2 box-border overflow-hidden"
+              className="bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden" // Added relative for position
             >
-              <div className="flex items-start gap-3">
-                {logoSrc && (
+              {/* Product Logo */}
+              <div className="flex justify-start mb-2">
+                {logoSrc ? (
                   <img
-                    src={`${BACKEND_URL}${logoSrc}`} // Prepend BACKEND_URL for full path
+                    src={logoSrc}
                     alt={product.name}
-                    className="h-12 w-12 sm:h-16 sm:w-16 object-contain flex-shrink-0 rounded-lg"
+                    className="w-16 h-16 object-contain rounded-lg" // Adjusted size to fit layout
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.src = `https://placehold.co/64x64/cccccc/ffffff?text=${product.name.charAt(0)}`;
                       e.currentTarget.onerror = null;
                     }}
                   />
+                ) : (
+                  // Placeholder if no logo is available
+                  <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xs">
+                    {product.name.charAt(0)}
+                  </div>
                 )}
-                <div className="flex-grow min-w-0">
-                  <div className="text-green-700 font-bold text-base sm:text-lg leading-tight break-words">
-                    {product.name}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-                    <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded flex-shrink-0">
-                      Discount is active
-                    </span>
-                    <span className="text-xs text-green-600 flex items-center flex-shrink-0">
-                      <svg width="16" height="16" fill="none" className="inline mr-1"><circle cx="8" cy="8" r="8" fill="#22c55e"/><path d="M5 8l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      Verified
-                    </span>
-                  </div>
-                </div>
               </div>
 
-              <div className="font-semibold text-gray-800 mt-2 text-sm sm:text-base break-words">{coupon.title}</div>
-              <div className="text-xs sm:text-sm text-gray-600 break-words">{product.title}</div>
-              <div className="text-xs text-gray-500 break-words">{product.subtitle}</div>
-              <div className="text-xs text-gray-400 break-words">{product.sub_subtitle}</div>
-              <div className="flex items-center text-xs text-gray-500 gap-4 mt-1">
-                <span>{coupon.used_count} Used</span>
+              {/* Discount Active / Verified */}
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm text-gray-500">Discount is active</span>
+                <span className="text-green-600 text-xs font-semibold">● Verified</span>
+              </div>
+
+              {/* Coupon Title */}
+              <div className="font-bold text-lg text-gray-900">{coupon.title}</div>
+
+              {/* Used Count / Today */}
+              <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
+                <span>{coupon.used_count} used</span>
                 <span>{coupon.used_today} Today</span>
               </div>
 
-              {coupon.code && coupon.code.trim() && (
-                <div className="flex flex-row items-center gap-2 mt-4">
-                  <input
-                    className="rounded px-2 py-1 text-xs sm:text-sm font-mono w-full flex-grow border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={coupon.code}
-                    readOnly
-                  />
+              {/* Coupon Code and Copy Button */}
+              {coupon.code && (
+                <div className="flex flex-wrap gap-2 items-center mt-auto"> {/* mt-auto pushes to bottom */}
+                  <span className="bg-gray-200 px-4 py-2 rounded font-bold text-lg select-all">
+                    {coupon.code}
+                  </span>
                   <button
-                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 sm:py-1 rounded text-xs sm:text-sm transition-colors duration-200"
+                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold flex-shrink-0"
                     onClick={() => {
-                      // Removed token requirement for copy action if backend allows AllowAny
-                      const tempInput = document.createElement('input');
-                      tempInput.value = coupon.code;
-                      document.body.appendChild(tempInput);
-                      tempInput.select();
-                      document.execCommand('copy'); // Note: document.execCommand('copy') is deprecated, but still widely supported. For modern approach, use navigator.clipboard.writeText(text).
-                      document.body.removeChild(tempInput);
+                      navigator.clipboard.writeText(coupon.code);
                       showPopup("Code copied!");
-
-                      // If you want to increment 'used_count' via API on copy,
-                      // you'd need to make a separate fetch call here,
-                      // and that API endpoint also needs to be public (`AllowAny`).
-                      // For example:
-                      // fetch(`${BACKEND_URL}/api/products/productcoupon/${coupon.id}/use/`, { method: "POST" });
+                      // Optionally, increment 'used_count' via API here (if backend endpoint is public)
+                      fetch(`${BACKEND_URL}/api/products/productcoupon/${coupon.id}/use/`, { method: "POST" })
+                        .then(() => { /* Maybe refresh data or update state if needed */ })
+                        .catch(err => console.error("Error updating coupon usage:", err));
                     }}
                   >
                     Copy
                   </button>
                 </div>
               )}
-              <button className="bg-green-500 hover:bg-green-600 text-white w-full mt-4 py-2 rounded font-semibold text-xs sm:text-base transition-colors duration-200">
-                Shop Now
-              </button>
+
+              {/* Shop Now Button */}
+              {coupon.shop_now_url ? (
+                <a
+                  href={coupon.shop_now_url}
+                  className="block mt-2 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded font-bold"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Shop Now
+                </a>
+              ) : (
+                // Optional: Render a disabled button or nothing if no shop_now_url
+                <button
+                  className="block mt-2 bg-gray-300 text-gray-600 text-center py-2 rounded font-bold cursor-not-allowed"
+                  disabled
+                >
+                  Shop Now (Link N/A)
+                </button>
+              )}
             </div>
           );
         })}

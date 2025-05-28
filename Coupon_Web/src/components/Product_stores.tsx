@@ -12,7 +12,6 @@ interface Product {
   sub_subtitle?: string;
   footer_section_effortless_savings_title?: string;
   footer_section_effortless_savings_description?: string;
-  // Updated types to reflect models.py change to TextField (plain string)
   footer_section_how_to_use_title?: string;
   footer_section_how_to_use_steps?: string; // Now a plain string
   footer_section_how_to_use_note?: string;
@@ -36,9 +35,9 @@ interface Coupon {
   discount: string;
   used_count: number;
   used_today: number;
+  shop_now_url?: string | null; // <--- ADDED: Include shop_now_url in Coupon interface
 }
 
-// Removed API_TOKEN constant as it's no longer needed for public endpoints
 const BACKEND_URL = "https://eragon-backend1.onrender.com";
 const PRODUCT_API = `${BACKEND_URL}/api/products/`;
 const COUPON_API = `${BACKEND_URL}/api/productcoupon/`;
@@ -70,12 +69,9 @@ const ProductStore: React.FC = () => {
 
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);
-    // Removed headers: { Authorization: `Token ${API_TOKEN}` } for the 'use/' POST request
     await fetch(`${COUPON_API}${coupon.id}/use/`, {
       method: "POST",
     });
-    // Refresh coupons
-    // Removed headers: { Authorization: `Token ${API_TOKEN}` } for refreshing coupons
     fetch(COUPON_API)
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status} when refreshing coupons`);
@@ -92,7 +88,7 @@ const ProductStore: React.FC = () => {
     if (!id) return;
     setLoading(true);
 
-    const fetchProduct = fetch(`${PRODUCT_API}${id}/`) // Removed headers: { Authorization: `Token ${API_TOKEN}` }
+    const fetchProduct = fetch(`${PRODUCT_API}${id}/`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -105,7 +101,7 @@ const ProductStore: React.FC = () => {
         setProduct(null);
       });
 
-    const fetchCoupons = fetch(COUPON_API) // Removed headers: { Authorization: `Token ${API_TOKEN}` }
+    const fetchCoupons = fetch(COUPON_API)
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status} when fetching coupons`);
         return res.json();
@@ -209,14 +205,18 @@ const ProductStore: React.FC = () => {
                     </button>
                   </div>
                 )}
-                <a
-                  href="#"
-                  className="block mt-2 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded font-bold"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Shop Now
-                </a>
+                {/* --- UPDATED: Shop Now button uses coupon.shop_now_url --- */}
+                {coupon.shop_now_url && (
+                  <a
+                    href={coupon.shop_now_url}
+                    className="block mt-2 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded font-bold"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Shop Now
+                  </a>
+                )}
+                {/* --- END UPDATED --- */}
               </div>
             ))
           )}
