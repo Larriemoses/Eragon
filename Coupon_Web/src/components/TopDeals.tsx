@@ -28,7 +28,6 @@ interface ProductCoupon {
 }
 
 // Helper function to get full logo URL (unified logic)
-// / Helper function to get full logo URL (unified logic)
 const getFullLogoUrl = (logoPath?: string | null) => {
   if (logoPath) {
     // Check if it's already a full URL (e.g., from Cloudinary or external source)
@@ -117,8 +116,8 @@ const TopDeals: React.FC = () => {
       )}
 
       <h2 className="text-2xl font-bold text-center mb-6">Top Deals</h2>
-      {/* Changed to grid for layout. Adjusted width for mobile to w-4/5 (80%) */}
-      <div className="w-full flex flex-col items-center justify-center gap-4 md:flex-row md:flex-wrap">
+      {/* Changed to match ProductStore's coupon list container: w-full flex flex-col gap-6 */}
+      <div className="w-full flex flex-col gap-6">
         {topDealsCoupons.length === 0 && (
           <div className="text-gray-500 text-center py-8 col-span-full">No top deals available.</div>
         )}
@@ -129,8 +128,8 @@ const TopDeals: React.FC = () => {
           return (
             <div
               key={coupon.id}
-              // Adjust width for mobile to w-4/5 (80%), and maintain existing desktop width
-              className="w-4/5 sm:w-3/5 md:w-1/3 lg:w-1/4 xl:w-1/5 max-w-sm bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden" // Added relative for position
+              // Changed to match ProductStore's individual coupon card width: w-full or w-[90%] as it's within max-w-xl
+              className="bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden" // Removed specific width classes
             >
               {/* Product Logo */}
               <div className="flex justify-start mb-2">
