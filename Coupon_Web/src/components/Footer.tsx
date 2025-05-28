@@ -41,6 +41,7 @@ const Footer: React.FC = () => (
           <Link to="/contact" className="mb-1 text-gray-300 hover:text-green-400 transition">Contact Us</Link>
           <Link to="/terms-of-service" className="mb-1 text-gray-300 hover:text-green-400 transition">Terms of Use</Link>
           <Link to="/privacy" className="mb-1 text-gray-300 hover:text-green-400 transition">Privacy Policy</Link>
+          <Link to="/affiliate-disclosure" className="mb-1 text-gray-300 hover:text-green-400 transition">Affiliate Disclosure</Link> 
         </div>
         {/* Logo */}
         <div className="flex flex-col items-center justify-center mb-6 md:mb-0">

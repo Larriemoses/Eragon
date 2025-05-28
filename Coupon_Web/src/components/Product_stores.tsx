@@ -171,7 +171,7 @@ const ProductStore: React.FC = () => {
             coupons.map((coupon) => (
               <div
                 key={coupon.id}
-                // *** ADJUSTED COUPON CARD WIDTHS HERE ***
+                // Reduced width for desktop, maintaining w-[90%] for mobile
                 className="w-[90%] sm:w-[80%] md:w-[45%] lg:w-[30%] xl:w-[23%] max-w-xs bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden"
               >
                 {/* Product Logo */}
@@ -294,52 +294,74 @@ const ProductStore: React.FC = () => {
         </div>
       )}
 
-      {/* Footer Section: Contact */}
+      {/* Footer Section: Contact - Styled to match the image */}
       {(product.footer_section_contact_title || product.footer_section_contact_description || product.footer_contact_phone || product.footer_contact_email || product.footer_contact_whatsapp) && (
         <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
           <h2
-            className="text-2xl font-bold text-gray-800 mb-2 text-center"
+            className="text-2xl font-bold text-gray-800 mb-4 text-center" // Increased mb for title
             dangerouslySetInnerHTML={{ __html: product.footer_section_contact_title || "" }}
           />
           {product.footer_section_contact_description && (
             <p
-              className="text-gray-600 mb-4"
+              className="text-gray-600 mb-6 text-center" // Added text-center for description
               dangerouslySetInnerHTML={{ __html: product.footer_section_contact_description }}
             />
           )}
-          {/* *** ADJUSTED CONTACT SECTION FOR MOBILE GRID LAYOUT WITH CENTERED TEXT *** */}
-          <div className="grid grid-cols-1 gap-y-4 md:grid-cols-2 md:gap-x-4 md:gap-y-0 text-gray-700">
+          {/* Main grid container for Phone/Email/WhatsApp sections */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-4 text-gray-700">
+
+            {/* Phone Support */}
             {product.footer_contact_phone && (
-              <div className="flex flex-col items-center text-center"> {/* Added items-center and text-center */}
-                <span className="font-semibold">Phone:</span>
-                <a href={`tel:${product.footer_contact_phone}`} className="text-blue-600 hover:underline">
-                  {product.footer_contact_phone}
-                </a>
+              <div className="flex flex-col items-center text-center">
+                <p className="font-bold text-lg mb-2">📞 Phone Support</p>
+                {/* Assuming footer_contact_phone might contain multiple numbers separated by newline or similar */}
+                {product.footer_contact_phone.split('\n').map((num, index) => (
+                  <a key={index} href={`tel:${num.replace(/\D/g, '')}`} className="text-blue-600 hover:underline mb-1 last:mb-0">
+                    {num.trim()}
+                  </a>
+                ))}
+                {/* Placeholder for "First Choice" if needed, assuming it's part of the number string or a separate field */}
+                {/* <span className="text-sm text-gray-500">(First Choice)</span> */}
               </div>
             )}
+
+            {/* Email Support */}
             {product.footer_contact_email && (
-              <div className="flex flex-col items-center text-center"> {/* Added items-center and text-center */}
-                <span className="font-semibold">Email:</span>
-                <a href={`mailto:${product.footer_contact_email}`} className="text-blue-600 hover:underline">
-                  {product.footer_contact_email}
-                </a>
+              <div className="flex flex-col items-center text-center md:col-span-1"> {/* md:col-span-1 ensures it sits nicely if only 1 of 3 present */}
+                <p className="font-bold text-lg mb-2">✉️ Email Support</p>
+                {/* Assuming footer_contact_email might contain multiple emails */}
+                {product.footer_contact_email.split('\n').map((email, index) => (
+                    <p key={index} className="mb-1 last:mb-0"> {/* Use p for email addresses */}
+                      <a href={`mailto:${email.trim()}`} className="text-blue-600 hover:underline">
+                        {email.trim()}
+                      </a>
+                    </p>
+                ))}
+                {/* Placeholder for "First Choice for Logistics Issue" if needed */}
+                {/* <p className="text-sm text-gray-500">(First Choice for Logistics Issue)</p> */}
               </div>
             )}
+
+            {/* WhatsApp Support */}
             {product.footer_contact_whatsapp && (
-              <div className="flex flex-col items-center text-center"> {/* Added items-center and text-center */}
-                <span className="font-semibold">WhatsApp:</span>
-                <a
-                  href={`https://wa.me/${product.footer_contact_whatsapp?.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-600 hover:underline"
-                >
-                  {product.footer_contact_whatsapp}
-                </a>
+              <div className="flex flex-col items-center text-center md:col-start-2 md:row-start-1"> {/* Position WhatsApp to the right of Phone on desktop */}
+                <p className="font-bold text-lg mb-2">💬 Whatsapp Support</p>
+                <p className="text-gray-800 mb-1">Chat with a rep:</p>
+                {/* Assuming footer_contact_whatsapp might contain multiple numbers */}
+                {product.footer_contact_whatsapp.split('\n').map((num, index) => (
+                  <a
+                    key={index}
+                    href={`https://wa.me/${num.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-600 hover:underline mb-1 last:mb-0"
+                  >
+                    {num.trim()}
+                  </a>
+                ))}
               </div>
             )}
           </div>
-          {/* *** END ADJUSTED CONTACT SECTION *** */}
         </div>
       )}
       {/* --- End of Product Footer Content --- */}

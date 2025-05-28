@@ -12,6 +12,7 @@ import SubmitStore from './pages/SubmitStore';
 import Contact from './pages/Contact';
 import TermsOfService from './pages/TermsOfService';
 import Privacy from './pages/Privacy';
+import Affiliate_Disclosure from './pages/Affiliate_Disclosure'
 
 
 const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void }> = ({ token, setToken }) => {
@@ -29,6 +30,7 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/affiliate-disclosure" element={<Affiliate_Disclosure />} /> 
         <Route path="*" element={<h2>Page Not Found</h2>} />
     
         
