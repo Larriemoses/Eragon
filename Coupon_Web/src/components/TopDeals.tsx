@@ -129,7 +129,7 @@ const TopDeals: React.FC = () => {
             <div
               key={coupon.id}
               // Changed to match ProductStore's individual coupon card width: w-full or w-[90%] as it's within max-w-xl
-              className="bg-white rounded-xl shadow-xl p-4 w-[80%] md:w-[40%] justify-center self-center flex flex-col gap-2" // Removed specific width classes
+              className="bg-white rounded-xl shadow-xl p-4 w-[90%] md:w-[30%] justify-center self-center flex flex-col gap-2" // Removed specific width classes
             >
               {/* Product Logo */}
               <div className="flex justify-start mb-2">
