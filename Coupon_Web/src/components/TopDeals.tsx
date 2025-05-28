@@ -116,7 +116,7 @@ const TopDeals: React.FC = () => {
       )}
 
       <h2 className="text-2xl font-bold text-center mb-6">Top Deals</h2>
-      <div className="min--w-[50%] justify-center mx-auto md:flex lg:flex"> {/* Changed to grid for layout */}
+      <div className="min-w-[80%] justify-center mx-auto md:flex lg:flex"> {/* Changed to grid for layout */}
         {topDealsCoupons.length === 0 && (
           <div className="text-gray-500 text-center py-8 col-span-full">No top deals available.</div>
         )}
