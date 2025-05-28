@@ -108,7 +108,7 @@ const TopDeals: React.FC = () => {
   }
 
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6 mb-3">
       {popup && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded shadow-lg z-50 transition-all">
           {popup}
@@ -117,7 +117,7 @@ const TopDeals: React.FC = () => {
 
       <h2 className="text-2xl font-bold text-center mb-6">Top Deals</h2>
       {/* Changed to match ProductStore's coupon list container: w-full flex flex-col gap-6 */}
-      <div className="w-full flex flex-col gap-6">
+      <div className="w-full flex flex-col justify-center gap-6">
         {topDealsCoupons.length === 0 && (
           <div className="text-gray-500 text-center py-8 col-span-full">No top deals available.</div>
         )}
@@ -129,7 +129,7 @@ const TopDeals: React.FC = () => {
             <div
               key={coupon.id}
               // Changed to match ProductStore's individual coupon card width: w-full or w-[90%] as it's within max-w-xl
-              className="bg-white rounded-xl shadow-xl p-4 w-[80%] md:w-[40%] justify-center flex flex-col gap-2" // Removed specific width classes
+              className="bg-white rounded-xl shadow-xl p-4 w-[80%] md:w-[40%] justify-center self-center flex flex-col gap-2" // Removed specific width classes
             >
               {/* Product Logo */}
               <div className="flex justify-start mb-2">
