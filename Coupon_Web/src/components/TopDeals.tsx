@@ -108,7 +108,7 @@ const TopDeals: React.FC = () => {
   }
 
   return (
-    <div className="p-4 max-w-10xl mx-auto">
+    <div className="p-4 max-w-[50%] mx-auto">
       {popup && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded shadow-lg z-50 transition-all">
           {popup}
