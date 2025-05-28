@@ -10,8 +10,22 @@ type Product = {
 const BACKEND_URL = "https://eragon-backend1.onrender.com";
 // const TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4"; // Removed: No longer needed for public endpoints
 
-const LOGO_WIDTH = 120; // px, should match min-w-[120px]
-const GAP = 48; // px, should match gap-12 (12*4)
+// Helper function to get full logo URL (THIS MUST BE CONSISTENT ACROSS ALL FILES)
+const getFullLogoUrl = (logoPath?: string | null) => {
+  if (logoPath) {
+    // Check if it's already a full URL (e.g., from Cloudinary or external source)
+    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+      return logoPath; // It's already an absolute URL, use it as is.
+    }
+    // Otherwise, prepend backend URL for relative paths (e.g., /media/...)
+    // Ensure no double slashes if logoPath already starts with '/'
+    if (logoPath.startsWith('/')) {
+        return `${BACKEND_URL}${logoPath}`;
+    }
+    return `${BACKEND_URL}/${logoPath}`; // Add a leading slash if missing
+  }
+  return undefined; // No logo path provided
+};
 
 const PopularStores: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -19,8 +33,7 @@ const PopularStores: React.FC = () => {
   const marqueeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Removed `headers: { Authorization: Token ${TOKEN} }` because the endpoint is now public
-    fetch(`${BACKEND_URL}/api/products/`)
+    fetch(`${BACKEND_URL}/api/products/`) // Removed headers
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -30,28 +43,21 @@ const PopularStores: React.FC = () => {
       .then((data) => setProducts(data))
       .catch((error) => {
         console.error("Error fetching popular stores:", error);
-        setProducts([]); // Set to empty array on error to prevent crashes
+        setProducts([]);
       });
   }, []);
 
-  // Calculate how many times to repeat the logos to fill the marquee
   useEffect(() => {
     if (products.length && marqueeRef.current) {
       const containerWidth = marqueeRef.current.offsetWidth;
       // Using 80px + 48px gap from the actual rendering logic
-      // Note: `min-w-[80px]` is set on the individual logo container
-      // and `gap-12` (48px) is set on the flex container.
-      const individualItemWidth = 80 + 48; // 80px width + 48px gap
+      const individualItemWidth = 80 + 48;
       const logoTotalWidth = products.length * individualItemWidth;
-
-      // Repeat enough times to cover at least twice the container width
-      // (to ensure smooth continuous marquee effect)
       const minRepeat = Math.ceil((containerWidth * 2) / logoTotalWidth);
-      setRepeatCount(minRepeat > 2 ? minRepeat : 2); // Ensure at least 2 repeats
+      setRepeatCount(minRepeat > 2 ? minRepeat : 2);
     }
-  }, [products]); // Recalculate if products change
+  }, [products]);
 
-  // Build the logos array to fill the marquee
   const logos = Array.from({ length: repeatCount })
     .flatMap(() => products);
 
@@ -62,31 +68,36 @@ const PopularStores: React.FC = () => {
         <div
           className="flex gap-12 animate-marquee"
           style={{
-            minWidth: "200%", // Ensures enough content for continuous scrolling
+            minWidth: "200%",
             alignItems: "center",
           }}
         >
           {logos.map((product, idx) => {
-            // Use logical OR for a cleaner fallback
             const logoSrc = product.logo || product.logo_url;
             return (
               <div key={product.id + "-" + idx} className="flex flex-col items-center min-w-[80px]">
                 {logoSrc ? (
                   <img
-                    src={`${BACKEND_URL}${logoSrc}`} // Prepend BACKEND_URL for full path
+                    src={getFullLogoUrl(logoSrc)} // <<<--- CHANGED THIS LINE to use the helper
                     alt={product.name}
                     className="h-12 md:h-16 object-contain mb-2"
                     draggable={false}
+                    onError={(e) => { // Added onError for robustness
+                      e.currentTarget.src = `https://placehold.co/64x64/cccccc/ffffff?text=${product.name.charAt(0)}`;
+                      e.currentTarget.onerror = null;
+                    }}
                   />
                 ) : (
-                  <div className="h-12 w-24 bg-gray-200 rounded" /> // Placeholder for missing logo
+                  // Placeholder for missing logo
+                  <div className="h-12 w-24 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm">
+                    {product.name.charAt(0)}
+                  </div>
                 )}
               </div>
             );
           })}
         </div>
       </div>
-      {/* Marquee animation styles */}
       <style>{`
         @keyframes marquee {
           0% { transform: translateX(0); }

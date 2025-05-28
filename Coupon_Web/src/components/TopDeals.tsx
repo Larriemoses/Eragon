@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-// const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4"; // Removed: No longer needed if all endpoints are public
 const BACKEND_URL = "https://eragon-backend1.onrender.com";
 
 interface Product {
@@ -15,33 +14,30 @@ interface Product {
 
 interface ProductCoupon {
   id: number;
-  product: Product; // Note: This product is an object, not just an ID
+  product: Product;
   title: string;
   code: string;
-  discount: string; // Assuming this is a string like "10%" or "20.00"
-  expiry_date?: string; // Add expiry_date as optional
+  discount: string;
+  expiry_date?: string;
   likes: number;
   dislikes: number;
   used_count: number;
   used_today: number;
-  shop_now_url?: string | null; // <--- ADDED: New field for ProductCoupon interface
+  shop_now_url?: string | null;
 }
 
 // Helper function to get full logo URL (unified logic)
 const getFullLogoUrl = (logoPath?: string | null) => {
   if (logoPath) {
-    // Check if it's already a full URL (e.g., from Cloudinary or external source)
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
       return logoPath;
     }
-    // Otherwise, prepend backend URL for relative paths (e.g., /media/...)
-    // Ensure no double slashes if logoPath already starts with '/'
     if (logoPath.startsWith('/')) {
         return `${BACKEND_URL}${logoPath}`;
     }
-    return `${BACKEND_URL}/${logoPath}`; // Add a leading slash if missing
+    return `${BACKEND_URL}/${logoPath}`;
   }
-  return undefined; // No logo path provided
+  return undefined;
 };
 
 
@@ -73,7 +69,7 @@ const TopDeals: React.FC = () => {
 
         const enrichedCoupons: ProductCoupon[] = fetchedCouponsRaw.map(coupon => {
           const productDetail = fetchedProducts.find(p => p.id === coupon.product) || {
-            id: coupon.product, // Keep the product ID even if product details aren't found
+            id: coupon.product,
             name: "Unknown Product",
             logo: null,
             logo_url: null,
@@ -96,11 +92,10 @@ const TopDeals: React.FC = () => {
     fetchTopDealsData();
   }, []);
 
-  // Filter and sort coupons for 'Top Deals' section
   const topDealsCoupons = coupons
-    .filter(coupon => coupon.code) // Only show coupons with a code
-    .sort((a, b) => (b.used_count + b.used_today) - (a.used_count + a.used_today)) // Example: sort by total usage
-    .slice(0, 6); // Show top 6 deals (adjust as needed)
+    .filter(coupon => coupon.code)
+    .sort((a, b) => (b.used_count + b.used_today) - (a.used_count + a.used_today))
+    .slice(0, 6);
 
 
   if (loading) {
@@ -108,7 +103,8 @@ const TopDeals: React.FC = () => {
   }
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    // Adjusted max-w and padding to give more breathing room
+    <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto">
       {popup && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded shadow-lg z-50 transition-all">
           {popup}
@@ -116,26 +112,28 @@ const TopDeals: React.FC = () => {
       )}
 
       <h2 className="text-2xl font-bold text-center mb-6">Top Deals</h2>
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Changed to grid for layout */}
+      {/* Responsive grid for coupon cards */}
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"> {/* Adjusted grid columns and gap */}
         {topDealsCoupons.length === 0 && (
           <div className="text-gray-500 text-center py-8 col-span-full">No top deals available.</div>
         )}
         {topDealsCoupons.map((coupon) => {
-          const product = coupon.product; // The product object is already embedded
+          const product = coupon.product;
           const logoSrc = getFullLogoUrl(product.logo ?? product.logo_url);
 
           return (
             <div
               key={coupon.id}
-              className="bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden" // Added relative for position
+              // Card styling: white background, rounded, shadow, padding
+              className="bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2" // Removed 'relative overflow-hidden' if not strictly needed
             >
-              {/* Product Logo */}
+              {/* Product Logo and Info - Top Section */}
               <div className="flex justify-start mb-2">
                 {logoSrc ? (
                   <img
                     src={logoSrc}
                     alt={product.name}
-                    className="w-16 h-16 object-contain rounded-lg" // Adjusted size to fit layout
+                    className="w-18 h-18 object-contain rounded-lg" // Kept consistent with ProductStore, adjusted h/w for larger logo
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.src = `https://placehold.co/64x64/cccccc/ffffff?text=${product.name.charAt(0)}`;
@@ -143,14 +141,13 @@ const TopDeals: React.FC = () => {
                     }}
                   />
                 ) : (
-                  // Placeholder if no logo is available
-                  <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xs">
+                  <div className="w-18 h-18 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xs">
                     {product.name.charAt(0)}
                   </div>
                 )}
               </div>
 
-              {/* Discount Active / Verified */}
+              {/* Discount Active / Verified Status */}
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm text-gray-500">Discount is active</span>
                 <span className="text-green-600 text-xs font-semibold">● Verified</span>
@@ -165,10 +162,10 @@ const TopDeals: React.FC = () => {
                 <span>{coupon.used_today} Today</span>
               </div>
 
-              {/* Coupon Code and Copy Button */}
+              {/* Coupon Code and Copy Button (pushed to bottom with mt-auto) */}
               {coupon.code && (
                 <div className="flex flex-wrap gap-2 items-center mt-auto"> {/* mt-auto pushes to bottom */}
-                  <span className="bg-gray-200 px-4 py-2 rounded font-bold text-lg select-all">
+                  <span className="bg-gray-200 px-4 py-2 rounded font-bold text-lg select-all flex-grow"> {/* flex-grow to make code span available space */}
                     {coupon.code}
                   </span>
                   <button
@@ -176,7 +173,6 @@ const TopDeals: React.FC = () => {
                     onClick={() => {
                       navigator.clipboard.writeText(coupon.code);
                       showPopup("Code copied!");
-                      // Optionally, increment 'used_count' via API here (if backend endpoint is public)
                       fetch(`${BACKEND_URL}/api/products/productcoupon/${coupon.id}/use/`, { method: "POST" })
                         .then(() => { /* Maybe refresh data or update state if needed */ })
                         .catch(err => console.error("Error updating coupon usage:", err));
@@ -198,7 +194,6 @@ const TopDeals: React.FC = () => {
                   Shop Now
                 </a>
               ) : (
-                // Optional: Render a disabled button or nothing if no shop_now_url
                 <button
                   className="block mt-2 bg-gray-300 text-gray-600 text-center py-2 rounded font-bold cursor-not-allowed"
                   disabled
