@@ -163,14 +163,16 @@ const ProductStore: React.FC = () => {
             />
           ) : null}
         </div>
-        <div className="w-full flex flex-col gap-6">
+        {/* Adjusted coupon list container for responsiveness */}
+        <div className="w-full flex flex-col items-center gap-6 md:flex-row md:flex-wrap md:justify-center">
           {coupons.length === 0 ? (
             <div className="text-center text-gray-500">No coupons available for this store.</div>
           ) : (
             coupons.map((coupon) => (
               <div
                 key={coupon.id}
-                className="bg-gray-100 rounded-xl shadow-xl p-4 flex flex-col gap-2"
+                // Reduced width for desktop, maintaining w-[90%] for mobile
+                className="w-[90%] sm:w-[80%] md:w-[45%] lg:w-[30%] xl:w-[23%] max-w-xs bg-white rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden"
               >
                 {/* Product Logo */}
                 <div className="flex justify-start mb-2">
@@ -228,7 +230,7 @@ const ProductStore: React.FC = () => {
       {(product.footer_section_effortless_savings_title || product.footer_section_effortless_savings_description) && (
         <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
           <h2
-            className="text-2xl font-bold text-gray-800 mb-2 text-center" // Added text-center here
+            className="text-2xl font-bold text-gray-800 mb-2 text-center"
             dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_title || "" }}
           />
           <p
@@ -242,7 +244,7 @@ const ProductStore: React.FC = () => {
       {(product.footer_section_how_to_use_title || product.footer_section_how_to_use_steps || product.footer_section_how_to_use_note) && (
         <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
           <h2
-            className="text-2xl font-bold text-gray-800 mb-2 text-center" // Added text-center here
+            className="text-2xl font-bold text-gray-800 mb-2 text-center"
             dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
           />
           {product.footer_section_how_to_use_steps && (
@@ -272,7 +274,7 @@ const ProductStore: React.FC = () => {
       {(product.footer_section_tips_title || product.footer_section_tips_list) && (
         <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
           <h2
-            className="text-2xl font-bold text-gray-800 mb-2 text-center" // Added text-center here
+            className="text-2xl font-bold text-gray-800 mb-2 text-center"
             dangerouslySetInnerHTML={{ __html: product.footer_section_tips_title || "" }}
           />
           {product.footer_section_tips_list && (
@@ -296,7 +298,7 @@ const ProductStore: React.FC = () => {
       {(product.footer_section_contact_title || product.footer_section_contact_description || product.footer_contact_phone || product.footer_contact_email || product.footer_contact_whatsapp) && (
         <div className="max-w-xl w-[90%] mt-8 bg-gray-100 p-6 rounded-lg shadow">
           <h2
-            className="text-2xl font-bold text-gray-800 mb-2 text-center" // Added text-center here
+            className="text-2xl font-bold text-gray-800 mb-2 text-center"
             dangerouslySetInnerHTML={{ __html: product.footer_section_contact_title || "" }}
           />
           {product.footer_section_contact_description && (
@@ -305,26 +307,27 @@ const ProductStore: React.FC = () => {
               dangerouslySetInnerHTML={{ __html: product.footer_section_contact_description }}
             />
           )}
-          <div className="text-gray-700">
+          {/* Adjusted contact section for grid layout on mobile */}
+          <div className="grid grid-cols-1 gap-4 text-gray-700 md:grid-cols-2">
             {product.footer_contact_phone && (
-              <p className="flex items-center mb-2">
-                <span className="font-semibold w-24">Phone:</span>
+              <div className="flex flex-col mb-2"> {/* Changed from p to div, added flex-col */}
+                <span className="font-semibold">Phone:</span>
                 <a href={`tel:${product.footer_contact_phone}`} className="text-blue-600 hover:underline">
                   {product.footer_contact_phone}
                 </a>
-              </p>
+              </div>
             )}
             {product.footer_contact_email && (
-              <p className="flex items-center mb-2">
-                <span className="font-semibold w-24">Email:</span>
+              <div className="flex flex-col mb-2"> {/* Changed from p to div, added flex-col */}
+                <span className="font-semibold">Email:</span>
                 <a href={`mailto:${product.footer_contact_email}`} className="text-blue-600 hover:underline">
                   {product.footer_contact_email}
                 </a>
-              </p>
+              </div>
             )}
             {product.footer_contact_whatsapp && (
-              <p className="flex items-center">
-                <span className="font-semibold w-24">WhatsApp:</span>
+              <div className="flex flex-col"> {/* Changed from p to div, added flex-col */}
+                <span className="font-semibold">WhatsApp:</span>
                 <a
                   href={`https://wa.me/${product.footer_contact_whatsapp?.replace(/\D/g, '')}`}
                   target="_blank"
@@ -333,7 +336,7 @@ const ProductStore: React.FC = () => {
                 >
                   {product.footer_contact_whatsapp}
                 </a>
-              </p>
+              </div>
             )}
           </div>
         </div>
