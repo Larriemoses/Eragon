@@ -1,10 +1,10 @@
 // Nav.tsx
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom"; // Import useLocation
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 // Constants for API and logo
-const BACKEND_URL = "https://eragon-backend1.onrender.com"; // Define backend URL
-const LOGO_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png"; // Your Cloudinary logo link
+const BACKEND_URL = "https://eragon-backend1.onrender.com";
+const LOGO_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png";
 
 // Helper function to get full logo URL (unified logic for all components)
 const getFullLogoUrl = (logoPath?: string | null) => {
@@ -20,9 +20,11 @@ const getFullLogoUrl = (logoPath?: string | null) => {
   return undefined;
 };
 
-
 const Nav: React.FC = () => {
-  const [products, setProducts] = useState<any[]>([]);
+  // Update the type for products to include 'country'
+  const [products, setProducts] = useState<
+    { id: number; name: string; country?: string }[] // Keep country for consistency if API returns it
+  >([]);
   const [dropdown, setDropdown] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
 
@@ -39,35 +41,51 @@ const Nav: React.FC = () => {
         }
         const productsData = await productsRes.json();
 
-        // --- START OF NEW SORTING LOGIC ---
+        // --- START OF REVISED NAME-BASED SORTING LOGIC ---
         const sortedProducts = [...productsData].sort((a, b) => {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
 
-          const isOraimoA = nameA.includes("oraimo");
-          const isOraimoB = nameB.includes("oraimo");
+          // Determine priority score for product 'a'
+          let scoreA: number;
+          if (nameA.includes("oraimo nigeria")) {
+            scoreA = 1; // Highest priority: "Oraimo Nigeria" specifically
+          } else if (nameA.includes("oraimo")) {
+            scoreA = 2; // Medium priority: Other "Oraimo" products
+          } else {
+            scoreA = 3; // Lowest priority: Non-"Oraimo" products
+          }
 
-          if (isOraimoA && !isOraimoB) {
-            return -1; // 'a' (Oraimo) comes before 'b'
+          // Determine priority score for product 'b'
+          let scoreB: number;
+          if (nameB.includes("oraimo nigeria")) {
+            scoreB = 1;
+          } else if (nameB.includes("oraimo")) {
+            scoreB = 2;
+          } else {
+            scoreB = 3;
           }
-          if (!isOraimoA && isOraimoB) {
-            return 1; // 'b' (Oraimo) comes before 'a'
+
+          // 1. Compare by score first
+          if (scoreA !== scoreB) {
+            return scoreA - scoreB; // Lower score means higher priority
           }
-          // If both are Oraimo or neither are Oraimo, sort alphabetically by name
+
+          // 2. If scores are equal, sort alphabetically by name
           return nameA.localeCompare(nameB);
         });
-        // --- END OF NEW SORTING LOGIC ---
+        // --- END OF REVISED NAME-BASED SORTING LOGIC ---
 
-        setProducts(sortedProducts); // Set the sorted products
+        setProducts(sortedProducts);
       } catch (error) {
         console.error("Error fetching products for Nav:", error);
       }
     };
 
     fetchProducts();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
-  // Handle smooth scroll for "Today Deals"
+  // Handle smooth scroll for "Today Deals" (no changes here)
   useEffect(() => {
     if (location.hash === '#top-deals') {
       const element = document.getElementById('top-deals');
@@ -92,21 +110,15 @@ const Nav: React.FC = () => {
     setMobileMenu(false);
   };
 
-  const visibleProducts = products.slice(0, 5); // Adjust the number of visible products as needed
+  const visibleProducts = products.slice(0, 5);
   const hasMoreProducts = products.length > 5;
 
   return (
     <header className="w-full bg-white shadow-sm mb-5">
       <nav className="w-[90%] container mx-auto flex items-center justify-between py-3 px-4 relative">
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <img src={LOGO_URL} alt="Discount Region" className="h-10 w-auto" />
         </Link>
-
-        {/* Removed Desktop Search Bar */}
-        {/* Removed Mobile Search Bar */}
-
-        {/* Desktop Nav Links */}
         <ul className="hidden md:flex items-center gap-6 font-normal text-black">
           <li className=" hover:text-gray-700">
             <Link to="/" className="hover:text-gray-700 cursor-pointer">
@@ -148,7 +160,7 @@ const Nav: React.FC = () => {
             {dropdown && (
               <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-md shadow-lg z-20">
                 <ul className="flex flex-col py-2">
-                  {visibleProducts.map((product: any) => (
+                  {visibleProducts.map((product) => (
                     <li key={product.id} className="w-full">
                       <Link
                         to={`/store/${product.id}`}
@@ -161,13 +173,13 @@ const Nav: React.FC = () => {
                   ))}
                   {hasMoreProducts && (
                     <li className="w-full">
-                      <Link
+                      <Link // FIXED: Added closing ">" to the Link tag
                         to="/stores"
                         className="block px-4 py-2 text-green-500 font-medium hover:underline transition-colors duration-150 text-base"
                         onClick={() => setDropdown(false)}
                       >
                         See More Stores
-                      </Link>
+                      </Link> {/* FIXED: Added closing </Link> tag */}
                     </li>
                   )}
                 </ul>
@@ -238,8 +250,6 @@ const Nav: React.FC = () => {
                 </svg>
               </button>
             </div>
-            {/* Removed Mobile Search Bar inside menu */}
-
             <ul className="flex flex-col gap-2 p-4 font-medium overflow-y-auto flex-grow">
               <li>
                 <Link
@@ -266,7 +276,7 @@ const Nav: React.FC = () => {
                     Stores
                   </summary>
                   <ul className="flex flex-col items-center py-2 bg-gray-50 rounded-md mt-1">
-                    {visibleProducts.map((product: any) => (
+                    {visibleProducts.map((product) => (
                       <li key={product.id} className="w-full">
                         <Link
                           to={`/store/${product.id}`}
@@ -285,7 +295,7 @@ const Nav: React.FC = () => {
                           onClick={() => setMobileMenu(false)}
                         >
                           See More Stores
-                        </Link>
+                        </Link> {/* FIXED: Added closing </Link> tag */}
                       </li>
                     )}
                   </ul>

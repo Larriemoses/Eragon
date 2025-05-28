@@ -4,8 +4,12 @@ const MOCKUP_IMG = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v174779946
 
 const About: React.FC = () => (
   <div className="w-[90%] flex flex-col items-center px-4 py-12 bg-white">
-    <h1 className="text-2xl md:text-3xl font-bold text-center mb-2">
-      Your Discount Journey Begins Here<br />
+    <h1 className="text-2xl md:text-3xl font-bold text-center px-3 md:px-0 mb-2">
+      Your Discount Journey Begins Here
+    
+    </h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-center mb-2">
+   
       Welcome to Discount Region
     </h1>
     <div className="flex flex-col md:flex-row items-center justify-center gap-8 max-w-4xl w-full mt-6">

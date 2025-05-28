@@ -10,26 +10,27 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
+  country?: string; // Keep country field, as it might be used elsewhere, but not for this specific sort priority
 }
 
 const API_URL = "https://eragon-backend1.onrender.com/api/products/";
 const BACKEND_BASE_URL = "https://eragon-backend1.onrender.com";
 
+// Helper function to get full logo URL (unified logic)
+const getFullLogoUrl = (logoPath?: string | null) => {
+  if (logoPath) {
+    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+      return logoPath;
+    }
+    return `${BACKEND_BASE_URL}${logoPath}`;
+  }
+  return undefined;
+};
+
 const Store: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-  // Helper function to get full logo URL (unified logic)
-  const getFullLogoUrl = (logoPath?: string | null) => {
-    if (logoPath) {
-      if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
-        return logoPath;
-      }
-      return `${BACKEND_BASE_URL}${logoPath}`;
-    }
-    return undefined;
-  };
 
   useEffect(() => {
     fetch(API_URL)
@@ -40,35 +41,51 @@ const Store: React.FC = () => {
         return res.json();
       })
       .then((data) => {
-        const productData = Array.isArray(data) ? data : data.results || [];
+        const productData: Product[] = Array.isArray(data) ? data : data.results || [];
 
-        // --- START OF NEW SORTING LOGIC ---
+        // --- START OF REVISED NAME-BASED SORTING LOGIC ---
         const sortedProducts = [...productData].sort((a, b) => {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
 
-          const isOraimoA = nameA.includes("oraimo");
-          const isOraimoB = nameB.includes("oraimo");
+          // Determine priority score for product 'a'
+          let scoreA: number;
+          if (nameA.includes("oraimo nigeria")) {
+            scoreA = 1; // Highest priority: "Oraimo Nigeria" specifically
+          } else if (nameA.includes("oraimo")) {
+            scoreA = 2; // Medium priority: Other "Oraimo" products
+          } else {
+            scoreA = 3; // Lowest priority: Non-"Oraimo" products
+          }
 
-          if (isOraimoA && !isOraimoB) {
-            return -1; // 'a' (Oraimo) comes before 'b'
+          // Determine priority score for product 'b'
+          let scoreB: number;
+          if (nameB.includes("oraimo nigeria")) {
+            scoreB = 1;
+          } else if (nameB.includes("oraimo")) {
+            scoreB = 2;
+          } else {
+            scoreB = 3;
           }
-          if (!isOraimoA && isOraimoB) {
-            return 1; // 'b' (Oraimo) comes before 'a'
+
+          // 1. Compare by score first
+          if (scoreA !== scoreB) {
+            return scoreA - scoreB; // Lower score means higher priority
           }
-          // If both are Oraimo or neither are Oraimo, sort alphabetically by name
+
+          // 2. If scores are equal, sort alphabetically by name
           return nameA.localeCompare(nameB);
         });
-        // --- END OF NEW SORTING LOGIC ---
+        // --- END OF REVISED NAME-BASED SORTING LOGIC ---
 
-        setProducts(sortedProducts); // Set the sorted products
+        setProducts(sortedProducts);
       })
       .catch((error) => {
         console.error("Error fetching products in Store component:", error);
         setProducts([]);
       })
       .finally(() => setLoading(false));
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-50 py-6">
