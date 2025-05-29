@@ -1,7 +1,8 @@
 # coupon_backend/urls.py
+
 from django.contrib import admin
 from django.urls import path, include
-from django.http import HttpResponse # <--- ADD THIS IMPORT
+# No TemplateView import needed anymore
 
 # Imports for DRF and token auth
 from rest_framework.routers import DefaultRouter
@@ -15,16 +16,20 @@ from products.sitemaps import ProductSitemap, StaticSitemap
 from django.conf import settings
 from django.conf.urls.static import static
 
-# Router for the coupons app (assuming this setup)
-from coupons.views import CouponViewSet
-coupon_router = DefaultRouter()
-coupon_router.register(r'coupons', CouponViewSet, basename='coupon')
+# <--- ADD THIS IMPORT!
+# Assuming CouponViewSet is located in the views.py of your 'coupons' app
+from coupons.views import CouponViewSet 
+
 
 # Define your sitemaps dictionary
 sitemaps = {
-    'products': ProductSitemap,
+    'products': ProductSitemap,     
     'static': StaticSitemap,
 }
+
+# Router for the coupons app
+coupon_router = DefaultRouter()
+coupon_router.register(r'coupons', CouponViewSet, basename='coupon')
 
 urlpatterns = [
     # Django Admin
@@ -35,20 +40,10 @@ urlpatterns = [
     path('api/', include(coupon_router.urls)),
     path('api-token-auth/', obtain_auth_token),
 
-    # --- Frontend React Routes (Crucial for Sitemap's `reverse()` to work) ---
-    # These paths are defined here so Django's `reverse()` can find them for the sitemap.
-    # They should NOT be served by Django for actual users if frontend is on Vercel.
-    # We use a dummy view (lambda function) that returns an empty HttpResponse.
-    path('', lambda request: HttpResponse(''), name='home'), # <--- CHANGED
-    path('stores/', lambda request: HttpResponse(''), name='stores'), # <--- CHANGED
-    path('store/<int:id>/<slug:slug>/', lambda request: HttpResponse(''), name='product_store_detail'),
-    path('submit-store/', lambda request: HttpResponse(''), name='submit_store'), # <--- CHANGED
-    path('contact/', lambda request: HttpResponse(''), name='contact'), # <--- CHANGED
-
     # Sitemap URL
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 ]
 
-# Serve media files in development (usually handled by web server in production)
+# Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

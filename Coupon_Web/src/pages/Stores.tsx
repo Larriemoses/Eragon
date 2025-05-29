@@ -1,21 +1,22 @@
-// Store.tsx
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { usePageHead } from '../utils/headManager';
-import { slugify } from '../utils/slugify'; // IMPORT slugify helper
+  // Store.tsx
+  import React, { useEffect, useState } from "react";
+  import { useNavigate } from "react-router-dom";
+  import { usePageHead } from '../utils/headManager';
 
-interface Product {
-  id: number;
-  name: string;
-  logo?: string | null;
-  logo_url?: string | null;
-  title?: string;
-  subtitle?: string;
-  sub_subtitle?: string;
-  country?: string;
-}
 
-const API_URL = "https://eragon-backend1.onrender.com/api/products/";
+
+  interface Product {
+    id: number;
+    name: string;
+    logo?: string | null;
+    logo_url?: string | null;
+    title?: string;
+    subtitle?: string;
+    sub_subtitle?: string;
+    country?: string;
+  }
+
+ const API_URL = "https://eragon-backend1.onrender.com/api/products/";
 const BACKEND_BASE_URL = "https://eragon-backend1.onrender.com";
 
 // Helper function to get full logo URL (unified logic)
@@ -40,8 +41,8 @@ const Store: React.FC = () => {
     title: "All Stores & Brands - Verified Coupons & Deals | Discount Region", // Adjusted title for stores page
     description: "Browse a comprehensive list of top brands and stores offering verified discount codes on gadgets, trading tools, and everyday essentials. Find Oraimo, prop firms, Shopinverse & more.", // Adjusted description for stores page
     ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
-    ogUrl: "https://eragon-ten.vercel.app/stores", // FIXED: Using your Vercel domain
-    canonicalUrl: "https://eragon-ten.vercel.app/stores", // FIXED: Using your Vercel domain
+    ogUrl: "https://www.yourdomain.com/stores", // IMPORTANT: Replace with your actual domain
+    canonicalUrl: "https://www.yourdomain.com/stores", // IMPORTANT: Replace with your actual domain
   });
   // <--- END CORRECT PLACEMENT ---
 
@@ -131,8 +132,6 @@ const Store: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {products.map((product) => {
               const logoSrc = product.logo || product.logo_url;
-              // FIXED: Generate the slug for the product name
-              const productSlug = slugify(product.name);
               return (
                 <div
                   key={product.id}
@@ -156,8 +155,7 @@ const Store: React.FC = () => {
                   <div className="font-semibold text-center mb-2">{product.name}</div>
                   <button
                     className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold transition"
-                    // FIXED: Navigate to the new URL format with ID and slug
-                    onClick={() => navigate(`/store/${product.id}/${productSlug}`)}
+                    onClick={() => navigate(`/store/${product.id}`)}
                   >
                     Open Store
                   </button>
