@@ -38,7 +38,7 @@ export const usePageHead = (config: HeadConfig) => {
   useEffect(() => {
     // Store original title to potentially restore it on unmount (less common in SPAs)
     // For SPAs, new component's useEffect will just overwrite.
-    const originalTitle = document.title;
+
 
     // --- Title ---
     document.title = config.title;

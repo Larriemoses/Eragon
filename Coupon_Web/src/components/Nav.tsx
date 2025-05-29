@@ -23,6 +23,7 @@ const getFullLogoUrl = (logoPath?: string | null) => {
   return undefined;
 };
 
+getFullLogoUrl
 // Define a type for the product data received from the API
 interface NavProduct {
   id: number;

@@ -46,16 +46,18 @@ const getFullLogoUrl = (logoPath?: string | null) => {
 
 
 const TopDeals: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  // const [products, setProducts] = useState<Product[]>([]);
   const [coupons, setCoupons] = useState<ProductCoupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [popup, setPopup] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const showPopup = (msg: string) => {
     setPopup(msg);
     setTimeout(() => setPopup(null), 2000);
   };
 
+products
   useEffect(() => {
     const fetchTopDealsData = async () => {
       setLoading(true);
@@ -234,6 +236,7 @@ const TopDeals: React.FC = () => {
             </div>
           );
         })}
+         
       </div>
     </div>
   );
