@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import SubmitDeal from "../components/SubmitDeal";
-
-
+import { usePageHead } from '../utils/headManager';
+import { slugify } from '../utils/slugify'; // Import slugify helper
 
 interface Product {
   id: number;
@@ -12,7 +12,7 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
-  main_affiliate_url?: string | null; // Correctly added this field
+  main_affiliate_url?: string | null;
   footer_section_effortless_savings_title?: string;
   footer_section_effortless_savings_description?: string;
   footer_section_how_to_use_title?: string;
@@ -51,21 +51,17 @@ const getFullLogoUrl = (logoPath?: string | null) => {
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
       return logoPath;
     }
-    // CORRECTED: Use proper template literals
     if (logoPath.startsWith('/')) {
-        return `${BACKEND_URL}${logoPath}`;
+        return `<span class="math-inline">\{BACKEND\_URL\}</span>{logoPath}`;
     }
-    return `${BACKEND_URL}/${logoPath}`;
+    return `<span class="math-inline">\{BACKEND\_URL\}/</span>{logoPath}`;
   }
   return undefined;
 };
 
 
 const ProductStore: React.FC = () => {
-
-
-  
-  const { id } = useParams<{ id: string }>();
+  const { id, slug } = useParams<{ id: string, slug?: string }>(); // ADD slug to useParams
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -73,8 +69,7 @@ const ProductStore: React.FC = () => {
 
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);
-    // CORRECTED: Use proper template literal for fetch URL
-    await fetch(`${COUPON_API}${coupon.id}/use/`, {
+    await fetch(`<span class="math-inline">\{COUPON\_API\}</span>{coupon.id}/use/`, {
       method: "POST",
     });
     fetch(COUPON_API)
@@ -93,8 +88,7 @@ const ProductStore: React.FC = () => {
     if (!id) return;
     setLoading(true);
 
-    // CORRECTED: Use proper template literal for fetch URL
-    const fetchProduct = fetch(`${PRODUCT_API}${id}/`)
+    const fetchProduct = fetch(`<span class="math-inline">\{PRODUCT\_API\}</span>{id}/`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -123,11 +117,33 @@ const ProductStore: React.FC = () => {
 
   }, [id]);
 
+  // Dynamic values for title, description, and image (derived from product state)
+  const pageTitle = product?.name ? `${product.name} Coupons & Deals | Discount Region` : 'Product Details | Discount Region';
+  const pageDescription = product?.subtitle ? `${product.subtitle} ${product.sub_subtitle || ''} Find all verified ${product.name} coupon codes and discounts at Discount Region. Save significantly.` : `Discover great deals and coupons for products at Discount Region.`;
+  const ogImageUrl = product?.logo_url || product?.logo || 'https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png'; // Fallback image
+
+  // <--- CORRECT PLACEMENT OF usePageHead HOOK ---
+  usePageHead({
+    title: pageTitle,
+    description: pageDescription,
+    ogImage: ogImageUrl,
+    ogUrl: window.location.href, // This will automatically include the slug
+    ogType: 'website',
+    canonicalUrl: window.location.href, // This will automatically include the slug
+  });
+  // <--- END CORRECT PLACEMENT ---
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   if (!product) {
+    usePageHead({
+      title: "Product Not Found | Discount Region",
+      description: "The product or store you are looking for could not be found on Discount Region.",
+      ogUrl: window.location.href,
+      canonicalUrl: window.location.href,
+    });
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="text-xl mb-4">Product not found.</div>
@@ -140,6 +156,16 @@ const ProductStore: React.FC = () => {
       </div>
     );
   }
+
+  // OPTIONAL: If the URL slug doesn't match the actual product name, navigate to the correct URL
+  // This helps with SEO by ensuring the canonical URL always uses the correct slug.
+  const actualSlug = slugify(product.name);
+  useEffect(() => {
+    if (slug && slug !== actualSlug) {
+      // Replace the current URL with the correct slugified URL
+      navigate(`/store/<span class="math-inline">\{id\}/</span>{actualSlug}`, { replace: true });
+    }
+  }, [slug, actualSlug, id, navigate]);
 
   const mainProductLinkUrl = product.main_affiliate_url && product.main_affiliate_url.trim() !== ''
     ? product.main_affiliate_url.trim()
@@ -415,3 +441,4 @@ const ProductStore: React.FC = () => {
 };
 
 export default ProductStore;
+
