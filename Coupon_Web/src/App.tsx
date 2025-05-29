@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import React, { useState } from "react";
+import { usePageHead } from '../utils/headManager';
 import './App.css';
 import Home from './pages/Home'
 import Stores from './pages/Stores';
@@ -53,6 +54,14 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
 function App() {
   // Initialize token from localStorage
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("adminToken"));
+
+   usePageHead({
+      title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
+      description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
+      ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
+      ogUrl: "https://eragon-ten.vercel.app/", // IMPORTANT: Replace with your actual domain
+      canonicalUrl: "https://eragon-ten.vercel.app/", // IMPORTANT: Replace with your actual domain
+    });
 
   // Update localStorage whenever token changes
   React.useEffect(() => {
