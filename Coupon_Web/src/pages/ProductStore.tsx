@@ -51,17 +51,17 @@ const getFullLogoUrl = (logoPath?: string | null) => {
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
       return logoPath;
     }
+    // FIXED: Corrected template literal syntax with backticks (`)
     if (logoPath.startsWith('/')) {
-        return `<span class="math-inline">\{BACKEND\_URL\}</span>{logoPath}`;
+        return `${BACKEND_URL}${logoPath}`;
     }
-    return `<span class="math-inline">\{BACKEND\_URL\}/</span>{logoPath}`;
+    return `${BACKEND_URL}/${logoPath}`;
   }
   return undefined;
 };
 
-
 const ProductStore: React.FC = () => {
-  const { id, slug } = useParams<{ id: string, slug?: string }>(); // ADD slug to useParams
+  const { id, slug } = useParams<{ id: string, slug?: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -69,7 +69,8 @@ const ProductStore: React.FC = () => {
 
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);
-    await fetch(`<span class="math-inline">\{COUPON\_API\}</span>{coupon.id}/use/`, {
+    // FIXED: Corrected template literal syntax for fetch URL
+    await fetch(`${COUPON_API}${coupon.id}/use/`, {
       method: "POST",
     });
     fetch(COUPON_API)
@@ -88,7 +89,8 @@ const ProductStore: React.FC = () => {
     if (!id) return;
     setLoading(true);
 
-    const fetchProduct = fetch(`<span class="math-inline">\{PRODUCT\_API\}</span>{id}/`)
+    // FIXED: Corrected template literal syntax for fetch URL
+    const fetchProduct = fetch(`${PRODUCT_API}${id}/`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -122,14 +124,16 @@ const ProductStore: React.FC = () => {
   const pageDescription = product?.subtitle ? `${product.subtitle} ${product.sub_subtitle || ''} Find all verified ${product.name} coupon codes and discounts at Discount Region. Save significantly.` : `Discover great deals and coupons for products at Discount Region.`;
   const ogImageUrl = product?.logo_url || product?.logo || 'https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png'; // Fallback image
 
-  // <--- CORRECT PLACEMENT OF usePageHead HOOK ---
+  // <--- CORRECT PLACEMENT AND SYNTAX OF usePageHead HOOK ---
   usePageHead({
     title: pageTitle,
     description: pageDescription,
     ogImage: ogImageUrl,
-    ogUrl: window.location.href, // This will automatically include the slug
+    // FIXED: Corrected template literal and Vercel URL
+    ogUrl: `https://eragon-ten.vercel.app/store/${id}/${slugify(product?.name || '')}`,
     ogType: 'website',
-    canonicalUrl: window.location.href, // This will automatically include the slug
+    // FIXED: Corrected template literal and Vercel URL
+    canonicalUrl: `https://eragon-ten.vercel.app/store/${id}/${slugify(product?.name || '')}`,
   });
   // <--- END CORRECT PLACEMENT ---
 
@@ -141,8 +145,10 @@ const ProductStore: React.FC = () => {
     usePageHead({
       title: "Product Not Found | Discount Region",
       description: "The product or store you are looking for could not be found on Discount Region.",
-      ogUrl: window.location.href,
-      canonicalUrl: window.location.href,
+      // FIXED: Corrected template literal and Vercel URL
+      ogUrl: `https://eragon-ten.vercel.app/store/${id}/${slug || ''}`,
+      // FIXED: Corrected template literal and Vercel URL
+      canonicalUrl: `https://eragon-ten.vercel.app/store/${id}/${slug || ''}`,
     });
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
@@ -161,11 +167,14 @@ const ProductStore: React.FC = () => {
   // This helps with SEO by ensuring the canonical URL always uses the correct slug.
   const actualSlug = slugify(product.name);
   useEffect(() => {
-    if (slug && slug !== actualSlug) {
+    // Only redirect if slug parameter exists and doesn't match the actual slug
+    // and if product.name is available (i.e., not loading or error)
+    if (slug && slug !== actualSlug && !loading && product.name) {
       // Replace the current URL with the correct slugified URL
-      navigate(`/store/<span class="math-inline">\{id\}/</span>{actualSlug}`, { replace: true });
+      // FIXED: Corrected template literal for navigate path
+      navigate(`/store/${id}/${actualSlug}`, { replace: true });
     }
-  }, [slug, actualSlug, id, navigate]);
+  }, [slug, actualSlug, id, navigate, loading, product?.name]);
 
   const mainProductLinkUrl = product.main_affiliate_url && product.main_affiliate_url.trim() !== ''
     ? product.main_affiliate_url.trim()
@@ -404,7 +413,7 @@ const ProductStore: React.FC = () => {
         <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-2 flex-wrap md:flex-nowrap">
           {product.social_facebook_url && (
             <a
-              href={product.social_facebook_url} // REVERTED: Now uses specific Facebook URL
+              href={product.social_facebook_url}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
@@ -414,7 +423,7 @@ const ProductStore: React.FC = () => {
           )}
           {product.social_twitter_url && (
             <a
-              href={product.social_twitter_url} // REVERTED: Now uses specific Twitter URL
+              href={product.social_twitter_url}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
@@ -424,7 +433,7 @@ const ProductStore: React.FC = () => {
           )}
           {product.social_instagram_url && (
             <a
-              href={product.social_instagram_url} // REVERTED: Now uses specific Instagram URL
+              href={product.social_instagram_url}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
@@ -441,4 +450,3 @@ const ProductStore: React.FC = () => {
 };
 
 export default ProductStore;
-
