@@ -6,6 +6,15 @@ import About from '../components/About';
 
 import { usePageHead } from '../utils/headManager';
 
+
+
+  
+// Define the background image URL
+const MOBILE_HERO_BG_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1748452006/Kimberly_Martin_Designs_b1nvsg.jpg";
+
+function Home() {
+
+
  usePageHead({
     title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
     description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
@@ -14,13 +23,6 @@ import { usePageHead } from '../utils/headManager';
     canonicalUrl: "https://www.yourdomain.com/", // IMPORTANT: Replace with your actual domain
   });
 
-
-
-  
-// Define the background image URL
-const MOBILE_HERO_BG_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1748452006/Kimberly_Martin_Designs_b1nvsg.jpg";
-
-function Home() {
   return (
     <div className="flex flex-col items-center min-h-screen bg-white">
       {/* Hero Section */}
@@ -67,7 +69,7 @@ function Home() {
             */}
             <div className="w-full max-w-xs text-left relative z-10 px-3 pr-7 mx-auto"> {/* Changed text-center back to text-left, added mx-auto */}
               <h1 className="text-white text-4xl sm:text-3xl font-bold t">
-                Top <br/>Coupon Codes, <br/>Discount Codes <br/> &amp; Deals
+                Top Coupon Codes, <br/>Discount Codes <br/> &amp; Deals
               </h1>
               <p className="text-white text-sm font-normal">
                 Your trusted source for the best promo codes at checkout.
