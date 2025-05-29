@@ -1,7 +1,8 @@
 // Nav.tsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-// import { usePageHead } from '../utils/headManager'; // Keep the import here
+import { usePageHead } from '../utils/headManager';
+import { slugify } from '../utils/slugify'; // IMPORT slugify helper
 
 
 // Constants for API and logo
@@ -15,9 +16,9 @@ const getFullLogoUrl = (logoPath?: string | null) => {
       return logoPath;
     }
     if (logoPath.startsWith('/')) {
-        return `<span class="math-inline">\{BACKEND\_URL\}</span>{logoPath}`;
+        return `${BACKEND_URL}${logoPath}`;
     }
-    return `<span class="math-inline">\{BACKEND\_URL\}/</span>{logoPath}`;
+    return `${BACKEND_URL}/${logoPath}`;
   }
   return undefined;
 };
@@ -31,8 +32,14 @@ interface NavProduct {
 }
 
 const Nav: React.FC = () => {
+   usePageHead({
+    title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
+    description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
+    ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
+    ogUrl: "https://eragon-ten.vercel.app/", // Correct Vercel URL
+    canonicalUrl: "https://eragon-ten.vercel.app/", // Correct Vercel URL
+  });
 
-  
   
   const [products, setProducts] = useState<NavProduct[]>([]);
   const [dropdown, setDropdown] = useState(false);
@@ -56,54 +63,26 @@ const Nav: React.FC = () => {
 
         // --- START OF REVISED SORTING LOGIC FOR HARDCODED PRIORITY ---
         const specificPriorities = [
-          "Oraimo Nigeria",
-          "Oraimo Ghana",
-          "Oraimo Morocco",
-          "FundedNext",
-          "Maven Trading",
+          "Oraimo Nigeria", "Oraimo Ghana", "Oraimo Morocco", "FundedNext", "Maven Trading",
         ];
 
         const sortedProducts = [...fetchedProducts].sort((a, b) => {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
 
-          const indexA = specificPriorities.findIndex(
-            (priorityName) => priorityName.toLowerCase() === nameA
-          );
-          const indexB = specificPriorities.findIndex(
-            (priorityName) => priorityName.toLowerCase() === nameB
-          );
+          const indexA = specificPriorities.findIndex((priorityName) => priorityName.toLowerCase() === nameA);
+          const indexB = specificPriorities.findIndex((priorityName) => priorityName.toLowerCase() === nameB);
 
-          if (indexA !== -1 && indexB !== -1) {
-            return indexA - indexB;
-          }
-
-          if (indexA !== -1) {
-            return -1;
-          }
-
-          if (indexB !== -1) {
-            return 1;
-          }
+          if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+          if (indexA !== -1) return -1;
+          if (indexB !== -1) return 1;
 
           let scoreA: number;
-          if (nameA.includes("oraimo")) {
-            scoreA = 1;
-          } else {
-            scoreA = 2;
-          }
-
+          if (nameA.includes("oraimo")) scoreA = 1; else scoreA = 2;
           let scoreB: number;
-          if (nameB.includes("oraimo")) {
-            scoreB = 1;
-          } else {
-            scoreB = 2;
-          }
+          if (nameB.includes("oraimo")) scoreB = 1; else scoreB = 2;
 
-          if (scoreA !== scoreB) {
-            return scoreA - scoreB;
-          }
-
+          if (scoreA !== scoreB) return scoreA - scoreB;
           return nameA.localeCompare(nameB);
         });
         setProducts(sortedProducts);
@@ -190,17 +169,22 @@ const Nav: React.FC = () => {
             {dropdown && (
               <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-md shadow-lg z-20">
                 <ul className="flex flex-col py-2">
-                  {visibleProducts.map((product) => (
-                    <li key={product.id} className="w-full">
-                      <Link
-                        to={`/store/${product.id}`}
-                        className="block px-4 py-2 text-black hover:bg-gray-100 transition-colors duration-150 text-sm"
-                        onClick={() => setDropdown(false)}
-                      >
-                        {product.name}
-                      </Link>
-                    </li>
-                  ))}
+                  {visibleProducts.map((product) => {
+                    // Generate the slug for the product name
+                    const productSlug = slugify(product.name);
+                    return (
+                      <li key={product.id} className="w-full">
+                        <Link
+                          // UPDATED: Link to the new URL format with ID and slug
+                          to={`/store/${product.id}/${productSlug}`}
+                          className="block px-4 py-2 text-black hover:bg-gray-100 transition-colors duration-150 text-sm"
+                          onClick={() => setDropdown(false)}
+                        >
+                          {product.name}
+                        </Link>
+                      </li>
+                    );
+                  })}
                   {hasMoreProducts && (
                     <li className="w-full">
                       <Link
@@ -306,17 +290,22 @@ const Nav: React.FC = () => {
                     Stores
                   </summary>
                   <ul className="flex flex-col items-center py-2 bg-gray-50 rounded-md mt-1">
-                    {visibleProducts.map((product) => (
-                      <li key={product.id} className="w-full">
-                        <Link
-                          to={`/store/${product.id}`}
-                          className="block text-center text-base py-2 px-4 cursor-pointer hover:bg-gray-100 rounded-md transition-colors duration-150"
-                          onClick={() => setMobileMenu(false)}
-                        >
-                          {product.name}
-                        </Link>
-                      </li>
-                    ))}
+                    {visibleProducts.map((product) => {
+                      // Generate the slug for the product name
+                      const productSlug = slugify(product.name);
+                      return (
+                        <li key={product.id} className="w-full">
+                          <Link
+                            // UPDATED: Link to the new URL format with ID and slug
+                            to={`/store/${product.id}/${productSlug}`}
+                            className="block text-center text-base py-2 px-4 cursor-pointer hover:bg-gray-100 rounded-md transition-colors duration-150"
+                            onClick={() => setMobileMenu(false)}
+                          >
+                            {product.name}
+                          </Link>
+                        </li>
+                      );
+                    })}
                     {hasMoreProducts && (
                       <li className="w-full">
                         <Link

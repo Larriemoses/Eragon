@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import React, { useState } from "react";
-import { usePageHead } from '../utils/headManager';
+import { usePageHead } from './utils/headManager';
 import './App.css';
 import Home from './pages/Home'
 import Stores from './pages/Stores';
@@ -26,7 +26,7 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/stores" element={<Stores />} />
-        <Route path="/store/:id" element={<ProductStore />} /> {/* <-- Fix here */}
+         <Route path="/store/:id/:slug" element={<ProductStore />} />
         <Route path="/submit-store" element={<SubmitStore />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
