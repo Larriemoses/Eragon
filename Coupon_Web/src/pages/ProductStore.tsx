@@ -368,15 +368,14 @@ const ProductStore: React.FC = () => {
         </div>
       )}
       {/* --- End of Product Footer Content --- */}
-
-      {/* --- Social Media Buttons --- */}
+{/* --- Social Media Buttons --- */}
       {(product.social_facebook_url || product.social_twitter_url || product.social_instagram_url) && (
         <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-2 flex-wrap md:flex-nowrap">
           {product.social_facebook_url && (
             <a
-              href={mainProductLinkUrl}
-              target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
-              rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
+              href={product.social_facebook_url} // REVERTED: Now uses specific Facebook URL
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
             >
               Facebook
@@ -384,9 +383,9 @@ const ProductStore: React.FC = () => {
           )}
           {product.social_twitter_url && (
             <a
-              href={mainProductLinkUrl}
-              target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
-              rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
+              href={product.social_twitter_url} // REVERTED: Now uses specific Twitter URL
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
             >
               Twitter
@@ -394,9 +393,9 @@ const ProductStore: React.FC = () => {
           )}
           {product.social_instagram_url && (
             <a
-              href={mainProductLinkUrl}
-              target={mainProductLinkUrl !== '#' ? "_blank" : "_self"}
-              rel={mainProductLinkUrl !== '#' ? "noopener noreferrer" : ""}
+              href={product.social_instagram_url} // REVERTED: Now uses specific Instagram URL
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
             >
               Instagram
