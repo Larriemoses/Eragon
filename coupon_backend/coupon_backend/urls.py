@@ -1,49 +1,31 @@
-# coupon_backend/urls.py
-
 from django.contrib import admin
 from django.urls import path, include
-# No TemplateView import needed anymore
-
-# Imports for DRF and token auth
+from django.http import HttpResponseRedirect
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
-
-# Sitemaps imports
-from django.contrib.sitemaps.views import sitemap
-from products.sitemaps import ProductSitemap, StaticSitemap
-
-# Imports for media files
+from coupons.views import CouponViewSet
+from .views import home  # Import the home view
 from django.conf import settings
 from django.conf.urls.static import static
 
-# <--- ADD THIS IMPORT!
-# Assuming CouponViewSet is located in the views.py of your 'coupons' app
-from coupons.views import CouponViewSet 
+# your_project/urls.py
+from django.contrib.sitemaps.views import sitemap
+# from your_app_name.sitemaps import ProductSitemap, StaticSitemap # You'd create these
+from products.sitemaps import ProductSitemap, StaticSitemap # You'd create these
 
-
-# Define your sitemaps dictionary
 sitemaps = {
     'products': ProductSitemap,     
     'static': StaticSitemap,
 }
 
-# Router for the coupons app
-coupon_router = DefaultRouter()
-coupon_router.register(r'coupons', CouponViewSet, basename='coupon')
+
+router = DefaultRouter()
+router.register(r'coupons', CouponViewSet, basename='coupon')
 
 urlpatterns = [
-    # Django Admin
+    path('', home, name='home'),  # Add the homepage
     path('admin/', admin.site.urls),
-
-    # API Endpoints
+    path('api/', include(router.urls)),
     path('api/', include('products.urls')),
-    path('api/', include(coupon_router.urls)),
     path('api-token-auth/', obtain_auth_token),
-
-    # Sitemap URL
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
-]
-
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
