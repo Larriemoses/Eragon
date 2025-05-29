@@ -41,7 +41,7 @@ urlpatterns = [
     # We use a dummy view (lambda function) that returns an empty HttpResponse.
     path('', lambda request: HttpResponse(''), name='home'), # <--- CHANGED
     path('stores/', lambda request: HttpResponse(''), name='stores'), # <--- CHANGED
-    path('store/<int:id>/<slug:slug>/', lambda request: HttpResponse(''), name='product_store_detail'), # <--- CHANGED
+    path('store/<int:id>/<slug:slug>/', lambda request: HttpResponse(''), name='product_store_detail'),
     path('submit-store/', lambda request: HttpResponse(''), name='submit_store'), # <--- CHANGED
     path('contact/', lambda request: HttpResponse(''), name='contact'), # <--- CHANGED
 

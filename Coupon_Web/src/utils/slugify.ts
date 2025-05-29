@@ -1,6 +1,6 @@
 // src/utils/slugify.ts
-
 export const slugify = (text: string): string => {
+  if (!text) return ''; // Handle null or undefined text
   return text
     .toString()                // Cast to string
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove diacritics (accents)
