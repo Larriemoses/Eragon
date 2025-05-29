@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import SubmitDeal from "../components/SubmitDeal";
 
-import { usePageHead } from '../utils/headManager';
-
 
 
 interface Product {
@@ -42,6 +40,7 @@ interface Coupon {
   used_today: number;
   shop_now_url?: string | null;
 }
+
 const BACKEND_URL = "https://eragon-backend1.onrender.com";
 const PRODUCT_API = `${BACKEND_URL}/api/products/`;
 const COUPON_API = `${BACKEND_URL}/api/productcoupon/`;
@@ -52,19 +51,20 @@ const getFullLogoUrl = (logoPath?: string | null) => {
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
       return logoPath;
     }
+    // CORRECTED: Use proper template literals
     if (logoPath.startsWith('/')) {
-        return `<span class="math-inline">\{BACKEND\_URL\}</span>{logoPath}`;
+        return `${BACKEND_URL}${logoPath}`;
     }
-    return `<span class="math-inline">\{BACKEND\_URL\}/</span>{logoPath}`;
+    return `${BACKEND_URL}/${logoPath}`;
   }
   return undefined;
 };
 
 
 const ProductStore: React.FC = () => {
-  // <--- MOVE THE usePageHead CALL HERE! This is inside the function component.
-  // It needs to be after useState and useEffect calls so it can use 'product' data.
 
+
+  
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
@@ -73,7 +73,8 @@ const ProductStore: React.FC = () => {
 
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);
-    await fetch(`<span class="math-inline">\{COUPON\_API\}</span>{coupon.id}/use/`, {
+    // CORRECTED: Use proper template literal for fetch URL
+    await fetch(`${COUPON_API}${coupon.id}/use/`, {
       method: "POST",
     });
     fetch(COUPON_API)
@@ -92,7 +93,8 @@ const ProductStore: React.FC = () => {
     if (!id) return;
     setLoading(true);
 
-    const fetchProduct = fetch(`<span class="math-inline">\{PRODUCT\_API\}</span>{id}/`)
+    // CORRECTED: Use proper template literal for fetch URL
+    const fetchProduct = fetch(`${PRODUCT_API}${id}/`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -121,35 +123,11 @@ const ProductStore: React.FC = () => {
 
   }, [id]);
 
-  // Dynamic values for title, description, and image (derived from product state)
-  const pageTitle = product?.name ? `${product.name} Coupons & Deals | Discount Region` : 'Product Details | Discount Region';
-  const pageDescription = product?.subtitle ? `${product.subtitle} ${product.sub_subtitle || ''} Find all verified ${product.name} coupon codes and discounts at Discount Region. Save significantly.` : `Discover great deals and coupons for products at Discount Region.`;
-  const ogImageUrl = product?.logo_url || product?.logo || 'https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png'; // Fallback image
-
-  // <--- CORRECT PLACEMENT OF usePageHead HOOK ---
-  // It is inside the functional component, after state definitions and data fetching logic (if dependent on data).
-  usePageHead({
-    title: pageTitle,
-    description: pageDescription,
-    ogImage: ogImageUrl, // Pass the raw path, getFullLogoUrl handles conversion inside headManager
-    ogUrl: window.location.href, // Dynamic URL for current page
-    ogType: 'website',
-    canonicalUrl: window.location.href, // Canonical URL for current page
-  });
-  // <--- END CORRECT PLACEMENT ---
-
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   if (!product) {
-    // If product is not found, set default head tags (also correctly placed here)
-    usePageHead({
-      title: "Product Not Found | Discount Region",
-      description: "The product or store you are looking for could not be found on Discount Region.",
-      ogUrl: window.location.href,
-      canonicalUrl: window.location.href,
-    });
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="text-xl mb-4">Product not found.</div>
@@ -281,6 +259,7 @@ const ProductStore: React.FC = () => {
       {(product.footer_section_how_to_use_title || product.footer_section_how_to_use_steps || product.footer_section_how_to_use_note) && (
         <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
           <h2
+            className="text-2xl font-bold text-gray-800 mb-2 text-center"
             dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
           />
           {product.footer_section_how_to_use_steps && (
