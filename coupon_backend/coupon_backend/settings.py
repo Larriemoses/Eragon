@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'corsheaders',  # For CORS
     'rest_framework.authtoken',  # Add this for token authentication
     'products',
+    'django.contrib.sitemaps',
 ]
 
 MIDDLEWARE = [
