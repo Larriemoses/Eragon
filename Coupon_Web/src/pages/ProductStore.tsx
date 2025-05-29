@@ -2,6 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import SubmitDeal from "../components/SubmitDeal";
 
+import { usePageHead } from '../utils/headManager';
+
+ usePageHead({
+    title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
+    description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
+    ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
+    ogUrl: "https://www.yourdomain.com/", // IMPORTANT: Replace with your actual domain
+    canonicalUrl: "https://www.yourdomain.com/", // IMPORTANT: Replace with your actual domain
+  });
+
 interface Product {
   id: number;
   name: string;

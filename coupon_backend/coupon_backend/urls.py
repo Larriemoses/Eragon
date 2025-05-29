@@ -24,6 +24,16 @@ from .views import home  # Import the home view
 from django.conf import settings
 from django.conf.urls.static import static
 
+# your_project/urls.py
+from django.contrib.sitemaps.views import sitemap
+from your_app_name.sitemaps import ProductSitemap, StaticSitemap # You'd create these
+
+sitemaps = {
+    'products': ProductSitemap,     
+    'static': StaticSitemap,
+}
+
+
 router = DefaultRouter()
 router.register(r'coupons', CouponViewSet, basename='coupon')
 
