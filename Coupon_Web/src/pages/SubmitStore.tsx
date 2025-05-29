@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import emailjs from '@emailjs/browser';
-import { usePageHead } from '../utils/headManager';
+import { usePageHead } from '../utils/headManager'; // Keep the import here
 
 
-
-  
 const SubmitStore: React.FC = () => {
 
+   // <--- CORRECT PLACEMENT OF usePageHead HOOK ---
+   // It MUST be the very first thing called inside the functional component's body.
    usePageHead({
-    title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
-    description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
+    title: "Submit Your Store | Discount Region - Share Your Deals", // Adjusted title for submit page
+    description: "Submit your store and share your coupon codes and verified deals with the Discount Region community. Get your brand featured!", // Adjusted description for submit page
     ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
-    ogUrl: "https://www.yourdomain.com/", // IMPORTANT: Replace with your actual domain
-    canonicalUrl: "https://www.yourdomain.com/", // IMPORTANT: Replace with your actual domain
+    ogUrl: "https://www.yourdomain.com/submit-store", // IMPORTANT: Replace with your actual domain
+    canonicalUrl: "https://www.yourdomain.com/submit-store", // IMPORTANT: Replace with your actual domain
   });
-
+  // <--- END CORRECT PLACEMENT ---
 
 
   const [form, setForm] = useState({

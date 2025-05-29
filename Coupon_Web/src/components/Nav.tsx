@@ -1,7 +1,7 @@
 // Nav.tsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { usePageHead } from '../utils/headManager';
+import { usePageHead } from '../utils/headManager'; // Keep the import here
 
 
 // Constants for API and logo
@@ -15,9 +15,9 @@ const getFullLogoUrl = (logoPath?: string | null) => {
       return logoPath;
     }
     if (logoPath.startsWith('/')) {
-        return `${BACKEND_URL}${logoPath}`;
+        return `<span class="math-inline">\{BACKEND\_URL\}</span>{logoPath}`;
     }
-    return `${BACKEND_URL}/${logoPath}`;
+    return `<span class="math-inline">\{BACKEND\_URL\}/</span>{logoPath}`;
   }
   return undefined;
 };
@@ -32,7 +32,7 @@ interface NavProduct {
 
 const Nav: React.FC = () => {
 
-
+   // <--- MOVE THE usePageHead CALL HERE! This is inside the function component.
    usePageHead({
     title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
     description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
@@ -57,13 +57,12 @@ const Nav: React.FC = () => {
         if (!productsRes.ok) {
           throw new Error(`HTTP error! status: ${productsRes.status} for products`);
         }
-        const rawProductsData: NavProduct[] = await productsRes.json(); // Explicitly type raw data
+        const rawProductsData: NavProduct[] = await productsRes.json();
 
-        // Ensure the data is an array and handle potential .results if API structure varies
         const fetchedProducts: NavProduct[] = Array.isArray(rawProductsData) ? rawProductsData : (rawProductsData as any).results || [];
 
 
-        // --- START OF REVISED SORTING LOGIC FOR HARDCODED PRIORITY (Copied from Store.tsx) ---
+        // --- START OF REVISED SORTING LOGIC FOR HARDCODED PRIORITY ---
         const specificPriorities = [
           "Oraimo Nigeria",
           "Oraimo Ghana",
@@ -72,11 +71,10 @@ const Nav: React.FC = () => {
           "Maven Trading",
         ];
 
-        const sortedProducts = [...fetchedProducts].sort((a, b) => { // Use fetchedProducts for sorting
+        const sortedProducts = [...fetchedProducts].sort((a, b) => {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
 
-          // Get the index in the specificPriorities array (case-insensitive)
           const indexA = specificPriorities.findIndex(
             (priorityName) => priorityName.toLowerCase() === nameA
           );
@@ -84,22 +82,18 @@ const Nav: React.FC = () => {
             (priorityName) => priorityName.toLowerCase() === nameB
           );
 
-          // If both are in the specific priorities list, sort by their index
           if (indexA !== -1 && indexB !== -1) {
             return indexA - indexB;
           }
 
-          // If only 'a' is in the specific priorities list, 'a' comes first
           if (indexA !== -1) {
             return -1;
           }
 
-          // If only 'b' is in the specific priorities list, 'b' comes first
           if (indexB !== -1) {
             return 1;
           }
 
-          // If neither is in the specific priorities list, then apply the general Oraimo/alphabetical logic
           let scoreA: number;
           if (nameA.includes("oraimo")) {
             scoreA = 1;
@@ -114,16 +108,12 @@ const Nav: React.FC = () => {
             scoreB = 2;
           }
 
-          // 1. Compare by score first (General Oraimo vs. Others)
           if (scoreA !== scoreB) {
             return scoreA - scoreB;
           }
 
-          // 2. If scores are equal, sort alphabetically by name
           return nameA.localeCompare(nameB);
         });
-        // --- END OF REVISED SORTING LOGIC ---
-
         setProducts(sortedProducts);
       } catch (error) {
         console.error("Error fetching products for Nav:", error);

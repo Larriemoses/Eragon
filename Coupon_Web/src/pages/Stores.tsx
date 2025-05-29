@@ -1,22 +1,22 @@
-// Store.tsx
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { usePageHead } from '../utils/headManager';
+  // Store.tsx
+  import React, { useEffect, useState } from "react";
+  import { useNavigate } from "react-router-dom";
+  import { usePageHead } from '../utils/headManager';
 
 
 
-interface Product {
-  id: number;
-  name: string;
-  logo?: string | null;
-  logo_url?: string | null;
-  title?: string;
-  subtitle?: string;
-  sub_subtitle?: string;
-  country?: string;
-}
+  interface Product {
+    id: number;
+    name: string;
+    logo?: string | null;
+    logo_url?: string | null;
+    title?: string;
+    subtitle?: string;
+    sub_subtitle?: string;
+    country?: string;
+  }
 
-const API_URL = "https://eragon-backend1.onrender.com/api/products/";
+ const API_URL = "https://eragon-backend1.onrender.com/api/products/";
 const BACKEND_BASE_URL = "https://eragon-backend1.onrender.com";
 
 // Helper function to get full logo URL (unified logic)
@@ -35,18 +35,17 @@ const getFullLogoUrl = (logoPath?: string | null) => {
 };
 
 const Store: React.FC = () => {
-
-
-   usePageHead({
-    title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
-    description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
+  // <--- CORRECT PLACEMENT OF usePageHead HOOK ---
+  // It MUST be the very first thing called inside the functional component's body.
+  usePageHead({
+    title: "All Stores & Brands - Verified Coupons & Deals | Discount Region", // Adjusted title for stores page
+    description: "Browse a comprehensive list of top brands and stores offering verified discount codes on gadgets, trading tools, and everyday essentials. Find Oraimo, prop firms, Shopinverse & more.", // Adjusted description for stores page
     ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
-    ogUrl: "https://www.yourdomain.com/", // IMPORTANT: Replace with your actual domain
-    canonicalUrl: "https://www.yourdomain.com/", // IMPORTANT: Replace with your actual domain
+    ogUrl: "https://www.yourdomain.com/stores", // IMPORTANT: Replace with your actual domain
+    canonicalUrl: "https://www.yourdomain.com/stores", // IMPORTANT: Replace with your actual domain
   });
+  // <--- END CORRECT PLACEMENT ---
 
-
-  
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -68,14 +67,13 @@ const Store: React.FC = () => {
           "Oraimo Ghana",
           "Oraimo Morocco",
           "FundedNext",
-          "Maven Trading", // CORRECTED: Changed from "Maven" to "Maven Trading"
+          "Maven Trading",
         ];
 
         const sortedProducts = [...productData].sort((a, b) => {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
 
-          // Get the index in the specificPriorities array (case-insensitive)
           const indexA = specificPriorities.findIndex(
             (priorityName) => priorityName.toLowerCase() === nameA
           );
@@ -83,22 +81,18 @@ const Store: React.FC = () => {
             (priorityName) => priorityName.toLowerCase() === nameB
           );
 
-          // If both are in the specific priorities list, sort by their index
           if (indexA !== -1 && indexB !== -1) {
             return indexA - indexB;
           }
 
-          // If only 'a' is in the specific priorities list, 'a' comes first
           if (indexA !== -1) {
             return -1;
           }
 
-          // If only 'b' is in the specific priorities list, 'b' comes first
           if (indexB !== -1) {
             return 1;
           }
 
-          // If neither is in the specific priorities list, then apply the Oraimo/alphabetical logic
           let scoreA: number;
           if (nameA.includes("oraimo")) {
             scoreA = 1;
@@ -113,16 +107,12 @@ const Store: React.FC = () => {
             scoreB = 2;
           }
 
-          // 1. Compare by score first (Oraimo vs. Others)
           if (scoreA !== scoreB) {
             return scoreA - scoreB;
           }
 
-          // 2. If scores are equal (both Oraimo or both Others), sort alphabetically by name
           return nameA.localeCompare(nameB);
         });
-        // --- END OF REVISED SORTING LOGIC ---
-
         setProducts(sortedProducts);
       })
       .catch((error) => {

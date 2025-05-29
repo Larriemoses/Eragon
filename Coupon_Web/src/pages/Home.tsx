@@ -3,19 +3,14 @@ import PopularStores from '../components/PopularStores';
 import TopDeals from '../components/TopDeals';
 import About from '../components/About';
 
-
 import { usePageHead } from '../utils/headManager';
 
-
-
-  
 // Define the background image URL
 const MOBILE_HERO_BG_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1748452006/Kimberly_Martin_Designs_b1nvsg.jpg";
 
 function Home() {
-
-
- usePageHead({
+  // CORRECT PLACEMENT: usePageHead is inside the functional component.
+  usePageHead({
     title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
     description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
     ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
@@ -67,9 +62,10 @@ function Home() {
               We keep the outer flex `justify-center` on the mobile hero container
               and use `mx-auto` on the text content div, and ensure it has a max-width.
             */}
-            <div className="w-full max-w-xs text-left relative z-10 px-3 pr-7 mx-auto"> {/* Changed text-center back to text-left, added mx-auto */}
-              <h1 className="text-white text-4xl sm:text-3xl font-bold t">
-                Top Coupon Codes, <br/>Discount Codes <br/> &amp; Deals
+            <div className="w-full max-w-xs text-left relative z-10 px-3 pr-7 mx-auto">
+              {/* FIXED: Removed stray 't' character after font-bold */}
+              <h1 className="text-white text-4xl sm:text-3xl font-bold">
+                Top <br/>Coupon Codes, <br/>Discount Codes <br/> &amp; Deals
               </h1>
               <p className="text-white text-sm font-normal">
                 Your trusted source for the best promo codes at checkout.
