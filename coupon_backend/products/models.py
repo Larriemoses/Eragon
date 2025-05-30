@@ -16,6 +16,7 @@ class Product(models.Model):
         verbose_name="Main Product Affiliate Link",
         help_text="Primary affiliate link for the product (e.g., used on logo, social buttons)"
     )
+    
     # --- End of new field ---
 
     # --- Existing fields for Product Footer content ---
