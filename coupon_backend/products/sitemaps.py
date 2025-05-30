@@ -5,7 +5,7 @@ from .models import Product
 import re # Import re for slugify
 
 # --- IMPORTANT: Define your Vercel frontend domain here ---
-FRONTEND_DOMAIN = "eragon-ten.vercel.app" # No http/https, just the domain
+FRONTEND_DOMAIN = "discountregion.com" # No http/https, just the domain
 # --- End of important definition ---
 
 def slugify_py(text):
