@@ -37,8 +37,8 @@ const Nav: React.FC = () => {
     title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
     description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
     ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
-    ogUrl: "https://eragon-ten.vercel.app/", // Correct Vercel URL
-    canonicalUrl: "https://eragon-ten.vercel.app/", // Correct Vercel URL
+    ogUrl: "https://www.discountregion.com/", // Correct Vercel URL
+    canonicalUrl: "https://www.discountregion.com/", // Correct Vercel URL
   });
 
   
