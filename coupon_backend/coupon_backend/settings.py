@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import dj_database_url
 from pathlib import Path
 import os
+# coupon_backend/settings.py
+
+# ... (existing imports)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,9 +51,13 @@ INSTALLED_APPS = [
     'corsheaders',  # For CORS
     'rest_framework.authtoken',  # Add this for token authentication
     'products',
-    'django.contrib.sites', # <--- ADD THIS LINE
+    'django.contrib.sites',
     'django.contrib.sitemaps',
 ]
+
+# --- ADD THIS LINE ---
+SITE_ID = 1
+# ---------------------
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # CORS middleware should be at the top
