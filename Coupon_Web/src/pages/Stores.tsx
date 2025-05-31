@@ -38,11 +38,11 @@ const Store: React.FC = () => {
   // <--- CORRECT PLACEMENT OF usePageHead HOOK ---
   // It MUST be the very first thing called inside the functional component's body.
   usePageHead({
-    title: "All Stores & Brands - Verified Coupons & Deals | Discount Region", // Adjusted title for stores page
-    description: "Browse a comprehensive list of top brands and stores offering verified discount codes on gadgets, trading tools, and everyday essentials. Find Oraimo, prop firms, Shopinverse & more.", // Adjusted description for stores page
-    ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
-    ogUrl: "https://www.discountregion.com/stores", // IMPORTANT: Replace with your actual domain
-    canonicalUrl: "https://www.discountregion.com/stores", // IMPORTANT: Replace with your actual domain
+    title: "All Stores & Brands - Verified Coupons & Deals | Discount Region",
+    description: "Browse a comprehensive list of top brands and stores offering verified discount codes on gadgets, trading tools, and everyday essentials. Find Oraimo, prop firms, Shopinverse & more.",
+    ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Consider a different image if you have one for stores
+    ogUrl: "https://www.discountregion.com/stores",
+    canonicalUrl: "https://www.discountregion.com/stores",
   });
   // <--- END CORRECT PLACEMENT ---
 
