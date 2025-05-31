@@ -25,8 +25,8 @@ class ProductSitemap(Sitemap):
         return Product.objects.all()
 
     def location(self, obj):
-        # FIXED: Use the hardcoded frontend domain
-        return f"https://{FRONTEND_DOMAIN}/store/{obj.id}/{slugify_py(obj.name)}/"
+        # UPDATED: Removed obj.id from the URL
+        return f"https://{FRONTEND_DOMAIN}/store/{slugify_py(obj.name)}/"
 
 class StaticSitemap(Sitemap):
     changefreq = "monthly"
@@ -36,5 +36,5 @@ class StaticSitemap(Sitemap):
         return ['/', '/stores/', '/submit-store/', '/contact/']
 
     def location(self, item):
-        # FIXED: Use the hardcoded frontend domain
+        # This part remains the same as it correctly uses the item path
         return f"https://{FRONTEND_DOMAIN}{item}"

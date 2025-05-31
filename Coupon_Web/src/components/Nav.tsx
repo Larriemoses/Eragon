@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { usePageHead } from '../utils/headManager';
-import { slugify } from '../utils/slugify'; // IMPORT slugify helper
+import { slugify } from '../utils/slugify'; // Keep slugify helper, as it's now essential for generating the new URLs
 
 
 // Constants for API and logo
@@ -23,7 +23,6 @@ const getFullLogoUrl = (logoPath?: string | null) => {
   return undefined;
 };
 
-getFullLogoUrl
 // Define a type for the product data received from the API
 interface NavProduct {
   id: number;
@@ -176,8 +175,8 @@ const Nav: React.FC = () => {
                     return (
                       <li key={product.id} className="w-full">
                         <Link
-                          // UPDATED: Link to the new URL format with ID and slug
-                          to={`/store/${product.id}/${productSlug}`}
+                          // UPDATED: Link to the new URL format without ID, using only slug
+                          to={`/store/${productSlug}`}
                           className="block px-4 py-2 text-black hover:bg-gray-100 transition-colors duration-150 text-sm"
                           onClick={() => setDropdown(false)}
                         >
@@ -297,8 +296,8 @@ const Nav: React.FC = () => {
                       return (
                         <li key={product.id} className="w-full">
                           <Link
-                            // UPDATED: Link to the new URL format with ID and slug
-                            to={`/store/${product.id}/${productSlug}`}
+                            // UPDATED: Link to the new URL format without ID, using only slug
+                            to={`/store/${productSlug}`}
                             className="block text-center text-base py-2 px-4 cursor-pointer hover:bg-gray-100 rounded-md transition-colors duration-150"
                             onClick={() => setMobileMenu(false)}
                           >
