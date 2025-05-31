@@ -1,7 +1,10 @@
+
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import SubmitDeal from "../components/SubmitDeal";
 import { usePageHead } from '../utils/headManager';
+// The slugify import is entirely removed as it's no longer used.
 
 interface Product {
   id: number;
@@ -41,9 +44,10 @@ interface Coupon {
 }
 
 const BACKEND_URL = "https://eragon-backend1.onrender.com";
-const PRODUCT_BY_SLUG_API = `${BACKEND_URL}/api/products/by_slug/`;
+const PRODUCT_API = `${BACKEND_URL}/api/products/`;
 const COUPON_API = `${BACKEND_URL}/api/productcoupon/`;
 
+// Helper function to get full logo URL (unified logic)
 const getFullLogoUrl = (logoPath?: string | null) => {
   if (logoPath) {
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
@@ -59,42 +63,11 @@ const getFullLogoUrl = (logoPath?: string | null) => {
 
 
 const ProductStore: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { id } = useParams<{ id: string }>(); // 'slug' is completely removed here
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentProductId, setCurrentProductId] = useState<number | null>(null);
-
-  // --- Dynamic Head Management Logic (Consolidated and Unconditional) ---
-  // Determine head content based on loading state and product data
-  let headTitle = 'Product Details | Discount Region';
-  let headDescription = 'Discover great deals and coupons for products at Discount Region.';
-  let headOgImage = 'https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png'; // Fallback
-
-  if (!loading) { // Once loading is complete, determine content
-    if (product) {
-      headTitle = product.name ? `${product.name} Coupons & Deals | Discount Region` : headTitle;
-      headDescription = product.subtitle ? `${product.subtitle} ${product.sub_subtitle || ''} Find all verified ${product.name} coupon codes and discounts at Discount Region. Save significantly.` : headDescription;
-      headOgImage = product.logo_url || product.logo || headOgImage;
-    } else { // Product not found
-      headTitle = "Product Not Found | Discount Region";
-      headDescription = "The product or store you are looking for could not be found on Discount Region.";
-      // ogImage can remain fallback
-    }
-  }
-
-  // --- CALL usePageHead UNCONDITIONALLY HERE ---
-  usePageHead({
-    title: headTitle,
-    description: headDescription,
-    ogImage: headOgImage,
-    ogUrl: window.location.href,
-    ogType: 'website',
-    canonicalUrl: window.location.href,
-  });
-  // --- END HEAD MANAGEMENT ---
-
 
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);
@@ -108,59 +81,70 @@ const ProductStore: React.FC = () => {
       })
       .then(data => {
         const couponData = Array.isArray(data) ? data : data.results || [];
-        setCoupons(couponData.filter((c: Coupon) => c.product === currentProductId))
+        setCoupons(couponData.filter((c: Coupon) => c.product === Number(id)))
       })
       .catch(error => console.error("Error refreshing coupons after copy:", error));
   };
 
   useEffect(() => {
-    if (!slug) {
-        setLoading(false);
-        return;
-    }
+    if (!id) return;
     setLoading(true);
 
-    fetch(`${PRODUCT_BY_SLUG_API}${slug}/`)
+    const fetchProduct = fetch(`${PRODUCT_API}${id}/`)
       .then(res => {
         if (!res.ok) {
-          if (res.status === 404) {
-              setProduct(null);
-              setCurrentProductId(null);
-              setCoupons([]);
-              setLoading(false);
-              return Promise.reject(new Error("Product not found (404)"));
-          }
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         return res.json();
       })
-      .then(productData => {
-          setProduct(productData);
-          setCurrentProductId(productData.id);
-          return productData.id;
-      })
-      .then(fetchedProductId => {
-          return fetch(COUPON_API)
-              .then(res => {
-                  if (!res.ok) throw new Error(`HTTP error! status: ${res.status} when fetching coupons`);
-                  return res.json();
-              })
-              .then(couponResponseData => {
-                  const couponData = Array.isArray(couponResponseData) ? couponResponseData : couponResponseData.results || [];
-                  setCoupons(couponData.filter((c: Coupon) => c.product === fetchedProductId));
-              });
-      })
+      .then(setProduct)
       .catch(error => {
-        console.error("Error fetching product or coupons:", error);
-        setLoading(false);
+        console.error("Error fetching product:", error);
+        setProduct(null);
       });
-  }, [slug]);
+
+    const fetchCoupons = fetch(COUPON_API)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status} when fetching coupons`);
+        return res.json();
+      })
+      .then(data => {
+        const couponData = Array.isArray(data) ? data : data.results || [];
+        setCoupons(couponData.filter((c: Coupon) => c.product === Number(id)))
+      })
+      .catch(error => console.error("Error fetching coupons:", error));
+
+    Promise.all([fetchProduct, fetchCoupons])
+      .finally(() => setLoading(false));
+
+  }, [id]);
+
+  // Dynamic values for title, description, and image (derived from product state)
+  const pageTitle = product?.name ? `${product.name} Coupons & Deals | Discount Region` : 'Product Details | Discount Region';
+  const pageDescription = product?.subtitle ? `${product.subtitle} ${product.sub_subtitle || ''} Find all verified ${product.name} coupon codes and discounts at Discount Region. Save significantly.` : `Discover great deals and coupons for products at Discount Region.`;
+  const ogImageUrl = product?.logo_url || product?.logo || 'https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png'; // Fallback image
+
+  // The usePageHead hook remains as it is, using window.location.href which doesn't rely on a slug.
+  usePageHead({
+    title: pageTitle,
+    description: pageDescription,
+    ogImage: ogImageUrl,
+    ogUrl: window.location.href,
+    ogType: 'website',
+    canonicalUrl: window.location.href,
+  });
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   if (!product) {
+    usePageHead({
+      title: "Product Not Found | Discount Region",
+      description: "The product or store you are looking for could not be found on Discount Region.",
+      ogUrl: window.location.href,
+      canonicalUrl: window.location.href,
+    });
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="text-xl mb-4">Product not found.</div>
@@ -174,6 +158,8 @@ const ProductStore: React.FC = () => {
     );
   }
 
+  // The useEffect block that handled slug-based navigation is completely removed.
+
   const mainProductLinkUrl = product.main_affiliate_url && product.main_affiliate_url.trim() !== ''
     ? product.main_affiliate_url.trim()
     : '#';
@@ -181,19 +167,23 @@ const ProductStore: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center bg-white py-8">
       <div className="max-w-xl w-[90%] flex flex-col items-center">
+        {/* Title */}
         <h1 className="text-3xl font-bold text-center mb-1">
           {product.title || product.name}
         </h1>
+        {/* Subtitle */}
         {product.subtitle && (
           <div className="text-center text-lg text-gray-900 mb-1">
             <h2 className="font-bold">{product.subtitle}</h2>
           </div>
         )}
+        {/* Sub-sub-title */}
         {product.sub_subtitle && (
           <div className="text-center text-base text-gray-500 mb-4">
             {product.sub_subtitle}
           </div>
         )}
+        {/* Product Logo with Link */}
         <div className="flex justify-center mb-6">
           {(product.logo || product.logo_url) ? (
             <a
@@ -209,6 +199,7 @@ const ProductStore: React.FC = () => {
             </a>
           ) : null}
         </div>
+        {/* Coupon list container and individual coupon card widths */}
         <div className="w-full flex flex-col items-center gap-6 md:flex-row md:flex-wrap md:justify-center">
           {coupons.length === 0 ? (
             <div className="text-center text-gray-500">No coupons available for this store.</div>
@@ -218,6 +209,7 @@ const ProductStore: React.FC = () => {
                 key={coupon.id}
                 className="w-[90%] sm:w-[80%] md:w-[100%] max-w-xs rounded-xl shadow-xl p-4 flex flex-col gap-2 relative overflow-hidden"
               >
+                {/* Product Logo */}
                 <div className="flex justify-start mb-2">
                   {product.logo || product.logo_url ? (
                     <img
@@ -236,6 +228,7 @@ const ProductStore: React.FC = () => {
                   <span>{coupon.used_count} used</span>
                   <span>{coupon.used_today} Today</span>
                 </div>
+                {/* Only show code and Copy button if coupon.code exists */}
                 {coupon.code && (
                   <div className="flex gap-2">
                     <span className="bg-gray-200 px-4 py-2 rounded font-bold text-lg select-all">
@@ -249,6 +242,7 @@ const ProductStore: React.FC = () => {
                     </button>
                   </div>
                 )}
+                {/* Shop Now button uses coupon.shop_now_url */}
                 {coupon.shop_now_url && (
                   <a
                     href={coupon.shop_now_url}
@@ -265,6 +259,8 @@ const ProductStore: React.FC = () => {
         </div>
       </div>
 
+      {/* --- Product Footer Content (embedded here) --- */}
+      {/* Footer Section: Effortless Savings */}
       {(product.footer_section_effortless_savings_title || product.footer_section_effortless_savings_description) && (
         <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
           <h2
@@ -277,6 +273,8 @@ const ProductStore: React.FC = () => {
           />
         </div>
       )}
+
+      {/* Footer Section: How to Use (updated to handle plain text or array) */}
       {(product.footer_section_how_to_use_title || product.footer_section_how_to_use_steps || product.footer_section_how_to_use_note) && (
         <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
           <h2
@@ -305,6 +303,8 @@ const ProductStore: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Footer Section: Tips (updated to handle plain text or array) */}
       {(product.footer_section_tips_title || product.footer_section_tips_list) && (
         <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
           <h2
@@ -327,17 +327,24 @@ const ProductStore: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Footer Section: Contact - Styled to match the image */}
       {(product.footer_section_contact_title || product.footer_section_contact_description || product.footer_contact_phone || product.footer_contact_email || product.footer_contact_whatsapp) && (
         <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
           <h2
             className="text-2xl font-bold text-gray-800 mb-4 text-center"
             dangerouslySetInnerHTML={{ __html: product.footer_section_contact_title || "" }}
           />
-          <p
-            className="text-gray-600 mb-6 text-center"
-            dangerouslySetInnerHTML={{ __html: product.footer_section_contact_description }}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-4 text-gray-700">  
+          {product.footer_section_contact_description && (
+            <p
+              className="text-gray-600 mb-6 text-center"
+              dangerouslySetInnerHTML={{ __html: product.footer_section_contact_description }}
+            />
+          )}
+          {/* Main grid container for Phone/Email/WhatsApp sections */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-4 text-gray-700">
+
+            {/* Phone Support */}
             {product.footer_contact_phone && (
               <div className="flex flex-col items-center text-center">
                 <p className="font-bold text-lg mb-2">📞 Phone Support</p>
@@ -348,6 +355,8 @@ const ProductStore: React.FC = () => {
                 ))}
               </div>
             )}
+
+            {/* Email Support */}
             {product.footer_contact_email && (
               <div className="flex flex-col items-center text-center md:col-span-1">
                 <p className="font-bold text-lg mb-2">✉️ Email Support</p>
@@ -360,6 +369,8 @@ const ProductStore: React.FC = () => {
                 ))}
               </div>
             )}
+
+            {/* WhatsApp Support */}
             {product.footer_contact_whatsapp && (
               <div className="flex flex-col items-center text-center md:col-start-2 md:row-start-1">
                 <p className="font-bold text-lg mb-2">💬 Whatsapp Support</p>
@@ -380,6 +391,8 @@ const ProductStore: React.FC = () => {
           </div>
         </div>
       )}
+      {/* --- End of Product Footer Content --- */}
+{/* --- Social Media Buttons --- */}
       {(product.social_facebook_url || product.social_twitter_url || product.social_instagram_url) && (
         <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-2 flex-wrap md:flex-nowrap">
           {product.social_facebook_url && (
@@ -414,6 +427,7 @@ const ProductStore: React.FC = () => {
           )}
         </div>
       )}
+      {/* --- End of Social Media Buttons --- */}
       <SubmitDeal />
     </div>
   );

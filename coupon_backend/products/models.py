@@ -1,13 +1,8 @@
-# your_app_name/models.py or products/models.py
+# your_app_name/models.py
 from django.db import models
-from django.utils.text import slugify # Import slugify
 
 class Product(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    # ADD THIS LINE:
-    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True) # Add this field!
-    # It's unique to ensure clean URLs, blank=True/null=True for initial migration
-
     logo = models.ImageField(upload_to='product_logos/', blank=True, null=True)
     logo_url = models.URLField(blank=True, null=True)
     title = models.CharField(max_length=255, blank=True)
@@ -21,6 +16,8 @@ class Product(models.Model):
         verbose_name="Main Product Affiliate Link",
         help_text="Primary affiliate link for the product (e.g., used on logo, social buttons)"
     )
+    
+    # --- End of new field ---
 
     # --- Existing fields for Product Footer content ---
     footer_section_effortless_savings_title = models.CharField(max_length=255, blank=True, null=True)
@@ -39,16 +36,11 @@ class Product(models.Model):
     footer_contact_email = models.EmailField(blank=True, null=True)
     footer_contact_whatsapp = models.CharField(max_length=100, blank=True, null=True)
 
-    # --- Social Media Links ---
+    # --- Social Media Links (these will still be available for specific social links if needed elsewhere) ---
     social_facebook_url = models.URLField(blank=True, null=True)
     social_twitter_url = models.URLField(blank=True, null=True)
     social_instagram_url = models.URLField(blank=True, null=True)
     # --- End of Product model ---
-
-    def save(self, *args, **kwargs):
-        if not self.slug: # Generate slug only if it's not already set
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
