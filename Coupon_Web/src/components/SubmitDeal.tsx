@@ -39,7 +39,7 @@ const SubmitStore: React.FC = () => {
 
   return (
     // Outer container: Fills the screen and centers content (Flexbox)
-    <div className="min-h-screen flex items-start justify-center p-4 bg-gray-50 mt-12">
+    <div className="flex items-start justify-center p-4 bg-gray-50 mt-12">
       {/* Inner container: Controls max width and provides card-like styling */}
       {/* Changed max-w-xl to max-w-lg for slightly reduced desktop width */}
       <div className="w-full max-w-lg p-6 bg-white shadow-xl rounded-lg border border-gray-200">
