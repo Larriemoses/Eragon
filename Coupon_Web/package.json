@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+     "build": "tsc -b && vite build && node scripts/prerender.js", 
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -26,10 +26,10 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "playwright": "^1.52.0",
     "puppeteer": "^24.9.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
-    "vite": "^6.3.5",
-    "vite-plugin-prerender": "^1.0.8"
+    "vite": "^6.3.5"
   }
 }
