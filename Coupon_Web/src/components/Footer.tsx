@@ -24,7 +24,7 @@ const Footer: React.FC = () => (
           <div className="flex-1">
             <h3 className="font-bold mb-2 text-lg text-start">CONNECT</h3>
             <div className="flex flex-col items-start">
-              <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Whatsapp</a>
+              <a href="https://wa.me/+2347039729635" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Whatsapp</a>
               <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Twitter</a>
               <a href="https://facebook.com/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Facebook</a>
               <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Instagram</a>
@@ -52,10 +52,10 @@ const Footer: React.FC = () => (
         <div className="flex-1 flex flex-col items-center md:items-start">
           <h3 className="font-bold mb-2 text-lg">CONNECT</h3>
           <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Whatsapp</a>
-          <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Twitter</a>
-          <a href="https://facebook.com/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Facebook</a>
-          <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Instagram</a>
-          <a href="https://linkedin.com/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Linkedin</a>
+          <a href="https://x.com/eragonsnr?s=21/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Twitter</a>
+          <a href="https://facebook.com/ani.okon.5?mibextid=wwXIfr&mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Facebook</a>
+          <a href="https://instagram.com/eragon_offical" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Instagram</a>
+          {/* <a href="https://linkedin.com/" target="_blank" rel="noopener noreferrer" className="mb-1 text-gray-300 hover:text-green-400 transition">Linkedin</a> */}
         </div>
       </div>
 

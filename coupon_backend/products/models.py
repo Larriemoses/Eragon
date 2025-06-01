@@ -1,5 +1,6 @@
 # your_app_name/models.py
 from django.db import models
+from django.utils import timezone # <--- NEW IMPORT: Import timezone here
 
 class Product(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -53,6 +54,8 @@ class ProductCoupon(models.Model):
     used_count = models.PositiveIntegerField(default=0)
     used_today = models.PositiveIntegerField(default=0)
     shop_now_url = models.URLField(blank=True, null=True, verbose_name="Shop Now Link")
+    
+    last_reset_date = models.DateField(default=timezone.now) # <--- NEW FIELD ADDED HERE
 
     def __str__(self):
         return f"{self.title} ({self.product.name})"

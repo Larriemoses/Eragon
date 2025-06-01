@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny # Ensure AllowAny is imported
 
 from django.core.mail import send_mail
+from django.utils import timezone # <--- NEW IMPORT: Import timezone
 
 from .models import Product, ProductCoupon
 from .serializers import ProductSerializer, ProductCouponSerializer
@@ -14,13 +15,11 @@ from .serializers import ProductSerializer, ProductCouponSerializer
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    # <<<--- VERIFY THIS LINE IS PRESENT AND CORRECT --->>>
     permission_classes = [AllowAny]
 
 class ProductCouponViewSet(ModelViewSet):
     queryset = ProductCoupon.objects.all()
     serializer_class = ProductCouponSerializer
-    # <<<--- VERIFY THIS LINE IS PRESENT AND CORRECT --->>>
     permission_classes = [AllowAny]
 
     @action(detail=True, methods=['post'], permission_classes=[AllowAny])
@@ -40,13 +39,22 @@ class ProductCouponViewSet(ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def use(self, request, pk=None):
         coupon = self.get_object()
+
+        # --- START OF LAZY DAILY RESET LOGIC ---
+        today = timezone.localdate() # Get today's date (e.g., 2025-06-01)
+        
+        # Check if the last reset date is different from today
+        if coupon.last_reset_date != today:
+            coupon.used_today = 0  # Reset used_today to 0 for the new day
+            coupon.last_reset_date = today # Update the last reset date to today
+        # --- END OF LAZY DAILY RESET LOGIC ---
+
         coupon.used_count += 1
-        coupon.used_today += 1
+        coupon.used_today += 1 # Increment for the current use (starts from 0 if it was reset)
         coupon.save()
         return Response({'used_count': coupon.used_count, 'used_today': coupon.used_today}, status=status.HTTP_200_OK)
 
 class SubmitStoreView(APIView):
-    # This was already correctly set to AllowAny, so no change needed here
     permission_classes = [AllowAny]
 
     def post(self, request):
