@@ -67,7 +67,7 @@ const ProductStore: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
 
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);

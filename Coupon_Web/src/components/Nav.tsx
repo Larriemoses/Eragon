@@ -41,7 +41,7 @@ const Nav: React.FC = () => {
     canonicalUrl: "https://www.discountregion.com/", // Correct Vercel URL
   });
 
-  
+
   const [products, setProducts] = useState<NavProduct[]>([]);
   const [dropdown, setDropdown] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);

@@ -173,7 +173,7 @@ const Store: React.FC = () => {
                   <div className="font-semibold text-center mb-2">{product.name}</div>
                   <button
                     className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold transition"
-                    onClick={() => navigate(`/store/${product.id}/${productSlug}`)} 
+                    onClick={() => navigate(`/store/${product.id}/${productSlug}`)}
                   >
                     Open Store
                   </button>

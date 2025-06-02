@@ -47,7 +47,7 @@ async function generateRoutes() {
   try {
     // 'fetch' here will implicitly refer to the global Node.js native fetch
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 25000); // 25-second timeout for cold start
+    const id = setTimeout(() => controller.abort(), 50000); // 25-second timeout for cold start
 
     const productsRes = await fetch(backendApiUrl, {
       signal: controller.signal

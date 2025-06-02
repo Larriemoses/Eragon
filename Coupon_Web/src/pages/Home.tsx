@@ -3,7 +3,7 @@ import PopularStores from '../components/PopularStores';
 import TopDeals from '../components/TopDeals';
 import About from '../components/About';
 
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { usePageHead } from '../utils/headManager';
 
 // Define the background image URL
@@ -25,13 +25,14 @@ function Home() {
   // --- END NEW ---
 
   usePageHead({
-    title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
-    description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
+    title: "Discount Region – Verified Discount Codes & Deals from Top Brands",
+    description: "Discover verified discount codes and real-time deals from trusted brands like Oraimo, FundedNext, Shopinverse, 1xBet, and more. Save on gadgets, trading platforms, and accessories, all in one place.",
     keywords: "coupon codes, promo codes, discount region, oraimo, shopinverse, 1xbet, prop firms, deals, verified discounts", // Example keywords for homepage
     ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png",
     // --- CHANGE: Use liveBaseUrl for ogUrl and canonicalUrl ---
     ogUrl: liveBaseUrl ? `${liveBaseUrl}/` : undefined, // Ensure trailing slash for homepage
     canonicalUrl: liveBaseUrl ? `${liveBaseUrl}/` : undefined,
+    baseLiveUrl: liveBaseUrl, // Pass to usePageHead
     // --- END CHANGE ---
   });
 

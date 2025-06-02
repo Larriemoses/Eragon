@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 
 // Declare global function type for TypeScript
-// This ensures TypeScript knows 'window.getPrerenderLiveBaseUrl' exists
 declare global {
   interface Window {
     getPrerenderLiveBaseUrl?: () => string;
@@ -33,100 +32,133 @@ interface HeadConfig {
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
-  ogUrl?: string;       // This will now be explicitly passed from the component
+  ogUrl?: string;       // Explicitly passed from the component
   ogType?: string;
   twitterCard?: string;
   twitterTitle?: string;
   twitterDescription?: string;
   twitterImage?: string;
-  canonicalUrl?: string; // This will now be explicitly passed from the component
-  // We don't need baseLiveUrl directly in HeadConfig anymore,
-  // as the page components will calculate the full URL and pass it to ogUrl/canonicalUrl.
+  canonicalUrl?: string; // Explicitly passed from the component
+  baseLiveUrl?: string; // Passed from page component, contains "https://www.discountregion.com"
 }
 
 export const usePageHead = (config: HeadConfig) => {
   useEffect(() => {
-    // Determine the actual URL for ogUrl/canonicalUrl based on config.ogUrl/canonicalUrl
-    // If provided in config, use that. Otherwise, fall back to window.location.href (for client-side)
-    const currentAbsoluteUrl = config.ogUrl || config.canonicalUrl || window.location.href;
-
-    document.title = config.title;
-
-    let descriptionTag = document.querySelector('meta[name="description"]') as HTMLMetaElement;
-    if (!descriptionTag) {
-      descriptionTag = document.createElement('meta');
-      descriptionTag.setAttribute('name', 'description');
-      document.head.appendChild(descriptionTag);
+    // --- Step 1: Ensure initial <head> is clean of generic React defaults ---
+    // (This is a proactive measure for initial render or hydration issues)
+    const existingDefaultMeta = document.head.querySelector('meta[data-react-helmet="true"]');
+    if (existingDefaultMeta) existingDefaultMeta.remove();
+    // Also explicitly remove default description if not the one we manage
+    let defaultDescription = document.head.querySelector('meta[name="description"]');
+    if (defaultDescription && defaultDescription.getAttribute('content') === "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!") {
+        defaultDescription.remove();
     }
-    descriptionTag.setAttribute('content', config.description);
+    // You might also find a default title here if you had one in index.html, it would be replaced by document.title below.
 
-    const updateOrCreateMeta = (property: string, content?: string) => {
-      let tag = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+
+    // Determine the absolute URL for ogUrl/canonicalUrl
+    let effectiveAbsoluteUrl: string;
+    if (config.ogUrl || config.canonicalUrl) {
+      effectiveAbsoluteUrl = config.ogUrl || config.canonicalUrl || window.location.href;
+    } else if (config.baseLiveUrl) {
+      effectiveAbsoluteUrl = `${config.baseLiveUrl}${window.location.pathname}${window.location.search}`;
+    } else {
+      effectiveAbsoluteUrl = window.location.href;
+    }
+
+
+    // --- Step 2: Update/Create Tags ---
+
+    // Function to update or create a meta tag. More robust.
+    const manageMetaTag = (
+        selector: string,                 // e.g., 'meta[name="description"]'
+        attribute: 'name' | 'property',   // 'name' for standard, 'property' for Open Graph
+        value: string,                    // The value of the attribute (e.g., 'description', 'og:title')
+        content?: string                  // The content for the 'content' attribute
+    ) => {
+      let tag = document.head.querySelector(selector) as HTMLMetaElement;
       if (!tag) {
         tag = document.createElement('meta');
-        tag.setAttribute('property', property);
+        tag.setAttribute(attribute, value);
         document.head.appendChild(tag);
       }
-      if (content) {
+      if (content !== undefined) { // Only update content if provided, otherwise leave if existing or remove if explicitly undefined
         tag.setAttribute('content', content);
+      } else {
+        tag.remove(); // Remove tag if content is explicitly undefined
+      }
+      return tag;
+    };
+
+    // Function to update or create a link tag (for canonical)
+    const manageLinkTag = (selector: string, rel: string, href?: string) => {
+      let tag = document.head.querySelector(selector) as HTMLLinkElement;
+      if (!tag) {
+        tag = document.createElement('link');
+        tag.setAttribute('rel', rel);
+        document.head.appendChild(tag);
+      }
+      if (href !== undefined) {
+        tag.setAttribute('href', href);
       } else {
         tag.remove();
       }
+      return tag;
     };
 
-    updateOrCreateMeta('og:title', config.ogTitle || config.title);
-    updateOrCreateMeta('og:description', config.ogDescription || config.description);
-    updateOrCreateMeta('og:image', config.ogImage ? getFullLogoUrl(config.ogImage) : undefined);
-    // --- CHANGE: Use config.ogUrl if provided, else currentAbsoluteUrl ---
-    updateOrCreateMeta('og:url', config.ogUrl || currentAbsoluteUrl);
-    // --- END CHANGE ---
-    updateOrCreateMeta('og:type', config.ogType || 'website');
 
-    updateOrCreateMeta('twitter:card', config.twitterCard || 'summary_large_image');
-    updateOrCreateMeta('twitter:title', config.twitterTitle || config.title);
-    updateOrCreateMeta('twitter:description', config.twitterDescription || config.description);
-    updateOrCreateMeta('twitter:image', config.twitterImage ? getFullLogoUrl(config.twitterImage) : (config.ogImage ? getFullLogoUrl(config.ogImage) : undefined));
+    // --- Title ---
+    document.title = config.title;
 
-    let keywordsTag = document.querySelector('meta[name="keywords"]') as HTMLMetaElement;
-    if (!keywordsTag) {
-      keywordsTag = document.createElement('meta');
-      keywordsTag.setAttribute('name', 'keywords');
-      document.head.appendChild(keywordsTag);
-    }
-    if (config.keywords) {
-      keywordsTag.setAttribute('content', config.keywords);
-    } else {
-      keywordsTag.remove();
-    }
+    // --- Meta Description ---
+    manageMetaTag('meta[name="description"]', 'name', 'description', config.description);
 
-    let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-    if (!canonicalLink) {
-      canonicalLink = document.createElement('link');
-      canonicalLink.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonicalLink);
-    }
-    // --- CHANGE: Use config.canonicalUrl if provided, else currentAbsoluteUrl ---
-    if (config.canonicalUrl) {
-      canonicalLink.setAttribute('href', config.canonicalUrl);
-    } else {
-      canonicalLink.setAttribute('href', currentAbsoluteUrl);
-    }
-    // --- END CHANGE ---
+    // --- Open Graph Tags (for Social Media Sharing) ---
+    manageMetaTag('meta[property="og:title"]', 'property', 'og:title', config.ogTitle || config.title);
+    manageMetaTag('meta[property="og:description"]', 'property', 'og:description', config.ogDescription || config.description);
+    manageMetaTag('meta[property="og:image"]', 'property', 'og:image', config.ogImage ? getFullLogoUrl(config.ogImage) : undefined);
+    manageMetaTag('meta[property="og:url"]', 'property', 'og:url', config.ogUrl || effectiveAbsoluteUrl);
+    manageMetaTag('meta[property="og:type"]', 'property', 'og:type', config.ogType || 'website');
 
+    // --- Twitter Card Tags --- (These use 'name' attribute, not 'property')
+    manageMetaTag('meta[name="twitter:card"]', 'name', 'twitter:card', config.twitterCard || 'summary_large_image');
+    manageMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title', config.twitterTitle || config.title);
+    manageMetaTag('meta[name="twitter:description"]', 'name', 'twitter:description', config.twitterDescription || config.description);
+    manageMetaTag('meta[name="twitter:image"]', 'name', 'twitter:image', config.twitterImage ? getFullLogoUrl(config.twitterImage) : (config.ogImage ? getFullLogoUrl(config.ogImage) : undefined));
+
+    // --- Meta Keywords ---
+    manageMetaTag('meta[name="keywords"]', 'name', 'keywords', config.keywords);
+
+    // --- Canonical URL ---
+    manageLinkTag('link[rel="canonical"]', 'canonical', config.canonicalUrl || effectiveAbsoluteUrl);
+
+
+    // --- Step 3: Comprehensive CLEANUP FUNCTION for component unmount/re-render ---
+    // This is vital to prevent accumulation of tags from previous renders.
     return () => {
-      const propertiesToRemove = [
-        'og:title', 'og:description', 'og:image', 'og:url', 'og:type',
-        'twitter:card', 'twitter:title', 'twitter:description', 'twitter:image',
-        'keywords'
-      ];
+        const selectorsToClean = [
+            'meta[name="description"]',
+            'meta[name="keywords"]',
+            'meta[property="og:title"]',
+            'meta[property="og:description"]',
+            'meta[property="og:image"]',
+            'meta[property="og:url"]',
+            'meta[property="og:type"]',
+            'meta[name="twitter:card"]',
+            'meta[name="twitter:title"]',
+            'meta[name="twitter:description"]',
+            'meta[name="twitter:image"]',
+            'link[rel="canonical"]'
+        ];
 
-      propertiesToRemove.forEach(prop => {
-        const tag = document.head.querySelector(`meta[property="${prop}"]`) || document.head.querySelector(`meta[name="${prop}"]`);
-        if (tag) tag.remove();
-      });
-
-      const canonicalToRemove = document.head.querySelector('link[rel="canonical"]');
-      if (canonicalToRemove) canonicalToRemove.remove();
+        selectorsToClean.forEach(selector => {
+            const tag = document.head.querySelector(selector);
+            if (tag) {
+                tag.remove();
+            }
+        });
+        // Title is automatically managed by document.title = ""; or next component.
+        // google-site-verification is usually persistent and not managed by usePageHead
     };
-  }, [config]);
+  }, [config]); // Dependency array: re-run effect if config object changes
 };
