@@ -1,4 +1,4 @@
-
+// Stores.tsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePageHead } from '../utils/headManager';
@@ -35,14 +35,30 @@ const getFullLogoUrl = (logoPath?: string | null) => {
 };
 
 const Store: React.FC = () => {
-  // <--- CORRECT PLACEMENT OF usePageHead HOOK ---
-  // It MUST be the very first thing called inside the functional component's body.
+  // --- NEW: Determine live base URL for usePageHead ---
+  const [liveBaseUrl, setLiveBaseUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    // Check if getPrerenderLiveBaseUrl is exposed (means we are pre-rendering)
+    if (window.getPrerenderLiveBaseUrl) {
+      setLiveBaseUrl(window.getPrerenderLiveBaseUrl());
+    } else {
+      // Otherwise, assume running in a live browser, use window.location.origin
+      setLiveBaseUrl(window.location.origin);
+    }
+  }, []);
+  // --- END NEW ---
+
+  // CORRECT PLACEMENT: usePageHead is inside the functional component.
   usePageHead({
     title: "All Stores & Brands - Verified Coupons & Deals | Discount Region",
     description: "Browse a comprehensive list of top brands and stores offering verified discount codes on gadgets, trading tools, and everyday essentials. Find Oraimo, prop firms, Shopinverse & more.",
+    keywords: "stores, brands, verified coupons, discount codes, prop firms, oraimo, shopinverse, 1xbet", // Example keywords for stores page
     ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Consider a different image if you have one for stores
-    ogUrl: "https://www.discountregion.com/stores",
-    canonicalUrl: "https://www.discountregion.com/stores",
+    // --- CHANGE: Use liveBaseUrl for ogUrl and canonicalUrl ---
+    ogUrl: liveBaseUrl ? `${liveBaseUrl}/stores/` : undefined,
+    canonicalUrl: liveBaseUrl ? `${liveBaseUrl}/stores/` : undefined,
+    // --- END CHANGE ---
   });
   // <--- END CORRECT PLACEMENT ---
 

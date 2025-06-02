@@ -1,22 +1,38 @@
-// Home.tsx
+// src/pages/Home.tsx
 import PopularStores from '../components/PopularStores';
 import TopDeals from '../components/TopDeals';
 import About from '../components/About';
 
+import  { useState, useEffect } from 'react';
 import { usePageHead } from '../utils/headManager';
 
 // Define the background image URL
 const MOBILE_HERO_BG_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1748452006/Kimberly_Martin_Designs_b1nvsg.jpg";
 
 function Home() {
-  // CORRECT PLACEMENT: usePageHead is inside the functional component.
+  // --- NEW: Determine live base URL for usePageHead ---
+  const [liveBaseUrl, setLiveBaseUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    // Check if getPrerenderLiveBaseUrl is exposed (means we are pre-rendering)
+    if (window.getPrerenderLiveBaseUrl) {
+      setLiveBaseUrl(window.getPrerenderLiveBaseUrl());
+    } else {
+      // Otherwise, assume running in a live browser, use window.location.origin
+      setLiveBaseUrl(window.location.origin);
+    }
+  }, []);
+  // --- END NEW ---
+
   usePageHead({
     title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
     description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
-    ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
-    ogUrl: "https://www.discountregion.com/", // IMPORTANT: Replace with your actual domain
-    canonicalUrl: "https://www.discountregion.com/", // IMPORTANT: Replace with your actual domain
-    
+    keywords: "coupon codes, promo codes, discount region, oraimo, shopinverse, 1xbet, prop firms, deals, verified discounts", // Example keywords for homepage
+    ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png",
+    // --- CHANGE: Use liveBaseUrl for ogUrl and canonicalUrl ---
+    ogUrl: liveBaseUrl ? `${liveBaseUrl}/` : undefined, // Ensure trailing slash for homepage
+    canonicalUrl: liveBaseUrl ? `${liveBaseUrl}/` : undefined,
+    // --- END CHANGE ---
   });
 
   return (
@@ -56,15 +72,7 @@ function Home() {
             ></div>
 
             {/* Content (text) positioned on top of the overlay - MODIFIED */}
-            {/*
-              To achieve:
-              1. Block of text is centered horizontally on the screen.
-              2. Text *within* the block remains left-aligned.
-              We keep the outer flex `justify-center` on the mobile hero container
-              and use `mx-auto` on the text content div, and ensure it has a max-width.
-            */}
             <div className="w-full max-w-xs text-left relative z-10 px-3 pr-7 mx-auto">
-              {/* FIXED: Removed stray 't' character after font-bold */}
               <h1 className="text-white text-4xl sm:text-3xl font-bold">
                 Top <br/>Coupon Codes, <br/>Discount Codes <br/> &amp; Deals
               </h1>

@@ -2,8 +2,15 @@
 
 import { useEffect } from 'react';
 
-// Helper function to get full logo URL (unified logic - copy from your existing utils)
-// Ensure BACKEND_URL is defined here or imported consistently.
+// Declare global function type for TypeScript
+// This ensures TypeScript knows 'window.getPrerenderLiveBaseUrl' exists
+declare global {
+  interface Window {
+    getPrerenderLiveBaseUrl?: () => string;
+  }
+}
+
+// Helper function to get full logo URL (unified logic)
 const BACKEND_URL = "https://eragon-backend1.onrender.com";
 
 const getFullLogoUrl = (logoPath?: string | null) => {
@@ -12,7 +19,7 @@ const getFullLogoUrl = (logoPath?: string | null) => {
       return logoPath;
     }
     if (logoPath.startsWith('/')) {
-      return `${BACKEND_URL}${logoPath}`;
+        return `${BACKEND_URL}${logoPath}`;
     }
     return `${BACKEND_URL}/${logoPath}`;
   }
@@ -22,28 +29,29 @@ const getFullLogoUrl = (logoPath?: string | null) => {
 interface HeadConfig {
   title: string;
   description: string;
+  keywords?: string;
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
-  ogUrl?: string;
+  ogUrl?: string;       // This will now be explicitly passed from the component
   ogType?: string;
   twitterCard?: string;
   twitterTitle?: string;
   twitterDescription?: string;
   twitterImage?: string;
-  canonicalUrl?: string; // Optional: for canonical links
+  canonicalUrl?: string; // This will now be explicitly passed from the component
+  // We don't need baseLiveUrl directly in HeadConfig anymore,
+  // as the page components will calculate the full URL and pass it to ogUrl/canonicalUrl.
 }
 
 export const usePageHead = (config: HeadConfig) => {
   useEffect(() => {
-    // Store original title to potentially restore it on unmount (less common in SPAs)
-    // For SPAs, new component's useEffect will just overwrite.
+    // Determine the actual URL for ogUrl/canonicalUrl based on config.ogUrl/canonicalUrl
+    // If provided in config, use that. Otherwise, fall back to window.location.href (for client-side)
+    const currentAbsoluteUrl = config.ogUrl || config.canonicalUrl || window.location.href;
 
-
-    // --- Title ---
     document.title = config.title;
 
-    // --- Meta Description ---
     let descriptionTag = document.querySelector('meta[name="description"]') as HTMLMetaElement;
     if (!descriptionTag) {
       descriptionTag = document.createElement('meta');
@@ -52,7 +60,6 @@ export const usePageHead = (config: HeadConfig) => {
     }
     descriptionTag.setAttribute('content', config.description);
 
-    // --- Open Graph Tags (for Social Media Sharing) ---
     const updateOrCreateMeta = (property: string, content?: string) => {
       let tag = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
       if (!tag) {
@@ -63,61 +70,63 @@ export const usePageHead = (config: HeadConfig) => {
       if (content) {
         tag.setAttribute('content', content);
       } else {
-        tag.remove(); // Remove tag if content is empty or null
+        tag.remove();
       }
     };
 
     updateOrCreateMeta('og:title', config.ogTitle || config.title);
     updateOrCreateMeta('og:description', config.ogDescription || config.description);
-    // Ensure image URLs are full URLs
     updateOrCreateMeta('og:image', config.ogImage ? getFullLogoUrl(config.ogImage) : undefined);
-    updateOrCreateMeta('og:url', config.ogUrl || window.location.href);
+    // --- CHANGE: Use config.ogUrl if provided, else currentAbsoluteUrl ---
+    updateOrCreateMeta('og:url', config.ogUrl || currentAbsoluteUrl);
+    // --- END CHANGE ---
     updateOrCreateMeta('og:type', config.ogType || 'website');
 
-    // --- Twitter Card Tags ---
     updateOrCreateMeta('twitter:card', config.twitterCard || 'summary_large_image');
     updateOrCreateMeta('twitter:title', config.twitterTitle || config.title);
     updateOrCreateMeta('twitter:description', config.twitterDescription || config.description);
-    // Ensure image URLs are full URLs for Twitter
     updateOrCreateMeta('twitter:image', config.twitterImage ? getFullLogoUrl(config.twitterImage) : (config.ogImage ? getFullLogoUrl(config.ogImage) : undefined));
 
+    let keywordsTag = document.querySelector('meta[name="keywords"]') as HTMLMetaElement;
+    if (!keywordsTag) {
+      keywordsTag = document.createElement('meta');
+      keywordsTag.setAttribute('name', 'keywords');
+      document.head.appendChild(keywordsTag);
+    }
+    if (config.keywords) {
+      keywordsTag.setAttribute('content', config.keywords);
+    } else {
+      keywordsTag.remove();
+    }
 
-    // --- Canonical URL ---
     let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
     if (!canonicalLink) {
       canonicalLink = document.createElement('link');
       canonicalLink.setAttribute('rel', 'canonical');
       document.head.appendChild(canonicalLink);
     }
+    // --- CHANGE: Use config.canonicalUrl if provided, else currentAbsoluteUrl ---
     if (config.canonicalUrl) {
       canonicalLink.setAttribute('href', config.canonicalUrl);
     } else {
-      canonicalLink.remove(); // Remove canonical if not provided for the page
+      canonicalLink.setAttribute('href', currentAbsoluteUrl);
     }
+    // --- END CHANGE ---
 
-
-    // Cleanup function: This is important!
     return () => {
-      // For title and description, the next useEffect call will just overwrite them.
-      // For other tags, we explicitly remove them.
       const propertiesToRemove = [
         'og:title', 'og:description', 'og:image', 'og:url', 'og:type',
-        'twitter:card', 'twitter:title', 'twitter:description', 'twitter:image'
+        'twitter:card', 'twitter:title', 'twitter:description', 'twitter:image',
+        'keywords'
       ];
 
       propertiesToRemove.forEach(prop => {
-        const tag = document.head.querySelector(`meta[property="${prop}"]`);
+        const tag = document.head.querySelector(`meta[property="${prop}"]`) || document.head.querySelector(`meta[name="${prop}"]`);
         if (tag) tag.remove();
-        // Also remove name-based twitter tags
-        const nameTag = document.head.querySelector(`meta[name="${prop}"]`);
-        if (nameTag) nameTag.remove();
       });
 
       const canonicalToRemove = document.head.querySelector('link[rel="canonical"]');
       if (canonicalToRemove) canonicalToRemove.remove();
-
-      // Optionally revert to a default title if needed, but often not necessary in SPAs
-      // document.title = originalTitle;
     };
-  }, [config]); // Re-run effect if config object changes
+  }, [config]);
 };

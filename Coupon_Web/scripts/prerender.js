@@ -6,14 +6,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { build } from 'vite'; // To run Vite build before serving
+// import { build } from 'vite'; // Not used directly in this script, build is run before
 import { preview } from 'vite'; // To serve the built app locally
 import playwright from 'playwright'; // Import Playwright
-// import fetch from 'node-fetch'; // For fetching product data for dynamic routes
+// import fetch from 'node-fetch'; // No longer needed, Node.js v22 has native fetch
 
 // Define the slugify function (copy from your src/utils/slugify.ts)
-// Or import it if you configure Node.js to read TS/ESM from src/
-// For simplicity, let's include it here as a JS function.
+// It's included directly here for simplicity, avoids import paths issues in Node.js script.
 const slugify = (text) => {
   if (!text) return '';
   return String(text)
@@ -32,7 +31,7 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..'); // Points to Coupon_Web root
 const distDir = path.join(projectRoot, 'dist');
 const backendApiUrl = 'https://eragon-backend1.onrender.com/api/products/';
-const siteHostname = 'https://discountregion.com';
+const siteHostname = 'https://www.discountregion.com'; // Your actual live domain (include https://)
 
 async function generateRoutes() {
   const staticRoutes = [
@@ -46,7 +45,15 @@ async function generateRoutes() {
   ];
 
   try {
-    const productsRes = await fetch(backendApiUrl);
+    // 'fetch' here will implicitly refer to the global Node.js native fetch
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 25000); // 25-second timeout for cold start
+
+    const productsRes = await fetch(backendApiUrl, {
+      signal: controller.signal
+    });
+    clearTimeout(id); // Clear timeout if fetch succeeds
+
     if (!productsRes.ok) {
       console.error(`[Pre-render] Failed to fetch products: HTTP error! status: ${productsRes.status}`);
       return staticRoutes;
@@ -58,23 +65,24 @@ async function generateRoutes() {
 
     return [...staticRoutes, ...productRoutes];
   } catch (error) {
-    console.error(`[Pre-render] Error fetching dynamic routes: ${error.message}`);
+    if (error.name === 'AbortError') {
+      console.error('[Pre-render] Error fetching dynamic routes: Fetch timed out (cold start likely).');
+    } else {
+      console.error(`[Pre-render] Error fetching dynamic routes: ${error.message}`);
+    }
     return staticRoutes; // Fallback to static routes if API fetch fails
   }
 }
 
 async function preRenderAndGenerateSitemap() {
   console.log('[Pre-render] Starting pre-rendering and sitemap generation...');
+  console.log(`[Pre-render] Target dist directory: ${distDir}`);
 
   // 1. Get all routes to render
   const routesToRender = await generateRoutes();
   console.log(`[Pre-render] Discovered ${routesToRender.length} routes.`);
 
-  // 2. Build the Vite app (if not already built by previous step)
-  // This is typically handled by `npm run build` before this script runs.
-  // We can skip `build()` here if we assume `vite build` already ran.
-
-  // 3. Start a local server to serve the 'dist' folder
+  // 2. Start a local server to serve the 'dist' folder
   const vitePreviewServer = await preview({
     preview: {
       port: 5000, // Choose an available port
@@ -90,19 +98,26 @@ async function preRenderAndGenerateSitemap() {
   const baseUrl = `http://localhost:${vitePreviewServer.config.preview.port}`;
   console.log(`[Pre-render] Serving built app at ${baseUrl}`);
 
-  // 4. Launch Playwright headless browser
+  // 3. Launch Playwright headless browser
   const browser = await playwright.chromium.launch();
   const page = await browser.newPage();
+
+  // --- NEW: Expose a global variable to the page context ---
+  // This function will be callable from the page's JavaScript (your React app)
+  await page.exposeFunction('getPrerenderLiveBaseUrl', () => siteHostname);
+  // --- END NEW ---
 
   const sitemapUrls = []; // To collect URLs for the sitemap
 
   for (const route of routesToRender) {
-    const url = `${baseUrl}${route}`;
+    const url = `${baseUrl}${route}`; // This 'baseUrl' is localhost:5000 during pre-render
     const outputPath = path.join(distDir, route, 'index.html'); // e.g., dist/stores/index.html
 
     try {
       console.log(`[Pre-render] Visiting ${url}`);
-      await page.goto(url, { waitUntil: 'networkidle' }); // Wait for network to be idle
+      // Wait for network to be idle, allowing React components to fetch data and update DOM
+      await page.goto(url, { waitUntil: 'networkidle' }); 
+      
       const htmlContent = await page.content(); // Get the full HTML content
 
       // Ensure directory exists for output
@@ -115,10 +130,12 @@ async function preRenderAndGenerateSitemap() {
 
     } catch (error) {
       console.error(`[Pre-render] Failed to render ${url}: ${error.message}`);
+      // Continue to next route even if one fails to render
     }
   }
 
-  // 5. Generate Sitemap XML
+  // 4. Generate Sitemap XML
+  console.log('[Pre-render] Attempting to generate sitemap.xml...');
   const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${sitemapUrls.map(url => `  <url>
@@ -129,20 +146,22 @@ ${sitemapUrls.map(url => `  <url>
 </urlset>`;
 
   const sitemapPath = path.join(distDir, 'sitemap.xml');
+  console.log(`[Pre-render] Writing sitemap.xml to: ${sitemapPath}`);
   fs.writeFileSync(sitemapPath, sitemapContent);
-  console.log(`[Pre-render] Generated sitemap.xml at ${sitemapPath}`);
+  console.log(`[Pre-render] Generated sitemap.xml successfully.`);
 
-  // 6. Generate robots.txt
+  // 5. Generate robots.txt
   const robotsTxtContent = `User-agent: *
 Allow: /
 Sitemap: ${siteHostname}/sitemap.xml
 `;
   const robotsTxtPath = path.join(distDir, 'robots.txt');
+  console.log(`[Pre-render] Writing robots.txt to: ${robotsTxtPath}`);
   fs.writeFileSync(robotsTxtPath, robotsTxtContent);
-  console.log(`[Pre-render] Generated robots.txt at ${robotsTxtPath}`);
+  console.log(`[Pre-render] Generated robots.txt successfully.`);
 
 
-  // 7. Clean up
+  // 6. Clean up
   await browser.close();
   await vitePreviewServer.close();
   console.log('[Pre-render] Pre-rendering and sitemap generation complete!');
