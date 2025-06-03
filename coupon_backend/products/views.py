@@ -4,10 +4,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny # Ensure AllowAny is imported
-
+from rest_framework.permissions import AllowAny
 from django.core.mail import send_mail
-from django.utils import timezone # <--- NEW IMPORT: Import timezone
+from django.utils import timezone
 
 from .models import Product, ProductCoupon
 from .serializers import ProductSerializer, ProductCouponSerializer
@@ -40,19 +39,23 @@ class ProductCouponViewSet(ModelViewSet):
     def use(self, request, pk=None):
         coupon = self.get_object()
 
-        # --- START OF LAZY DAILY RESET LOGIC ---
-        today = timezone.localdate() # Get today's date (e.g., 2025-06-01)
-        
-        # Check if the last reset date is different from today
-        if coupon.last_reset_date != today:
-            coupon.used_today = 0  # Reset used_today to 0 for the new day
-            coupon.last_reset_date = today # Update the last reset date to today
-        # --- END OF LAZY DAILY RESET LOGIC ---
+        # --- Daily Reset Logic ---
+        today = timezone.localdate()  # Get today's date (timezone-aware)
 
+        if coupon.last_reset_date != today:
+            coupon.used_today = 0
+            coupon.last_reset_date = today
+
+        # --- Update Click Counts ---
         coupon.used_count += 1
-        coupon.used_today += 1 # Increment for the current use (starts from 0 if it was reset)
+        coupon.used_today += 1
         coupon.save()
-        return Response({'used_count': coupon.used_count, 'used_today': coupon.used_today}, status=status.HTTP_200_OK)
+
+        return Response({
+            'used_count': coupon.used_count,
+            'used_today': coupon.used_today,
+            'message': 'Coupon usage updated successfully.'
+        }, status=status.HTTP_200_OK)
 
 class SubmitStoreView(APIView):
     permission_classes = [AllowAny]
