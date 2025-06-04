@@ -8,7 +8,9 @@ Access the live application here: [DiscountRegion](https://discountregion.com)
 
 ## 📸 Screenshots
 
-*Include screenshots or GIFs of the application here to showcase its interface and features.*
+
+![image](https://github.com/user-attachments/assets/d592555d-8b2f-4a71-a4b8-e9096a04294c)
+
 
 ## 🛠️ Tech Stack
 
