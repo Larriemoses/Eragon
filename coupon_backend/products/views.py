@@ -42,9 +42,9 @@ class ProductCouponViewSet(ModelViewSet):
         # --- Daily Reset Logic ---
         today = timezone.localdate()  # Get today's date (timezone-aware)
 
-        if coupon.last_reset_date != today: # <--- PROBLEM HERE: last_reset_date does not exist on the model
+        if coupon.last_reset_date != today:
             coupon.used_today = 0
-            coupon.last_reset_date = today # <-
+            coupon.last_reset_date = today
 
         # --- Update Click Counts ---
         coupon.used_count += 1
