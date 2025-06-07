@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import React, { useState } from "react";
-// import { usePageHead } from './utils/headManager';
+// import { usePageHead } from './utils/headManager'; // Keeping this commented out as per your code
 import './App.css';
 import Home from './pages/Home'
 import Stores from './pages/Stores';
@@ -14,27 +14,30 @@ import Contact from './pages/Contact';
 import TermsOfService from './pages/TermsOfService';
 import Privacy from './pages/Privacy';
 import Affiliate_Disclosure from './pages/Affiliate_Disclosure'
-//         .then((data) => setProducts(data))                                                                                                                                           
 
 const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void }> = ({ token, setToken }) => {
-  const location = useLocation();                       
+  const location = useLocation();
   const hideNav = location.pathname === "/admin-login" || location.pathname === "/admin-dashboard";
 
   return (
-    <>
+    // --- CRITICAL FIX: Add data-prerender-ready="true" to the top-level element ---
+    // This div serves as the universal signal that the basic React app structure is mounted.
+    <div data-prerender-ready="true">
       {!hideNav && <Nav />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/stores" element={<Stores />} />
-         <Route path="/store/:id/:slug" element={<ProductStore />} />
+        {/* Your current route for product pages */}
+        <Route path="/store/:id/:slug" element={<ProductStore />} />
         <Route path="/submit-store" element={<SubmitStore />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/privacy" element={<Privacy />} />
-        <Route path="/affiliate-disclosure" element={<Affiliate_Disclosure />} /> 
+        <Route path="/affiliate-disclosure" element={<Affiliate_Disclosure />} />
+
+        {/* Catch-all route for 404 - keep this as it's good practice */}
         <Route path="*" element={<h2>Page Not Found</h2>} />
-    
-        
+
         <Route
           path="/admin-login"
           element={<Login onLogin={setToken} />}
@@ -46,14 +49,17 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
           }
         />
       </Routes>
-       {!hideNav && <Footer />}
-    </>
+      {!hideNav && <Footer />}
+    </div>
+    // --- END CRITICAL FIX ---
   );
 };
 
 function App() {
   // Initialize token from localStorage
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("adminToken"));
+
+
 
   // Update localStorage whenever token changes
   React.useEffect(() => {

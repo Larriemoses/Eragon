@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import SubmitDeal from "../components/SubmitDeal";
 import { usePageHead } from '../utils/headManager';
-// The slugify import is entirely removed as it's no longer used.
 
 interface Product {
   id: number;
@@ -62,28 +61,88 @@ const getFullLogoUrl = (logoPath?: string | null) => {
 
 
 const ProductStore: React.FC = () => {
-  const { id, slug } = useParams<{ id: string; slug: string }>(); // Keep slug for canonical URL logic if needed
+  const { id, slug } = useParams<{ id: string; slug: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState<string | null>(null);
+
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
+
+  const [liveBaseUrl, setLiveBaseUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if ((window as any).getPrerenderLiveBaseUrl) {
+        setLiveBaseUrl((window as any).getPrerenderLiveBaseUrl());
+      } else {
+        setLiveBaseUrl(window.location.origin);
+      }
+    }
+  }, []);
+
+  const pageTitle = product?.name ? `${product.name} Coupons & Deals | Discount Region` : 'Product Details | Discount Region';
+  const pageDescription = product?.subtitle ? `${product.subtitle} ${product.sub_subtitle || ''} Find all verified ${product.name} coupon codes and discounts at Discount Region. Save significantly.` : `Discover great deals and coupons for products at Discount Region.`;
+  const ogImageUrl = product?.logo_url || product?.logo || 'https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png';
+
+  usePageHead({
+    title: pageTitle,
+    description: pageDescription,
+    keywords: product?.name ? `${product.name} coupons, ${product.name} discount code, ${product.name} promo, ${product.name} deals` : 'product coupons, online deals, discount codes',
+    ogImage: getFullLogoUrl(ogImageUrl),
+    ogType: 'website',
+    ogUrl: liveBaseUrl ? `${liveBaseUrl}/store/${id}/${slug || ''}/` : undefined,
+    canonicalUrl: liveBaseUrl ? `${liveBaseUrl}/store/${id}/${slug || ''}/` : undefined,
+  });
 
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);
-    await fetch(`${COUPON_API}${coupon.id}/use/`, {
-      method: "POST",
-    });
-    fetch(COUPON_API)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status} when refreshing coupons`);
-        return res.json();
-      })
-      .then(data => {
-        const couponData = Array.isArray(data) ? data : data.results || [];
-        setCoupons(couponData.filter((c: Coupon) => c.product === Number(id)))
-      })
-      .catch(error => console.error("Error refreshing coupons after copy:", error));
+
+    try {
+      const response = await fetch(`${COUPON_API}${coupon.id}/use/`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        console.error(`HTTP error! status: ${response.status} when updating coupon usage`);
+      }
+
+      let updatedUsageData = { used_count: coupon.used_count, used_today: coupon.used_today };
+      try {
+        const jsonResponse = await response.json();
+        updatedUsageData = {
+          used_count: jsonResponse.used_count || coupon.used_count,
+          used_today: jsonResponse.used_today || coupon.used_today,
+        };
+      } catch (e) {
+        console.warn("Backend did not return JSON for coupon usage update:", e);
+      }
+
+      setCoupons(prevCoupons =>
+        prevCoupons.map(c =>
+          c.id === coupon.id
+            ? {
+                ...c,
+                used_count: updatedUsageData.used_count,
+                used_today: updatedUsageData.used_today,
+              }
+            : c
+        ).sort((a: Coupon, b: Coupon) => {
+          if (a.used_count !== b.used_count) {
+              return b.used_count - a.used_count;
+          }
+          return a.title.localeCompare(b.title);
+        })
+      );
+
+      setShowCopyNotification(true);
+      setTimeout(() => {
+        setShowCopyNotification(false);
+      }, 2000); // Hide after 2 seconds
+
+    } catch (error) {
+      console.error("Error handling copy or coupon usage update:", error);
+    }
   };
 
   useEffect(() => {
@@ -110,7 +169,16 @@ const ProductStore: React.FC = () => {
       })
       .then(data => {
         const couponData = Array.isArray(data) ? data : data.results || [];
-        setCoupons(couponData.filter((c: Coupon) => c.product === Number(id)))
+        setCoupons(
+          couponData
+            .filter((c: Coupon) => c.product === Number(id))
+            .sort((a: Coupon, b: Coupon) => {
+                if (a.used_count !== b.used_count) {
+                    return b.used_count - a.used_count;
+                }
+                return a.title.localeCompare(b.title);
+            })
+        );
       })
       .catch(error => console.error("Error fetching coupons:", error));
 
@@ -119,46 +187,16 @@ const ProductStore: React.FC = () => {
 
   }, [id]);
 
-  // Dynamic values for title, description, and image (derived from product state)
-  const pageTitle = product?.name ? `${product.name} Coupons & Deals | Discount Region` : 'Product Details | Discount Region';
-  const pageDescription = product?.subtitle ? `${product.subtitle} ${product.sub_subtitle || ''} Find all verified ${product.name} coupon codes and discounts at Discount Region. Save significantly.` : `Discover great deals and coupons for products at Discount Region.`;
-  const ogImageUrl = product?.logo_url || product?.logo || 'https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png';
-
-  // --- NEW: Determine live base URL for usePageHead ---
-  const [liveBaseUrl, setLiveBaseUrl] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (window.getPrerenderLiveBaseUrl) {
-      setLiveBaseUrl(window.getPrerenderLiveBaseUrl());
-    } else {
-      setLiveBaseUrl(window.location.origin);
-    }
-  }, []);
-  // --- END NEW ---
-
-  usePageHead({
-    title: pageTitle,
-    description: pageDescription,
-    keywords: product?.name ? `${product.name} coupons, ${product.name} discount code, ${product.name} promo, ${product.name} deals` : 'product coupons, online deals, discount codes', // Example dynamic keywords
-    ogImage: getFullLogoUrl(ogImageUrl),
-    ogType: 'website',
-    // --- CHANGE: Use liveBaseUrl to construct the full URL ---
-    ogUrl: liveBaseUrl ? `${liveBaseUrl}/store/${id}/${slug || ''}/` : undefined,
-    canonicalUrl: liveBaseUrl ? `${liveBaseUrl}/store/${id}/${slug || ''}/` : undefined,
-    // --- END CHANGE ---
-  });
-
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   if (!product) {
-    // Also set specific page head for 404
     usePageHead({
       title: "Product Not Found | Discount Region",
       description: "The product or store you are looking for could not be found on Discount Region.",
-      ogUrl: window.location.href, // For 404, local URL is fine
-      canonicalUrl: window.location.href, // For 404, local URL is fine
+      ogUrl: window.location.href,
+      canonicalUrl: window.location.href,
       keywords: "page not found, invalid URL, discount region error"
     });
     return (
@@ -178,8 +216,29 @@ const ProductStore: React.FC = () => {
     ? product.main_affiliate_url.trim()
     : '#';
 
+  // --- NEW LOGIC: Determine button text based on keywords ---
+  // This logic runs only if 'product' is not null.
+  const isSignupStore = product.name.toLowerCase().includes('trade') ||
+                         product.name.toLowerCase().includes('trading') ||
+                         product.name.toLowerCase().includes('trader') ||
+                         product.name.toLowerCase().includes('bet') ||
+                         product.name.toLowerCase().includes('betnow') ||
+                         product.name.toLowerCase().includes('betting');
+
+  const buttonText = isSignupStore ? 'Sign Up' : 'Shop Now';
+  // --- END NEW LOGIC ---
+
   return (
-    <div className="min-h-screen flex flex-col items-center bg-white py-8">
+    <div
+      className="min-h-screen flex flex-col items-center bg-white py-8 relative"
+      data-prerender-ready={!loading && product !== null ? "true" : "false"}
+    >
+      {showCopyNotification && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          Copied successfully!
+        </div>
+      )}
+
       <div className="max-w-xl w-[90%] flex flex-col items-center">
         {/* Title */}
         <h1 className="text-3xl font-bold text-center mb-1">
@@ -188,12 +247,12 @@ const ProductStore: React.FC = () => {
         {/* Subtitle */}
         {product.subtitle && (
           <div className="text-center text-lg text-gray-900 mb-1">
-            <h2 className="font-bold">{product.subtitle}</h2>
+            <h2 className="">{product.subtitle}</h2>
           </div>
         )}
         {/* Sub-sub-title */}
         {product.sub_subtitle && (
-          <div className="text-center text-base text-gray-500 mb-4">
+          <div className="text-center text-base text-gray-500 mb-4 font-bold">
             {product.sub_subtitle}
           </div>
         )}
@@ -230,221 +289,222 @@ const ProductStore: React.FC = () => {
                       src={getFullLogoUrl(product.logo ?? product.logo_url)}
                       alt={product.name}
                       className="w-18 h-18 object-contain rounded bg-white"
-                    />
-                  ) : null}
-                </div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm text-gray-500">Discount is active</span>
-                  <span className="text-green-600 text-xs font-semibold">● Verified</span>
-                </div>
-                <div className="font-bold text-lg">{coupon.title}</div>
-                <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
-                  <span>{coupon.used_count} used</span>
-                  <span>{coupon.used_today} Today</span>
-                </div>
-                {/* Only show code and Copy button if coupon.code exists */}
-                {coupon.code && (
-                  <div className="flex gap-2">
-                      <span className="bg-gray-200 px-4 py-2 rounded font-bold text-lg select-all">
-                        {coupon.code}
-                      </span>
-                      <button
-                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold"
-                        onClick={() => handleCopy(coupon)}
+                      />
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm text-gray-500">Discount is active</span>
+                    <span className="text-green-600 text-xs font-semibold">● Verified</span>
+                  </div>
+                  <div className="font-bold text-lg">{coupon.title}</div>
+                  <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
+                    <span>{coupon.used_count} used</span>
+                    <span>{coupon.used_today} Today</span>
+                  </div>
+                  {/* Only show code and Copy button if coupon.code exists */}
+                  {coupon.code && (
+                    <div className="flex gap-2">
+                        <span className="bg-gray-200 px-4 py-2 rounded font-bold text-lg select-all">
+                          {coupon.code}
+                        </span>
+                        <button
+                          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold"
+                          onClick={() => handleCopy(coupon)}
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    )}
+                    {/* Shop Now button uses coupon.shop_now_url */}
+                    {coupon.shop_now_url && (
+                      <a
+                        href={coupon.shop_now_url}
+                        className="block mt-2 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded font-bold"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        // --- Use buttonText variable ---
                       >
-                        Copy
-                      </button>
-                    </div>
-                  )}
-                  {/* Shop Now button uses coupon.shop_now_url */}
-                  {coupon.shop_now_url && (
-                    <a
-                      href={coupon.shop_now_url}
-                      className="block mt-2 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded font-bold"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Shop Now
-                    </a>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* --- Product Footer Content (embedded here) --- */}
-        {/* Footer Section: Effortless Savings */}
-        {(product.footer_section_effortless_savings_title || product.footer_section_effortless_savings_description) && (
-          <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
-            <h2
-              className="text-2xl font-bold text-gray-800 mb-2 text-center"
-              dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_title || "" }}
-            />
-            <p
-              className="text-gray-600 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_description || "" }}
-            />
-          </div>
-        )}
-
-        {/* Footer Section: How to Use (updated to handle plain text or array) */}
-        {(product.footer_section_how_to_use_title || product.footer_section_how_to_use_steps || product.footer_section_how_to_use_note) && (
-          <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
-            <h2
-              className="text-2xl font-bold text-gray-800 mb-2 text-center"
-              dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
-            />
-            {product.footer_section_how_to_use_steps && (
-              Array.isArray(product.footer_section_how_to_use_steps) ? (
-                <ol className="list-decimal list-inside text-gray-600 mb-4">
-                  {product.footer_section_how_to_use_steps.map((step, index) => (
-                    <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: step }} />
-                  ))}
-                </ol>
-              ) : (
-                <p
-                  className="text-gray-600 leading-relaxed mb-4"
-                  dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_steps }}
-                />
-              )
-            )}
-            {product.footer_section_how_to_use_note && (
-              <p
-                className="text-sm text-gray-500 italic"
-                dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_note }}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Footer Section: Tips (updated to handle plain text or array) */}
-        {(product.footer_section_tips_title || product.footer_section_tips_list) && (
-          <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
-            <h2
-              className="text-2xl font-bold text-gray-800 mb-2 text-center"
-              dangerouslySetInnerHTML={{ __html: product.footer_section_tips_title || "" }}
-            />
-            {product.footer_section_tips_list && (
-              Array.isArray(product.footer_section_tips_list) ? (
-                <ul className="list-disc list-inside text-gray-600">
-                  {product.footer_section_tips_list.map((tip, index) => (
-                    <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: tip }} />
-                  ))}
-                </ul>
-              ) : (
-                <p
-                  className="text-gray-600 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: product.footer_section_tips_list }}
-                />
-              )
-            )}
-          </div>
-        )}
-
-        {/* Footer Section: Contact - Styled to match the image */}
-        {(product.footer_section_contact_title || product.footer_section_contact_description || product.footer_contact_phone || product.footer_contact_email || product.footer_contact_whatsapp) && (
-          <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
-            <h2
-              className="text-2xl font-bold text-gray-800 mb-4 text-center"
-              dangerouslySetInnerHTML={{ __html: product.footer_section_contact_title || "" }}
-            />
-            {product.footer_section_contact_description && (
-              <p
-                className="text-gray-600 mb-6 text-center"
-                dangerouslySetInnerHTML={{ __html: product.footer_section_contact_description }}
-              />
-            )}
-            {/* Main grid container for Phone/Email/WhatsApp sections */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-4 text-gray-700">
-
-              {/* Phone Support */}
-              {product.footer_contact_phone && (
-                <div className="flex flex-col items-center text-center">
-                  <p className="font-bold text-lg mb-2">📞 Phone Support</p>
-                  {product.footer_contact_phone.split('\n').map((num, index) => (
-                    <a key={index} href={`tel:${num.replace(/\D/g, '')}`} className="text-blue-600 hover:underline mb-1 last:mb-0">
-                      {num.trim()}
-                    </a>
-                  ))}
-                </div>
+                        {buttonText} {/* Dynamic button text */}
+                      </a>
+                    )}
+                  </div>
+                ))
               )}
+            </div>
+          </div>
 
-              {/* Email Support */}
-              {product.footer_contact_email && (
-                <div className="flex flex-col items-center text-center md:col-span-1">
-                  <p className="font-bold text-lg mb-2">✉️ Email Support</p>
-                  {product.footer_contact_email.split('\n').map((email, index) => (
-                      <p key={index} className="mb-1 last:mb-0">
-                        <a href={`mailto:${email.trim()}`} className="text-blue-600 hover:underline">
-                          {email.trim()}
-                        </a>
-                      </p>
-                  ))}
-                </div>
+          {/* --- Product Footer Content (embedded here) --- */}
+          {/* Footer Section: Effortless Savings */}
+          {(product.footer_section_effortless_savings_title || product.footer_section_effortless_savings_description) && (
+            <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
+              <h2
+                className="text-2xl font-bold text-gray-800 mb-2 text-center"
+                dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_title || "" }}
+              />
+              <p
+                className="text-gray-600 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: product.footer_section_effortless_savings_description || "" }}
+              />
+            </div>
+          )}
+
+          {/* Footer Section: How to Use (updated to handle plain text or array) */}
+          {(product.footer_section_how_to_use_title || product.footer_section_how_to_use_steps || product.footer_section_how_to_use_note) && (
+            <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
+              <h2
+                className="text-2xl font-bold text-gray-800 mb-2 text-center"
+                dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_title || "" }}
+              />
+              {product.footer_section_how_to_use_steps && (
+                Array.isArray(product.footer_section_how_to_use_steps) ? (
+                  <ol className="list-decimal list-inside text-gray-600 mb-4">
+                    {product.footer_section_how_to_use_steps.map((step, index) => (
+                      <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: step }} />
+                    ))}
+                  </ol>
+                ) : (
+                  <p
+                    className="text-gray-600 leading-relaxed mb-4"
+                    dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_steps }}
+                  />
+                )
               )}
+              {product.footer_section_how_to_use_note && (
+                <p
+                  className="text-sm text-gray-500 italic"
+                  dangerouslySetInnerHTML={{ __html: product.footer_section_how_to_use_note }}
+                />
+              )}
+            </div>
+          )}
 
-              {/* WhatsApp Support */}
-              {product.footer_contact_whatsapp && (
-                <div className="flex flex-col items-center text-center md:col-start-2 md:row-start-1">
-                  <p className="font-bold text-lg mb-2">💬 Whatsapp Support</p>
-                  <p className="text-gray-800 mb-1">Chat with a rep:</p>
-                  {product.footer_contact_whatsapp.split('\n').map((num, index) => (
-                    <a
-                      key={index}
-                      href={`https://wa.me/${num.replace(/\D/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-green-600 hover:underline mb-1 last:mb-0"
-                    >
-                      {num.trim()}
-                    </a>
-                  ))}
+          {/* Footer Section: Tips (updated to handle plain text or array) */}
+          {(product.footer_section_tips_title || product.footer_section_tips_list) && (
+            <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
+              <h2
+                className="text-2xl font-bold text-gray-800 mb-2 text-center"
+                dangerouslySetInnerHTML={{ __html: product.footer_section_tips_title || "" }}
+              />
+              {product.footer_section_tips_list && (
+                Array.isArray(product.footer_section_tips_list) ? (
+                  <ul className="list-disc list-inside text-gray-600">
+                    {product.footer_section_tips_list.map((tip, index) => (
+                      <li key={index} className="mb-1" dangerouslySetInnerHTML={{ __html: tip }} />
+                    ))}
+                  </ul>
+                ) : (
+                  <p
+                    className="text-gray-600 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: product.footer_section_tips_list }}
+                  />
+                )
+              )}
+            </div>
+          )}
+
+          {/* Footer Section: Contact - Styled to match the image */}
+          {(product.footer_section_contact_title || product.footer_section_contact_description || product.footer_contact_phone || product.footer_contact_email || product.footer_contact_whatsapp) && (
+            <div className="max-w-xl w-[90%] mt-8 p-6 rounded-lg shadow">
+              <h2
+                className="text-2xl font-bold text-gray-800 mb-4 text-center"
+                dangerouslySetInnerHTML={{ __html: product.footer_section_contact_title || "" }}
+              />
+              {product.footer_section_contact_description && (
+                <p
+                  className="text-gray-600 mb-6 text-center"
+                  dangerouslySetInnerHTML={{ __html: product.footer_section_contact_description }}
+                />
+              )}
+              {/* Main grid container for Phone/Email/WhatsApp sections */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-4 text-gray-700">
+
+                {/* Phone Support */}
+                {product.footer_contact_phone && (
+                  <div className="flex flex-col items-center text-center">
+                    <p className="font-bold text-lg mb-2">📞 Phone Support</p>
+                    {product.footer_contact_phone.split('\n').map((num, index) => (
+                      <a key={index} href={`tel:${num.replace(/\D/g, '')}`} className="text-blue-600 hover:underline mb-1 last:mb-0">
+                        {num.trim()}
+                      </a>
+                    ))}
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-          {/* --- End of Product Footer Content --- */}
-    {/* --- Social Media Buttons --- */}
-          {(product.social_facebook_url || product.social_twitter_url || product.social_instagram_url) && (
-            <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-2 flex-wrap md:flex-nowrap">
-              {product.social_facebook_url && (
-                <a
-                  href={product.social_facebook_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
-                >
-                  Facebook
-                </a>
-              )}
-              {product.social_twitter_url && (
-                <a
-                  href={product.social_twitter_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
-                >
-                  Twitter
-                </a>
-              )}
-              {product.social_instagram_url && (
-                <a
-                  href={product.social_instagram_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
-                >
-                  Instagram
-                </a>
-              )}
-            </div>
-          )}
-          {/* --- End of Social Media Buttons --- */}
-          <SubmitDeal />
-        </div>
-      );
-    };
 
-    export default ProductStore;
+                {/* Email Support */}
+                {product.footer_contact_email && (
+                  <div className="flex flex-col items-center text-center md:col-span-1">
+                    <p className="font-bold text-lg mb-2">✉️ Email Support</p>
+                    {product.footer_contact_email.split('\n').map((email, index) => (
+                        <p key={index} className="mb-1 last:mb-0">
+                          <a href={`mailto:${email.trim()}`} className="text-blue-600 hover:underline">
+                            {email.trim()}
+                          </a>
+                        </p>
+                    ))}
+                  </div>
+                )}
+
+                {/* WhatsApp Support */}
+                {product.footer_contact_whatsapp && (
+                  <div className="flex flex-col items-center text-center md:col-start-2 md:row-start-1">
+                    <p className="font-bold text-lg mb-2">💬 Whatsapp Support</p>
+                    <p className="text-gray-800 mb-1">Chat with a rep:</p>
+                    {product.footer_contact_whatsapp.split('\n').map((num, index) => (
+                      <a
+                        key={index}
+                        href={`https://wa.me/${num.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-600 hover:underline mb-1 last:mb-0"
+                      >
+                        {num.trim()}
+                      </a>
+                    ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {/* --- End of Product Footer Content --- */}
+      {/* --- Social Media Buttons --- */}
+            {(product.social_facebook_url || product.social_twitter_url || product.social_instagram_url) && (
+              <div className="max-w-xl w-[90%] mt-8 flex justify-center gap-2 flex-wrap md:flex-nowrap">
+                {product.social_facebook_url && (
+                  <a
+                    href={product.social_facebook_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
+                  >
+                    Facebook
+                  </a>
+                )}
+                {product.social_twitter_url && (
+                  <a
+                    href={product.social_twitter_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
+                  >
+                    Twitter
+                  </a>
+                )}
+                {product.social_instagram_url && (
+                  <a
+                    href={product.social_instagram_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold flex-grow text-sm md:text-base text-center"
+                  >
+                    Instagram
+                  </a>
+                )}
+              </div>
+            )}
+            {/* --- End of Social Media Buttons --- */}
+            <SubmitDeal />
+          </div>
+        );
+      };
+
+      export default ProductStore;

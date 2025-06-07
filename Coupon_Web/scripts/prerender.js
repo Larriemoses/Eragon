@@ -6,10 +6,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-// import { build } from 'vite'; // Not used directly in this script, build is run before
 import { preview } from 'vite'; // To serve the built app locally
 import playwright from 'playwright'; // Import Playwright
-// import fetch from 'node-fetch'; // No longer needed, Node.js v22 has native fetch
 
 // Define the slugify function (copy from your src/utils/slugify.ts)
 // It's included directly here for simplicity, avoids import paths issues in Node.js script.
@@ -22,7 +20,6 @@ const slugify = (text) => {
     .replace(/\s+/g, '-')
     .replace(/[^\w-]+/g, '')
     .replace(/--+/g, '-')
-    .replace(/^-+/, '')
     .replace(/-+$/, '');
 };
 
@@ -45,9 +42,8 @@ async function generateRoutes() {
   ];
 
   try {
-    // 'fetch' here will implicitly refer to the global Node.js native fetch
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 50000); // 25-second timeout for cold start
+    const id = setTimeout(() => controller.abort(), 50000); // 50-second timeout for cold start
 
     const productsRes = await fetch(backendApiUrl, {
       signal: controller.signal
@@ -115,8 +111,14 @@ async function preRenderAndGenerateSitemap() {
 
     try {
       console.log(`[Pre-render] Visiting ${url}`);
-      // Wait for network to be idle, allowing React components to fetch data and update DOM
-      await page.goto(url, { waitUntil: 'networkidle' }); 
+      // Initial navigation
+      await page.goto(url, { waitUntil: 'domcontentloaded' }); // Use domcontentloaded for faster initial nav
+
+      // --- CRITICAL FIX: Wait for the data-prerender-ready attribute ---
+      // This waits until your React component confirms its data is loaded and rendered.
+      // Set a generous timeout in case backend is slow.
+      await page.waitForSelector('[data-prerender-ready="true"]', { timeout: 60000 }); // Wait up to 60 seconds
+      // --- END CRITICAL FIX ---
       
       const htmlContent = await page.content(); // Get the full HTML content
 
