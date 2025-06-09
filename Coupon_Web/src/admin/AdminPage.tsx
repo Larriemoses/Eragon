@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Update Product interface to include the new field
 interface Product {
   id: number;
   name: string;
   logo?: string | null;
   logo_url?: string | null;
-  title?: string;
-  subtitle?: string;
-  sub_subtitle?: string;
+  title?: string; // This is productTitle
+  subtitle?: string; // This is productSubtitle
+  sub_subtitle?: string; // This is productSubSubtitle
   footer_section_effortless_savings_title?: string | null;
   footer_section_effortless_savings_description?: string | null;
   footer_section_how_to_use_title?: string | null;
@@ -24,7 +25,8 @@ interface Product {
   social_facebook_url?: string | null;
   social_twitter_url?: string | null;
   social_instagram_url?: string | null;
-  main_affiliate_url?: string | null; // <--- ADDED: New field for Product interface
+  main_affiliate_url?: string | null;
+  is_signup_store?: boolean;
 }
 
 interface AdminPageProps {
@@ -34,7 +36,7 @@ interface AdminPageProps {
 interface ProductCoupon {
   id: number;
   product: Product;
-  title: string;
+  title: string; // This is coupon title
   code: string;
   discount: string;
   used_count: number;
@@ -43,25 +45,30 @@ interface ProductCoupon {
 }
 
 const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
+  // Coupon Form States
   const [coupons, setCoupons] = useState<ProductCoupon[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [productId, setProductId] = useState<number | "">("");
-  const [title, setTitle] = useState("");
+  const [productId, setProductId] = useState<number | ''>("");
+  const [couponTitle, setCouponTitle] = useState(""); // Renamed for clarity
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState("");
   const [shopNowUrl, setShopNowUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [popup, setPopup] = useState<string | null>(null);
-  const [name, setName] = useState("");
+  const [editingCoupon, setEditingCoupon] = useState<ProductCoupon | null>(null);
+
+  // Product Form States
+  const [products, setProducts] = useState<Product[]>([]);
+  const [name, setName] = useState(""); // Product Name
   const [logo, setLogo] = useState<File | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
-  const [subtitle, setSubtitle] = useState("");
-  const [subSubTitle, setSubSubTitle] = useState("");
-  const [editingCoupon, setEditingCoupon] = useState<ProductCoupon | null>(null);
+  // --- FIXED: Renamed product-related title states for consistency ---
+  const [productTitle, setProductTitle] = useState("");
+  const [productSubtitle, setProductSubtitle] = useState("");
+  const [productSubSubtitle, setProductSubSubtitle] = useState("");
+  // --- END FIXED ---
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  const navigate = useNavigate();
+  const [isSignupStore, setIsSignupStore] = useState(false);
 
+  // Footer Content States
   const [footerEffortlessSavingsTitle, setFooterEffortlessSavingsTitle] = useState("");
   const [footerEffortlessSavingsDescription, setFooterEffortlessSavingsDescription] = useState("");
   const [footerHowToUseTitle, setFooterHowToUseTitle] = useState("");
@@ -75,10 +82,17 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
   const [footerContactEmail, setFooterContactEmail] = useState("");
   const [footerContactWhatsapp, setFooterContactWhatsapp] = useState("");
 
+  // Social Media States
   const [socialFacebookUrl, setSocialFacebookUrl] = useState("");
   const [socialTwitterUrl, setSocialTwitterUrl] = useState("");
   const [socialInstagramUrl, setSocialInstagramUrl] = useState("");
-  const [mainAffiliateUrl, setMainAffiliateUrl] = useState(""); // <--- ADDED: New state for main affiliate URL
+  const [mainAffiliateUrl, setMainAffiliateUrl] = useState("");
+
+  // Loading and Notification States
+  const [loadingAction, setLoadingAction] = useState(false); // Renamed from 'loading' for clarity on form actions
+  const [popup, setPopup] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   const showPopup = (msg: string) => {
     setPopup(msg);
@@ -89,9 +103,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setName("");
     setLogo(null);
     setLogoUrl("");
-    setTitle("");
-    setSubtitle("");
-    setSubSubTitle("");
+    // --- FIXED: Clearing product-related title states ---
+    setProductTitle("");
+    setProductSubtitle("");
+    setProductSubSubtitle("");
+    // --- END FIXED ---
+    setMainAffiliateUrl("");
+    setIsSignupStore(false);
     setFooterEffortlessSavingsTitle("");
     setFooterEffortlessSavingsDescription("");
     setFooterHowToUseTitle("");
@@ -107,13 +125,12 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setSocialFacebookUrl("");
     setSocialTwitterUrl("");
     setSocialInstagramUrl("");
-    setMainAffiliateUrl(""); // <--- ADDED: Clear mainAffiliateUrl
     setEditingProduct(null);
   };
 
   // Helper function for full logo URL (unified logic)
   const getFullLogoUrl = (logoPath?: string | null) => {
-    const BACKEND_URL = "https://eragon-backend1.onrender.com";
+    const BACKEND_URL = "https://eragon-backend1.onrender.com"; // Define BACKEND_URL locally for this helper
     if (logoPath) {
       if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
         return logoPath;
@@ -132,17 +149,16 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         const productsRes = await fetch("https://eragon-backend1.onrender.com/api/products/", {
           headers: { Authorization: `Token ${token}` },
         });
-        // Ensure that fetchedProducts is an array of Product type
-        const fetchedProducts: Product[] = (await productsRes.json()) as Product[];
+        const fetchedProducts: Product[] = await productsRes.json();
         setProducts(fetchedProducts);
 
         const couponsRes = await fetch("https://eragon-backend1.onrender.com/api/productcoupon/", {
           headers: { Authorization: `Token ${token}` },
         });
-        const fetchedCoupons: any[] = await couponsRes.json();
+        const fetchedCouponsRaw: any[] = await couponsRes.json();
 
-        const enrichedCoupons: ProductCoupon[] = fetchedCoupons.map(coupon => {
-          const productDetail = fetchedProducts.find(p => p.id === coupon.product) || {
+        const enrichedCoupons: ProductCoupon[] = fetchedCouponsRaw.map(coupon => {
+          const productDetail = fetchedProducts.find((p: Product) => p.id === coupon.product) || {
             id: coupon.product,
             name: "Unknown Product",
             logo: null,
@@ -150,6 +166,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             title: "",
             subtitle: "",
             sub_subtitle: "",
+            is_signup_store: false,
             footer_section_effortless_savings_title: null,
             footer_section_effortless_savings_description: null,
             footer_section_how_to_use_title: null,
@@ -165,7 +182,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             social_facebook_url: null,
             social_twitter_url: null,
             social_instagram_url: null,
-            main_affiliate_url: null, // <--- ADDED: Default for new field
+            main_affiliate_url: null,
           };
           return { ...coupon, product: productDetail };
         });
@@ -180,15 +197,23 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     fetchAdminData();
   }, [token]);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleAddCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingAction(true);
 
-    if (!productId || !title || !discount) {
-      showPopup("Product, Title, and Discount are required for coupons.");
-      setLoading(false);
+    if (!productId || !couponTitle || !discount) { // Use couponTitle here
+      showPopup("Product, Offer, and Discount are required for coupons.");
+      setLoadingAction(false);
       return;
     }
+
+    const payload = {
+        product: Number(productId),
+        title: couponTitle, // Use couponTitle here
+        code: code,
+        discount: discount,
+        shop_now_url: shopNowUrl,
+    };
 
     const res = await fetch("https://eragon-backend1.onrender.com/api/productcoupon/", {
       method: "POST",
@@ -196,13 +221,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         "Content-Type": "application/json",
         Authorization: `Token ${token}`,
       },
-      body: JSON.stringify({
-        product: productId,
-        title,
-        code,
-        discount,
-        shop_now_url: shopNowUrl,
-      }),
+      body: JSON.stringify(payload),
     });
     if (res.ok) {
       const newCoupon = await res.json();
@@ -214,6 +233,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         title: "",
         subtitle: "",
         sub_subtitle: "",
+        is_signup_store: false,
         footer_section_effortless_savings_title: null,
         footer_section_effortless_savings_description: null,
         footer_section_how_to_use_title: null,
@@ -229,16 +249,16 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         social_facebook_url: null,
         social_twitter_url: null,
         social_instagram_url: null,
-        main_affiliate_url: null, // <--- ADDED: Default for new field
+        main_affiliate_url: null,
       };
       setCoupons([
         { ...newCoupon, product: productObj },
         ...coupons,
       ]);
-      setTitle("");
+      setProductId(""); // Clear coupon form fields
+      setCouponTitle(""); // Clear coupon form fields
       setCode("");
       setDiscount("");
-      setProductId("");
       setShopNowUrl("");
       showPopup("Coupon added successfully!");
     } else {
@@ -249,16 +269,16 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
           : Object.values(errorData).flat().join(" ")
       );
     }
-    setLoading(false);
+    setLoadingAction(false);
   };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingAction(true);
 
     if (!name.trim()) {
       showPopup("Product Name is required.");
-      setLoading(false);
+      setLoadingAction(false);
       return;
     }
 
@@ -266,10 +286,15 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     formData.append("name", name);
     if (logo) formData.append("logo", logo);
     if (logoUrl) formData.append("logo_url", logoUrl);
-    if (title) formData.append("title", title);
-    if (subtitle) formData.append("subtitle", subtitle);
-    if (subSubTitle) formData.append("sub_subtitle", subSubTitle);
+    // --- FIXED: Use product-related title states ---
+    if (productTitle) formData.append("title", productTitle);
+    if (productSubtitle) formData.append("subtitle", productSubtitle);
+    if (productSubSubtitle) formData.append("sub_subtitle", productSubSubtitle);
+    // --- END FIXED ---
+    if (mainAffiliateUrl) formData.append("main_affiliate_url", mainAffiliateUrl);
+    formData.append("is_signup_store", String(isSignupStore)); // Boolean to string
 
+    // Footer content
     if (footerEffortlessSavingsTitle) formData.append("footer_section_effortless_savings_title", footerEffortlessSavingsTitle);
     if (footerEffortlessSavingsDescription) formData.append("footer_section_effortless_savings_description", footerEffortlessSavingsDescription);
     if (footerHowToUseTitle) formData.append("footer_section_how_to_use_title", footerHowToUseTitle);
@@ -283,54 +308,64 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     if (footerContactEmail) formData.append("footer_contact_email", footerContactEmail);
     if (footerContactWhatsapp) formData.append("footer_contact_whatsapp", footerContactWhatsapp);
 
+    // Social media links
     if (socialFacebookUrl) formData.append("social_facebook_url", socialFacebookUrl);
     if (socialTwitterUrl) formData.append("social_twitter_url", socialTwitterUrl);
     if (socialInstagramUrl) formData.append("social_instagram_url", socialInstagramUrl);
-    // <--- ADDED: Append main_affiliate_url to formData ---
-    if (mainAffiliateUrl) formData.append("main_affiliate_url", mainAffiliateUrl);
-    // <--- END ADDED ---
 
     const method = editingProduct ? "PUT" : "POST";
     const url = editingProduct ? `https://eragon-backend1.onrender.com/api/products/${editingProduct.id}/` : "https://eragon-backend1.onrender.com/api/products/";
 
-    const res = await fetch(url, {
-      method: method,
-      headers: {
-        Authorization: `Token ${token}`,
-      },
-      body: formData,
-    });
+    try {
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+        body: formData,
+      });
 
-    if (res.ok) {
-      const product = await res.json();
-      if (editingProduct) {
-        setProducts(products.map(p => p.id === product.id ? product : p));
-        showPopup("Product updated successfully!");
+      if (response.ok) {
+        const data = await response.json();
+        if (editingProduct) {
+          setProducts(products.map((p) => (p.id === data.id ? data : p)));
+          showPopup("Product updated successfully!");
+        } else {
+          setProducts([data, ...products]);
+          showPopup("Product added successfully!");
+        }
+        clearProductForm();
       } else {
-        setProducts([product, ...products]);
-        showPopup("Product added successfully!");
+        const errorData = await response.json();
+        console.error(`Error ${editingProduct ? "updating" : "adding"} product:`, errorData);
+        showPopup(
+          typeof errorData === "string"
+            ? errorData
+            : Object.values(errorData).flat().join(" ")
+        );
       }
-      clearProductForm();
-    } else {
-      const errorData = await res.json();
-      console.error(`Error ${editingProduct ? "updating" : "adding"} product:`, errorData);
-      showPopup(
-        typeof errorData === "string"
-          ? errorData
-          : Object.values(errorData).flat().join(" ")
-      );
+    } catch (error) {
+      console.error(`Error ${editingProduct ? "updating" : "adding"} product:`, error);
+      showPopup("Failed to add/update product.");
+    } finally {
+      setLoadingAction(false);
     }
-    setLoading(false);
   };
 
   const handleEditProduct = (productToEdit: Product) => {
     setEditingProduct(productToEdit);
     setName(productToEdit.name);
+    setLogo(null);
     setLogoUrl(productToEdit.logo_url || productToEdit.logo || '');
-    setTitle(productToEdit.title || '');
-    setSubtitle(productToEdit.subtitle || '');
-    setSubSubTitle(productToEdit.sub_subtitle || '');
+    // --- FIXED: Populate product-related title states for editing ---
+    setProductTitle(productToEdit.title || '');
+    setProductSubtitle(productToEdit.subtitle || '');
+    setProductSubSubtitle(productToEdit.sub_subtitle || '');
+    // --- END FIXED ---
+    setMainAffiliateUrl(productToEdit.main_affiliate_url || '');
+    setIsSignupStore(productToEdit.is_signup_store || false);
 
+    // Footer content
     setFooterEffortlessSavingsTitle(productToEdit.footer_section_effortless_savings_title || '');
     setFooterEffortlessSavingsDescription(productToEdit.footer_section_effortless_savings_description || '');
     setFooterHowToUseTitle(productToEdit.footer_section_how_to_use_title || '');
@@ -338,24 +373,23 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
     setFooterHowToUseNote(productToEdit.footer_section_how_to_use_note || '');
     setFooterTipsTitle(productToEdit.footer_section_tips_title || '');
     setFooterTipsList(productToEdit.footer_section_tips_list || '');
-
     setFooterContactTitle(productToEdit.footer_section_contact_title || '');
     setFooterContactDescription(productToEdit.footer_section_contact_description || '');
     setFooterContactPhone(productToEdit.footer_contact_phone || '');
     setFooterContactEmail(productToEdit.footer_contact_email || '');
     setFooterContactWhatsapp(productToEdit.footer_contact_whatsapp || '');
 
+    // Social media links
     setSocialFacebookUrl(productToEdit.social_facebook_url || '');
     setSocialTwitterUrl(productToEdit.social_twitter_url || '');
     setSocialInstagramUrl(productToEdit.social_instagram_url || '');
-    setMainAffiliateUrl(productToEdit.main_affiliate_url || ''); // <--- ADDED: Set mainAffiliateUrl when editing
   };
 
   const handleDeleteProduct = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this product and all its associated coupons?")) {
       return;
     }
-    setLoading(true);
+    setLoadingAction(true);
     try {
       const res = await fetch(`https://eragon-backend1.onrender.com/api/products/${id}/`, {
         method: "DELETE",
@@ -377,14 +411,14 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
       console.error("Error deleting product:", error);
       showPopup("Failed to delete product.");
     } finally {
-      setLoading(false);
+      setLoadingAction(false);
     }
   };
 
-  const handleEdit = (coupon: ProductCoupon) => {
+  const handleEditCoupon = (coupon: ProductCoupon) => {
     setEditingCoupon(coupon);
     setProductId(coupon.product.id);
-    setTitle(coupon.title);
+    setCouponTitle(coupon.title); // Use couponTitle
     setCode(coupon.code);
     setDiscount(coupon.discount);
     setShopNowUrl(coupon.shop_now_url || '');
@@ -392,13 +426,21 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
 
   const handleUpdateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingAction(true);
 
-    if (!editingCoupon || !productId || !title || !discount) {
+    if (!editingCoupon || !productId || !couponTitle || !discount) { // Use couponTitle
       showPopup("All fields are required for update.");
-      setLoading(false);
+      setLoadingAction(false);
       return;
     }
+
+    const payload = {
+        product: Number(productId),
+        title: couponTitle, // Use couponTitle
+        code: code,
+        discount: discount,
+        shop_now_url: shopNowUrl,
+    };
 
     const res = await fetch(`https://eragon-backend1.onrender.com/api/productcoupon/${editingCoupon.id}/`, {
       method: "PUT",
@@ -406,13 +448,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         "Content-Type": "application/json",
         Authorization: `Token ${token}`,
       },
-      body: JSON.stringify({
-        product: productId,
-        title,
-        code,
-        discount,
-        shop_now_url: shopNowUrl,
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (res.ok) {
@@ -425,6 +461,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         title: "",
         subtitle: "",
         sub_subtitle: "",
+        is_signup_store: false,
         footer_section_effortless_savings_title: null,
         footer_section_effortless_savings_description: null,
         footer_section_how_to_use_title: null,
@@ -440,7 +477,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         social_facebook_url: null,
         social_twitter_url: null,
         social_instagram_url: null,
-        main_affiliate_url: null, // <--- ADDED: Default for new field
+        main_affiliate_url: null,
       };
 
       setCoupons(
@@ -449,10 +486,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
         )
       )
       setEditingCoupon(null);
-      setTitle("");
+      setProductId("");
+      setCouponTitle(""); // Clear coupon title
       setCode("");
       setDiscount("");
-      setProductId("");
       setShopNowUrl("");
       showPopup("Coupon updated successfully!");
     } else {
@@ -463,16 +500,27 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
           : Object.values(errorData).flat().join(" ")
       );
     }
-    setLoading(false);
+    setLoadingAction(false);
   };
 
-  const handleDelete = async (id: number) => {
-    await fetch(`https://eragon-backend1.onrender.com/api/productcoupon/${id}/`, {
-      method: "DELETE",
-      headers: { Authorization: `Token ${token}` },
-    });
-    setCoupons(coupons.filter((c) => c.id !== id));
-    showPopup("Coupon deleted successfully!");
+  const handleDeleteCoupon = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this coupon?")) {
+        return;
+    }
+    setLoadingAction(true);
+    try {
+        await fetch(`https://eragon-backend1.onrender.com/api/productcoupon/${id}/`, {
+            method: "DELETE",
+            headers: { Authorization: `Token ${token}` },
+        });
+        setCoupons(coupons.filter((c) => c.id !== id));
+        showPopup("Coupon deleted successfully!");
+    } catch (error) {
+        console.error("Error deleting coupon:", error);
+        showPopup("Failed to delete coupon.");
+    } finally {
+        setLoadingAction(false);
+    }
   };
 
   const handleLogout = () => {
@@ -518,7 +566,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
           />
           {logoUrl && !logo && (
             <p className="text-sm text-gray-500">
-              Current Logo URL: <a href={logoUrl} target="_blank" rel="noopener noreferrer" className="underline">{logoUrl}</a>
+              Current Logo URL:{" "}
+              <a href={logoUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                {logoUrl}
+              </a>
             </p>
           )}
           <input
@@ -531,26 +582,25 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
           <input
             type="text"
             placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={productTitle} // --- FIXED: Use productTitle ---
+            onChange={(e) => setProductTitle(e.target.value)} // --- FIXED: Set productTitle ---
             className="w-full p-2 border rounded"
           />
           <input
             type="text"
             placeholder="Subtitle"
-            value={subtitle}
-            onChange={(e) => setSubtitle(e.target.value)}
+            value={productSubtitle} // --- FIXED: Use productSubtitle ---
+            onChange={(e) => setProductSubtitle(e.target.value)} // --- FIXED: Set productSubtitle ---
             className="w-full p-2 border rounded"
           />
           <input
             type="text"
             placeholder="Sub-sub-title"
-            value={subSubTitle}
-            onChange={(e) => setSubSubTitle(e.target.value)}
+            value={productSubSubtitle} // --- FIXED: Use productSubSubtitle ---
+            onChange={(e) => setProductSubSubtitle(e.target.value)} // --- FIXED: Set productSubSubtitle ---
             className="w-full p-2 border rounded"
           />
 
-          {/* --- ADDED: Input for Main Affiliate URL --- */}
           <h3 className="text-lg font-semibold mt-4 mb-2">Main Affiliate Link (for logo/socials)</h3>
           <input
             type="url"
@@ -559,7 +609,21 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             onChange={(e) => setMainAffiliateUrl(e.target.value)}
             className="w-full p-2 border rounded"
           />
-          {/* --- END ADDED --- */}
+
+          {/* --- NEW: is_signup_store Checkbox --- */}
+          <div className="flex items-center mt-4">
+            <input
+              type="checkbox"
+              id="isSignupStore"
+              checked={isSignupStore}
+              onChange={(e) => setIsSignupStore(e.target.checked)}
+              className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isSignupStore" className="text-gray-700 font-medium">
+              This is a "Sign Up" store (changes button text to "Sign Up")
+            </label>
+          </div>
+          {/* --- END NEW --- */}
 
           <h3 className="text-lg font-semibold mt-4 mb-2">Product Footer Content</h3>
           <input
@@ -574,7 +638,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             value={footerEffortlessSavingsDescription}
             onChange={(e) => setFooterEffortlessSavingsDescription(e.target.value)}
             className="w-full p-2 border rounded h-24"
-          />
+          ></textarea>
           <input
             type="text"
             placeholder="How to Use Title (e.g., How to Use Your<br />Oraimo Discount Code)"
@@ -587,13 +651,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             value={footerHowToUseSteps}
             onChange={(e) => setFooterHowToUseSteps(e.target.value)}
             className="w-full p-2 border rounded h-24"
-          />
+          ></textarea>
           <textarea
             placeholder="How to Use Note (e.g., NOTE: There are instances...)"
             value={footerHowToUseNote}
             onChange={(e) => setFooterHowToUseNote(e.target.value)}
             className="w-full p-2 border rounded h-20"
-          />
+          ></textarea>
           <input
             type="text"
             placeholder="Tips Title (e.g., Tips for Getting the<br />Best Oraimo Deals)"
@@ -606,7 +670,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             value={footerTipsList}
             onChange={(e) => setFooterTipsList(e.target.value)}
             className="w-full p-2 border rounded h-24"
-          />
+          ></textarea>
           <input
             type="text"
             placeholder="Contact Title (e.g., Need Help? Here’s How to<br />Contact Oraimo Customer Care)"
@@ -619,7 +683,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             value={footerContactDescription}
             onChange={(e) => setFooterContactDescription(e.target.value)}
             className="w-full p-2 border rounded h-20"
-          />
+          ></textarea>
           <input
             type="text"
             placeholder="Contact Phone"
@@ -669,16 +733,16 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             <button
               type="submit"
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex-1"
-              disabled={loading}
+              disabled={loadingAction}
             >
-              {loading ? (editingProduct ? "Updating Product..." : "Adding Product...") : (editingProduct ? "Update Product" : "Add Product")}
+              {loadingAction ? (editingProduct ? "Updating Product..." : "Adding Product...") : (editingProduct ? "Update Product" : "Add Product")}
             </button>
             {editingProduct && (
               <button
                 type="button"
                 className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 flex-none"
                 onClick={clearProductForm}
-                disabled={loading}
+                disabled={loadingAction}
               >
                 Cancel Edit
               </button>
@@ -695,14 +759,15 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                         <th className="px-2 py-2 text-left">Name</th>
                         <th className="px-2 py-2 text-left">Logo</th>
                         <th className="px-2 py-2 text-left">Title</th>
-                        <th className="px-2 py-2 text-left">Main Link</th> {/* <--- ADDED: Table header for Main Link */}
+                        <th className="px-2 py-2 text-left">Main Link</th>
+                        <th className="px-2 py-2 text-left">Is Signup</th>
                         <th className="px-2 py-2 text-left">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {products.length === 0 ? (
                         <tr>
-                            <td colSpan={6} className="text-center py-4">No products added yet.</td> {/* <--- Updated colspan */}
+                            <td colSpan={7} className="text-center py-4">No products added yet.</td>
                         </tr>
                     ) : (
                         products.map(p => (
@@ -712,7 +777,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                                 <td className="px-2 py-2">
                                     {p.logo || p.logo_url ? (
                                         <img
-                                            src={p.logo ?? p.logo_url ?? undefined}
+                                            src={getFullLogoUrl(p.logo ?? p.logo_url)}
                                             alt={p.name}
                                             className="w-10 h-10 object-contain rounded"
                                         />
@@ -721,7 +786,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                                     )}
                                 </td>
                                 <td className="px-2 py-2">{p.title}</td>
-                                {/* --- ADDED: Display Main Affiliate URL in table --- */}
                                 <td className="px-2 py-2">
                                     {p.main_affiliate_url ? (
                                         <a
@@ -737,7 +801,9 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                                         "N/A"
                                     )}
                                 </td>
-                                {/* --- END ADDED --- */}
+                                <td className="px-2 py-2">
+                                    {p.is_signup_store ? "Yes" : "No"}
+                                </td>
                                 <td className="px-2 py-2 flex gap-2">
                                     <button
                                         className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
@@ -759,10 +825,12 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             </table>
         </div>
 
-        <form onSubmit={handleAdd} className="mb-6">
+        {/* Add New Coupon Form */}
+        <form onSubmit={handleAddCoupon} className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Add New Coupon</h2>
-          <label className="block mb-1">Product:</label>
+          <label htmlFor="couponProduct" className="block mb-1">Product:</label>
           <select
+            id="couponProduct"
             className="w-full mb-2 p-2 border rounded"
             value={productId}
             onChange={(e) => setProductId(Number(e.target.value))}
@@ -775,33 +843,35 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
               </option>
             ))}
           </select>
-          <label className="block mb-1">Offer:</label>
+          <label htmlFor="couponTitle" className="block mb-1">Offer:</label>
           <input
+            id="couponTitle"
             className="w-full mb-2 p-2 border rounded"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={couponTitle}
+            onChange={(e) => setCouponTitle(e.target.value)}
             placeholder="Enter offer details"
             required
           />
-          <label className="block mb-1">Code:</label>
+          <label htmlFor="couponCode" className="block mb-1">Code:</label>
           <input
+            id="couponCode"
             className="w-full mb-2 p-2 border rounded"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="Enter coupon code (optional)"
           />
-          {/* --- ADDED: Shop Now URL input field --- */}
-          <label className="block mb-1">Shop Now URL:</label>
+          <label htmlFor="couponShopNowUrl" className="block mb-1">Shop Now URL:</label>
           <input
+            id="couponShopNowUrl"
             type="url"
             className="w-full mb-4 p-2 border rounded"
             value={shopNowUrl}
             onChange={(e) => setShopNowUrl(e.target.value)}
             placeholder="Enter full shop now URL (e.g., https://store.com/deal)"
           />
-          {/* --- END ADDED --- */}
-          <label className="block mb-1">Discount:</label>
+          <label htmlFor="couponDiscount" className="block mb-1">Discount:</label>
           <input
+            id="couponDiscount"
             className="w-full mb-4 p-2 border rounded"
             value={discount}
             onChange={(e) => setDiscount(e.target.value)}
@@ -811,9 +881,9 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
           <button
             type="submit"
             className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-            disabled={loading}
+            disabled={loadingAction}
           >
-            {loading ? "Adding..." : "Add Coupon"}
+            {loadingAction ? "Adding..." : "Add Coupon"}
           </button>
         </form>
 
@@ -822,8 +892,9 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
             <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
               <h2 className="text-xl font-semibold mb-4">Edit Coupon</h2>
               <form onSubmit={handleUpdateCoupon}>
-                <label className="block mb-1">Product:</label>
+                <label htmlFor="editCouponProduct" className="block mb-1">Product:</label>
                 <select
+                  id="editCouponProduct"
                   className="w-full mb-2 p-2 border rounded"
                   value={productId}
                   onChange={(e) => setProductId(Number(e.target.value))}
@@ -836,33 +907,35 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                     </option>
                   ))}
                 </select>
-                <label className="block mb-1">Offer:</label>
+                <label htmlFor="editCouponTitle" className="block mb-1">Offer:</label>
                 <input
+                  id="editCouponTitle"
                   className="w-full mb-2 p-2 border rounded"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  value={couponTitle}
+                  onChange={(e) => setCouponTitle(e.target.value)}
                   placeholder="Enter offer details"
                   required
                 />
-                <label className="block mb-1">Code:</label>
+                <label htmlFor="editCouponCode" className="block mb-1">Code:</label>
                 <input
+                  id="editCouponCode"
                   className="w-full mb-2 p-2 border rounded"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   placeholder="Enter coupon code"
                 />
-                {/* --- ADDED: Shop Now URL input field to Edit form --- */}
-                <label className="block mb-1">Shop Now URL:</label>
+                <label htmlFor="editCouponShopNowUrl" className="block mb-1">Shop Now URL:</label>
                 <input
+                  id="editCouponShopNowUrl"
                   type="url"
                   className="w-full mb-4 p-2 border rounded"
                   value={shopNowUrl}
                   onChange={(e) => setShopNowUrl(e.target.value)}
                   placeholder="Enter full shop now URL (e.g., https://store.com/deal)"
                 />
-                {/* --- END ADDED --- */}
-                <label className="block mb-1">Discount:</label>
+                 <label htmlFor="editCouponDiscount" className="block mb-1">Discount:</label>
                 <input
+                  id="editCouponDiscount"
                   className="w-full mb-4 p-2 border rounded"
                   value={discount}
                   onChange={(e) => setDiscount(e.target.value)}
@@ -880,9 +953,9 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                   <button
                     type="submit"
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                    disabled={loading}
+                    disabled={loadingAction}
                   >
-                    {loading ? "Updating..." : "Update Coupon"}
+                    {loadingAction ? "Updating..." : "Update Coupon"}
                   </button>
                 </div>
               </form>
@@ -947,13 +1020,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                     <td className="px-2 py-2 flex gap-2">
                       <button
                         className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                        onClick={() => handleEdit(c)}
+                        onClick={() => handleEditCoupon(c)}
                       >
                         Edit
                       </button>
                       <button
                         className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        onClick={() => handleDelete(c.id)}
+                        onClick={() => handleDeleteCoupon(c.id)}
                       >
                         Delete
                       </button>
@@ -1003,13 +1076,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ token }) => {
                   <div className="flex gap-2 mt-3 w-full">
                     <button
                       className="flex-1 bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                      onClick={() => handleEdit(c)}
+                      onClick={() => handleEditCoupon(c)}
                     >
                       Edit
                     </button>
                     <button
                       className="flex-1 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                      onClick={() => handleDelete(c.id)}
+                      onClick={() => handleDeleteCoupon(c.id)}
                     >
                       Delete
                     </button>

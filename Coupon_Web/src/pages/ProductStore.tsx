@@ -28,6 +28,7 @@ interface Product {
   social_facebook_url?: string | null;
   social_twitter_url?: string | null;
   social_instagram_url?: string | null;
+  is_signup_store?: boolean; // --- CRITICAL: Add this to the Product interface ---
 }
 
 interface Coupon {
@@ -200,7 +201,10 @@ const ProductStore: React.FC = () => {
       keywords: "page not found, invalid URL, discount region error"
     });
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center"
+        data-prerender-ready="true" // Ensure this is set here too!
+      >
         <div className="text-xl mb-4">Product not found.</div>
         <button
           className="bg-green-500 text-white px-4 py-2 rounded"
@@ -216,22 +220,15 @@ const ProductStore: React.FC = () => {
     ? product.main_affiliate_url.trim()
     : '#';
 
-  // --- NEW LOGIC: Determine button text based on keywords ---
-  // This logic runs only if 'product' is not null.
-  const isSignupStore = product.name.toLowerCase().includes('trade') ||
-                         product.name.toLowerCase().includes('trading') ||
-                         product.name.toLowerCase().includes('trader') ||
-                         product.name.toLowerCase().includes('bet') ||
-                         product.name.toLowerCase().includes('betnow') ||
-                         product.name.toLowerCase().includes('betting');
-
-  const buttonText = isSignupStore ? 'Sign Up' : 'Shop Now';
-  // --- END NEW LOGIC ---
+  // --- CRITICAL FIX: Use product.is_signup_store from backend ---
+  // Default to false if the field is not present (e.g., older backend API version)
+  const buttonText = product.is_signup_store === true ? 'Sign Up' : 'Shop Now';
+  // --- END CRITICAL FIX ---
 
   return (
     <div
       className="min-h-screen flex flex-col items-center bg-white py-8 relative"
-      data-prerender-ready={!loading && product !== null ? "true" : "false"}
+      data-prerender-ready={!loading ? "true" : "false"}
     >
       {showCopyNotification && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
@@ -247,12 +244,12 @@ const ProductStore: React.FC = () => {
         {/* Subtitle */}
         {product.subtitle && (
           <div className="text-center text-lg text-gray-900 mb-1">
-            <h2 className="">{product.subtitle}</h2>
+            <h2 className="">{product.subtitle}</h2>1 0+  
           </div>
         )}
         {/* Sub-sub-title */}
         {product.sub_subtitle && (
-          <div className="text-center text-base text-gray-500 mb-4 font-bold">
+          <div className="text-2xl text-center text-base text-black mb-4 font-bold">
             {product.sub_subtitle}
           </div>
         )}
@@ -319,10 +316,9 @@ const ProductStore: React.FC = () => {
                     {coupon.shop_now_url && (
                       <a
                         href={coupon.shop_now_url}
-                        className="block mt-2 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded font-bold"
+                        className={`block mt-2 ${product.is_signup_store ? 'bg-green-500 hover:bg-green-600' : 'bg-green-500 hover:bg-green-600'} text-white text-center py-2 rounded font-bold`} // Dynamic color
                         target="_blank"
                         rel="noopener noreferrer"
-                        // --- Use buttonText variable ---
                       >
                         {buttonText} {/* Dynamic button text */}
                       </a>

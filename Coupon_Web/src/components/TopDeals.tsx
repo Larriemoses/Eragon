@@ -216,7 +216,7 @@ const TopDeals: React.FC = () => {
               {coupon.shop_now_url ? ( // Only show button if a URL exists
                 <a
                   href={coupon.shop_now_url}
-                  className={`block mt-2 ${isSignupStoreAction ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'} text-white text-center py-2 rounded font-bold`}
+                  className={`block mt-2 ${isSignupStoreAction ? 'bg-green-500 hover:bg-green-600' : 'bg-green-500 hover:bg-green-600'} text-white text-center py-2 rounded font-bold`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
