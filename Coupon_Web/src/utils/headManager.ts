@@ -1,5 +1,3 @@
-// src/utils/headManager.ts
-
 import { useEffect } from 'react';
 
 // Declare global function type for TypeScript
