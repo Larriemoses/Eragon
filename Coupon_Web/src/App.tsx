@@ -55,7 +55,7 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
 };
 
 function App() {
-  // Initialize token from localStorage
+  
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("adminToken"));
 
 
