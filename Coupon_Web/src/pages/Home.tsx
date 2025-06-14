@@ -1,4 +1,4 @@
-// src/pages/Home.tsx
+
 import PopularStores from '../components/PopularStores';
 import TopDeals from '../components/TopDeals';
 import About from '../components/About';
