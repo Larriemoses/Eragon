@@ -50,7 +50,7 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
       </Routes>
       {!hideNav && <Footer />}
     </div>
-    // --- END CRITICAL FIX ---
+    
   );
 };
 
