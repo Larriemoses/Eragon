@@ -6,7 +6,7 @@ import About from '../components/About';
 import { useState, useEffect } from 'react';
 import { usePageHead } from '../utils/headManager';
 
-// Define the background image URL
+
 const MOBILE_HERO_BG_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1748452006/Kimberly_Martin_Designs_b1nvsg.jpg";
 
 function Home() {
