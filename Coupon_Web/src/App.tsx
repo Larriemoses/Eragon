@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import React, { useState } from "react";
-// import { usePageHead } from './utils/headManager'; // Keeping this commented out as per your code
+
 import './App.css';
 import Home from './pages/Home'
 import Stores from './pages/Stores';
