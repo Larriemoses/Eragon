@@ -20,8 +20,7 @@ const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void
   const hideNav = location.pathname === "/admin-login" || location.pathname === "/admin-dashboard";
 
   return (
-    // --- CRITICAL FIX: Add data-prerender-ready="true" to the top-level element ---
-    // This div serves as the universal signal that the basic React app structure is mounted.
+    
     <div data-prerender-ready="true">
       {!hideNav && <Nav />}
       <Routes>
