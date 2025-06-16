@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import { preview } from 'vite'; // To serve the built app locally
 import playwright from 'playwright'; // Import Playwright
 
-// Define the slugify function (copy from your src/utils/slugify.ts)
+
 // It's included directly here for simplicity, avoids import paths issues in Node.js script.
 const slugify = (text) => {
   if (!text) return '';
