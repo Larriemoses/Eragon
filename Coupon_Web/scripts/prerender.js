@@ -1,8 +1,6 @@
 // scripts/prerender.js
 // This script will run in Node.js after your Vite build.
 // It will launch a server, use Playwright to visit routes,
-// and save the HTML, then generate a sitemap.
-
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
