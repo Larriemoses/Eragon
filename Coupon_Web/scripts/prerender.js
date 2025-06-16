@@ -8,7 +8,7 @@ import { preview } from 'vite'; // To serve the built app locally
 import playwright from 'playwright'; // Import Playwright
 
 
-// It's included directly here for simplicity, avoids import paths issues in Node.js script.
+ paths issues in Node.js script.
 const slugify = (text) => {
   if (!text) return '';
   return String(text)
