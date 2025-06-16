@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { preview } from 'vite'; // To serve the built app locally
+import { preview } from 'vite'; 
 import playwright from 'playwright'; 
 
 const slugify = (text) => {
