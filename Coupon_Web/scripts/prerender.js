@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { preview } from 'vite'; // To serve the built app locally
-import playwright from 'playwright'; // Import Playwright
+import playwright from 'playwright'; 
 
 const slugify = (text) => {
   if (!text) return '';
