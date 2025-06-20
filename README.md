@@ -80,6 +80,7 @@ Eragon/
    ```bash
    python -m venv venv
    source venv/bin/activate
+
    ```
 
 
@@ -180,6 +181,6 @@ For any inquiries or feedback:
 
 * **Email:** [larriemoses@gmail.com](mailto:larriemoses@gmail.com)
 * **LinkedIn:** [linkedin.com/in/larriemoses](https://www.linkedin.com/in/larriemoses)
-* **Twitter:** [@larriemoses](https://twitter.com/larriemoses)
+* **Twitter:** [@larriemoses](https://x.com/larriemoses)
 
 
