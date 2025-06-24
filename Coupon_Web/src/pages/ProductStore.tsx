@@ -119,6 +119,7 @@ const ProductStore: React.FC = () => {
         console.warn("Backend did not return JSON for coupon usage update:", e);
       }
 
+      // --- FIX: Update the specific coupon in state WITHOUT sorting ---
       setCoupons(prevCoupons =>
         prevCoupons.map(c =>
           c.id === coupon.id
@@ -128,13 +129,9 @@ const ProductStore: React.FC = () => {
                 used_today: updatedUsageData.used_today,
               }
             : c
-        ).sort((a: Coupon, b: Coupon) => {
-          if (a.used_count !== b.used_count) {
-              return b.used_count - a.used_count;
-          }
-          return a.title.localeCompare(b.title);
-        })
+        ) // Removed .sort() call here
       );
+      // --- END FIX ---
 
       setShowCopyNotification(true);
       setTimeout(() => {
@@ -170,16 +167,12 @@ const ProductStore: React.FC = () => {
       })
       .then(data => {
         const couponData = Array.isArray(data) ? data : data.results || [];
+        // --- FIX: Set coupons WITHOUT sorting ---
         setCoupons(
           couponData
             .filter((c: Coupon) => c.product === Number(id))
-            .sort((a: Coupon, b: Coupon) => {
-                if (a.used_count !== b.used_count) {
-                    return b.used_count - a.used_count;
-                }
-                return a.title.localeCompare(b.title);
-            })
-        );
+        ); // Removed .sort() call here
+        // --- END FIX ---
       })
       .catch(error => console.error("Error fetching coupons:", error));
 
@@ -203,7 +196,7 @@ const ProductStore: React.FC = () => {
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center"
-        data-prerender-ready="true" // Ensure this is set here too!
+        data-prerender-ready="true"
       >
         <div className="text-xl mb-4">Product not found.</div>
         <button
@@ -220,10 +213,7 @@ const ProductStore: React.FC = () => {
     ? product.main_affiliate_url.trim()
     : '#';
 
-  // --- CRITICAL FIX: Use product.is_signup_store from backend ---
-  // Default to false if the field is not present (e.g., older backend API version)
   const buttonText = product.is_signup_store === true ? 'Sign Up' : 'Shop Now';
-  // --- END CRITICAL FIX ---
 
   return (
     <div
@@ -244,7 +234,7 @@ const ProductStore: React.FC = () => {
         {/* Subtitle */}
         {product.subtitle && (
           <div className="text-center text-lg text-gray-900 mb-1">
-            <h2 className="">{product.subtitle}</h2>1 0+  
+            <h2 className="">{product.subtitle}</h2>
           </div>
         )}
         {/* Sub-sub-title */}
@@ -316,11 +306,11 @@ const ProductStore: React.FC = () => {
                     {coupon.shop_now_url && (
                       <a
                         href={coupon.shop_now_url}
-                        className={`block mt-2 ${product.is_signup_store ? 'bg-green-500 hover:bg-green-600' : 'bg-green-500 hover:bg-green-600'} text-white text-center py-2 rounded font-bold`} // Dynamic color
+                        className={`block mt-2 ${product.is_signup_store ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'} text-white text-center py-2 rounded font-bold`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        {buttonText} {/* Dynamic button text */}
+                        {buttonText}
                       </a>
                     )}
                   </div>
