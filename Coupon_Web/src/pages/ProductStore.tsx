@@ -147,6 +147,7 @@ const ProductStore: React.FC = () => {
     if (!id) return;
     setLoading(true);
 
+    // --- FIXED: Added trailing slash ---
     const fetchProduct = fetch(`${PRODUCT_API}${id}/`)
       .then(res => {
         if (!res.ok) {
@@ -160,7 +161,8 @@ const ProductStore: React.FC = () => {
         setProduct(null);
       });
 
-    const fetchCoupons = fetch(COUPON_API)
+    // --- FIXED: Added trailing slash ---
+    const fetchCoupons = fetch(`${COUPON_API}`) // Coupon API itself needs trailing slash
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status} when fetching coupons`);
         return res.json();

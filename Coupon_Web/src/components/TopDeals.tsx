@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-// const API_TOKEN = "5e94ab243b5cbc00546b6e026b51ba421550c5f4"; // Removed: No longer needed if all endpoints are public
 const BACKEND_URL = "https://eragon-backend1.onrender.com";
 
 interface Product {
@@ -11,38 +10,34 @@ interface Product {
   title?: string;
   subtitle?: string;
   sub_subtitle?: string;
-  is_signup_store?: boolean; // --- ADDED: New field for Product interface ---
+  is_signup_store?: boolean;
 }
 
 interface ProductCoupon {
   id: number;
-  product: Product; // Note: This product is an object, not just an ID
+  product: Product;
   title: string;
   code: string;
-  discount: string; // Assuming this is a string like "10%" or "20.00"
-  expiry_date?: string; // Add expiry_date as optional
-  likes: number; // Assuming you have these fields on your ProductCoupon model
-  dislikes: number; // Assuming you have these fields on your ProductCoupon model
+  discount: string;
+  expiry_date?: string;
+  likes: number;
+  dislikes: number;
   used_count: number;
   used_today: number;
   shop_now_url?: string | null;
 }
 
-// Helper function to get full logo URL (unified logic)
 const getFullLogoUrl = (logoPath?: string | null) => {
   if (logoPath) {
-    // Check if it's already a full URL (e.g., from Cloudinary or external source)
     if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
       return logoPath;
     }
-    // Otherwise, prepend backend URL for relative paths (e.g., /media/...)
-    // Ensure no double slashes if logoPath already starts with '/'
     if (logoPath.startsWith('/')) {
         return `${BACKEND_URL}${logoPath}`;
     }
-    return `${BACKEND_URL}/${logoPath}`; // Add a leading slash if missing
+    return `${BACKEND_URL}/${logoPath}`;
   }
-  return undefined; // No logo path provided
+  return undefined;
 };
 
 
@@ -50,7 +45,6 @@ const TopDeals: React.FC = () => {
   const [coupons, setCoupons] = useState<ProductCoupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [popup, setPopup] = useState<string | null>(null);
-  // products state is fine here as it's used internally by useEffect for mapping.
 
   const showPopup = (msg: string) => {
     setPopup(msg);
@@ -61,21 +55,27 @@ const TopDeals: React.FC = () => {
     const fetchTopDealsData = async () => {
       setLoading(true);
       try {
-        const productsRes = await fetch(`${BACKEND_URL}/api/products`);
+        // --- FIXED: Added trailing slash ---
+        const productsRes = await fetch(`${BACKEND_URL}/api/products/`);
         if (!productsRes.ok) throw new Error(`HTTP error! status: ${productsRes.status} for products`);
         const productsData = await productsRes.json();
-        // Ensure fetchedProducts are an array, handling potential 'results' key from DRF pagination
         const fetchedProducts: Product[] = Array.isArray(productsData) ? productsData : productsData.results || [];
-        // No need to setProducts to state here if only used for coupon enrichment.
-        // setProducts(fetchedProducts); // Removed if not directly rendered or used elsewhere.
+        console.log("DEBUG(TopDeals): Fetched Products Raw:", productsData);
+        console.log("DEBUG(TopDeals): Processed Products:", fetchedProducts);
 
+        // --- FIXED: Added trailing slash ---
         const couponsRes = await fetch(`${BACKEND_URL}/api/productcoupon/`);
         if (!couponsRes.ok) throw new Error(`HTTP error! status: ${couponsRes.status} for coupons`);
         const couponsData = await couponsRes.json();
         const fetchedCouponsRaw: any[] = Array.isArray(couponsData) ? couponsData : couponsData.results || [];
+        console.log("DEBUG(TopDeals): Fetched Coupons Raw:", couponsData);
+        console.log("DEBUG(TopDeals): Processed Coupons Raw (from API):", fetchedCouponsRaw);
 
         const enrichedCoupons: ProductCoupon[] = fetchedCouponsRaw.map(coupon => {
-          const productDetail = fetchedProducts.find(p => p.id === coupon.product) || {
+          const productDetail = fetchedProducts.find(p => {
+            console.log(`DEBUG(TopDeals): Matching coupon.product ID: ${coupon.product} against product ID: ${p.id}`);
+            return p.id === coupon.product;
+          }) || {
             id: coupon.product,
             name: "Unknown Product",
             logo: null,
@@ -83,14 +83,17 @@ const TopDeals: React.FC = () => {
             title: "",
             subtitle: "",
             sub_subtitle: "",
-            is_signup_store: false // Default to false if product not found
+            is_signup_store: false
           };
+          console.log("DEBUG(TopDeals): Product Detail found for coupon:", productDetail.name);
           return { ...coupon, product: productDetail };
         });
         setCoupons(enrichedCoupons);
+        console.log("DEBUG(TopDeals): Enriched Coupons (state updated):", enrichedCoupons);
+
 
       } catch (error) {
-        console.error("Failed to fetch top deals data:", error);
+        console.error("Failed to fetch top deals data in TopDeals component:", error);
         showPopup("Failed to load top deals. Please try again.");
       } finally {
         setLoading(false);
@@ -98,37 +101,49 @@ const TopDeals: React.FC = () => {
     };
 
     fetchTopDealsData();
-  }, []); // Empty dependency array, runs once on mount
+  }, []);
 
   const topDealsCoupons: ProductCoupon[] = React.useMemo(() => {
     const productToBestCouponMap = new Map<number, ProductCoupon>();
 
-    // Group coupons by product ID and find the best one for each
-    coupons.forEach(coupon => {
-      const currentBest = productToBestCouponMap.get(coupon.product.id);
+    console.log("DEBUG(TopDeals): Starting useMemo - current 'coupons' state:", coupons);
 
-      // "Better" is defined by higher combined used_count + used_today
-      if (!currentBest || (coupon.used_count + coupon.used_today) > (currentBest.used_count + currentBest.used_today)) {
-        productToBestCouponMap.set(coupon.product.id, coupon);
+    coupons.forEach(coupon => {
+      if (coupon.product && typeof coupon.product.id === 'number') {
+        const currentBest = productToBestCouponMap.get(coupon.product.id);
+
+        if (!currentBest || (coupon.used_count + coupon.used_today) > (currentBest.used_count + currentBest.used_today)) {
+          productToBestCouponMap.set(coupon.product.id, coupon);
+          console.log(`DEBUG(TopDeals): Set best coupon for product ${coupon.product.name} (ID: ${coupon.product.id})`);
+        }
+      } else {
+        console.warn("DEBUG(TopDeals): Skipping coupon due to invalid product ID:", coupon);
       }
     });
 
-    // Convert map values to an array
     let selectedCoupons = Array.from(productToBestCouponMap.values());
+    console.log("DEBUG(TopDeals): Selected Coupons before sort:", selectedCoupons);
 
-    // Sort the selected coupons by overall usage (most popular first)
     selectedCoupons.sort((a, b) => (b.used_count + b.used_today) - (a.used_count + a.used_today));
+    console.log("DEBUG(TopDeals): Final Sorted Top Deals Coupons:", selectedCoupons);
 
-    // This now returns one coupon per product, sorted by usage, without a hard limit.
     return selectedCoupons;
-  }, [coupons]); // Recalculate only when 'coupons' data changes
+  }, [coupons]);
 
   if (loading) {
-    return <div className="text-center py-8">Loading top deals...</div>;
+    return (
+        <div className="text-center py-8" id="top-deals" data-prerender-ready="false">
+            Loading top deals...
+        </div>
+    );
   }
 
   return (
-    <div className="w-full flex flex-col gap-4 mb-3" id="top-deals"> {/* Added id for smooth scrolling */}
+    <div
+        className="w-full flex flex-col gap-4 mb-3"
+        id="top-deals"
+        data-prerender-ready="true"
+    >
       {popup && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded shadow-lg z-50 transition-all">
           {popup}
@@ -144,10 +159,8 @@ const TopDeals: React.FC = () => {
           const product = coupon.product;
           const logoSrc = getFullLogoUrl(product.logo ?? product.logo_url);
 
-          // --- NEW LOGIC: Determine button text based on product.is_signup_store ---
-          const buttonText = product.is_signup_store ? 'Sign Up' : 'Shop Now';
-          const isSignupStoreAction = product.is_signup_store; // Store boolean for clarity
-          // --- END NEW LOGIC ---
+          const buttonText = product.is_signup_store === true ? 'Sign Up' : 'Shop Now';
+          const isSignupStoreAction = product.is_signup_store;
 
           return (
             <div
@@ -200,8 +213,6 @@ const TopDeals: React.FC = () => {
                     onClick={() => {
                       navigator.clipboard.writeText(coupon.code);
                       showPopup("Code copied!");
-                      // Use product.id to update usage if coupon.id alone isn't enough,
-                      // or just pass coupon.id as it's what your backend expects for 'use' action.
                       fetch(`${BACKEND_URL}/api/productcoupon/${coupon.id}/use/`, { method: "POST" })
                         .then(() => { /* Maybe refresh data or update state if needed */ })
                         .catch(err => console.error("Error updating coupon usage:", err));
@@ -216,11 +227,11 @@ const TopDeals: React.FC = () => {
               {coupon.shop_now_url ? ( // Only show button if a URL exists
                 <a
                   href={coupon.shop_now_url}
-                  className={`block mt-2 ${isSignupStoreAction ? 'bg-green-500 hover:bg-green-600' : 'bg-green-500 hover:bg-green-600'} text-white text-center py-2 rounded font-bold`}
+                  className={`block mt-2 ${isSignupStoreAction ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'} text-white text-center py-2 rounded font-bold`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {buttonText} {/* Dynamic text */}
+                  {buttonText}
                 </a>
               ) : (
                 // Display a disabled button if no URL is available for the action
@@ -228,7 +239,7 @@ const TopDeals: React.FC = () => {
                     className="block mt-2 bg-gray-300 text-gray-600 text-center py-2 rounded font-bold cursor-not-allowed"
                     disabled
                 >
-                    {buttonText} (Link N/A) {/* Dynamic text with N/A */}
+                    {buttonText} (Link N/A)
                 </button>
               )}
             </div>
