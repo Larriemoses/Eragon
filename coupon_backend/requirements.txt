@@ -3,6 +3,9 @@ dj-database-url==2.3.0
 Django==5.2.1
 django-cors-headers==4.7.0
 djangorestframework==3.16.0
+# --- ADDED FOR REDIS CACHING ---
+django-redis==5.4.0 # Or the latest compatible version
+# --- END ADDED ---
 gunicorn==23.0.0
 packaging==25.0
 pillow==11.2.1

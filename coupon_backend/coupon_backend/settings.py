@@ -7,7 +7,7 @@ For more information on this file, see
 https://docs.djangoproject.com/en/4.2/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/4.2/ref/settings/
+https://docs.djangoproject.com/en/4.2/ref/settings/#values
 """
 import dj_database_url
 from pathlib import Path
@@ -31,9 +31,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['.onrender.com',
                  '127.0.0.1',
-    'localhost',
-    # Add your Render domain here for production!
-    'eragon-backend1.onrender.com'
+                 'localhost',
+                 # Add your Render domain here for production!
+                 'eragon-backend1.onrender.com'
                  ]
 
 
@@ -48,8 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'coupons',
     'rest_framework',
-    'corsheaders',  # For CORS
-    'rest_framework.authtoken',  # Add this for token authentication
+    'corsheaders', # For CORS
+    'rest_framework.authtoken', # Add this for token authentication
     'products',
     'django.contrib.sites',
     'django.contrib.sitemaps',
@@ -60,15 +60,21 @@ SITE_ID = 1
 # ---------------------
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # CORS middleware should be at the top
+    'corsheaders.middleware.CorsMiddleware', # CORS middleware should be at the top
     'django.middleware.security.SecurityMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware', # For sessions (required by cache middleware if used globally)
+    'django.middleware.cache.UpdateCacheMiddleware', # Global page caching (if you decide to use it)
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware', # Global page caching (if you decide to use it)
 ]
+
+# IMPORTANT: If you use global page caching (UpdateCacheMiddleware/FetchFromCacheMiddleware),
+# FetchFromCacheMiddleware MUST be listed AFTER UpdateCacheMiddleware.
+# Also, they must be very high in your MIDDLEWARE list, usually right after SessionMiddleware.
+# I've placed them above for now. If you only use low-level cache (recommended), you can remove them.
 
 ROOT_URLCONF = 'coupon_backend.urls'
 
@@ -95,13 +101,31 @@ WSGI_APPLICATION = 'coupon_backend.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-     'default': dj_database_url.config(
+    'default': dj_database_url.config(
         # default is a fallback for local development if DATABASE_URL is not set
         # For production on Render, DATABASE_URL will be provided by Render
         default='sqlite:///db.sqlite3', # Keep this for local dev if you want
         conn_max_age=600 # Optional: Reconnect to DB after 10 min to avoid stale connections
     )
 }
+
+# --- Caching Configuration ---
+# Remember to install django-redis: pip install django-redis
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        # For Render production: REDIS_URL will be set by environment variable
+        # For local development: ensure a Redis server is running (e.g., via Docker, or directly)
+        "LOCATION": os.environ.get('REDIS_URL', "redis://127.0.0.1:6379/1"), # /1 is database 1
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARTS": {"max_connections": 100}, # Typo fix: KWARTS -> KWARGS
+        },
+        "KEY_PREFIX": "coupon_backend_cache" # Optional: a prefix for all keys from this app
+    }
+}
+# --- End Caching Configuration ---
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -164,15 +188,13 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # Require authentication by default
+        'rest_framework.permissions.IsAuthenticated', # Require authentication by default
     ],
 }
 
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
