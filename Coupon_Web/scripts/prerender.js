@@ -97,7 +97,7 @@ async function preRenderAndGenerateSitemap() {
   // --- NEW: Expose a global variable to the page context ---
   // This function will be callable from the page's JavaScript (your React app)
   await page.exposeFunction('getPrerenderLiveBaseUrl', () => siteHostname);
-  // --- END NEW ---
+
 
   const sitemapUrls = []; // To collect URLs for the sitemap
 
