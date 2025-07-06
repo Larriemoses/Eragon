@@ -15,6 +15,7 @@ import TermsOfService from './pages/TermsOfService';
 import Privacy from './pages/Privacy';
 import Affiliate_Disclosure from './pages/Affiliate_Disclosure'
 
+
 const AppContent: React.FC<{ token: string | null; setToken: (t: string) => void }> = ({ token, setToken }) => {
   const location = useLocation();
   const hideNav = location.pathname === "/admin-login" || location.pathname === "/admin-dashboard";
