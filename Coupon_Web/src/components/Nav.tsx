@@ -1,29 +1,29 @@
 // Nav.tsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { usePageHead } from '../utils/headManager';
-import { slugify } from '../utils/slugify'; // IMPORT slugify helper
-
+import { usePageHead } from "../utils/headManager";
+import { slugify } from "../utils/slugify"; // IMPORT slugify helper
 
 // Constants for API and logo
 const BACKEND_URL = "https://eragon-backend1.onrender.com";
-const LOGO_URL = "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png";
+const LOGO_URL =
+  "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1752110182/logo_-_dr-removebg-preview_qe8c4l.png";
 
 // Helper function to get full logo URL (unified logic for all components)
 const getFullLogoUrl = (logoPath?: string | null) => {
   if (logoPath) {
-    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+    if (logoPath.startsWith("http://") || logoPath.startsWith("https://")) {
       return logoPath;
     }
-    if (logoPath.startsWith('/')) {
-        return `${BACKEND_URL}${logoPath}`;
+    if (logoPath.startsWith("/")) {
+      return `${BACKEND_URL}${logoPath}`;
     }
     return `${BACKEND_URL}/${logoPath}`;
   }
   return undefined;
 };
 
-getFullLogoUrl
+getFullLogoUrl;
 // Define a type for the product data received from the API
 interface NavProduct {
   id: number;
@@ -33,14 +33,15 @@ interface NavProduct {
 }
 
 const Nav: React.FC = () => {
-   usePageHead({
+  usePageHead({
     title: "Discount Region - Top Coupon Codes, Verified Deals & Promo Codes",
-    description: "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
-    ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
-    ogUrl: "https://www.discountregion.com/", // Correct Vercel URL
-    canonicalUrl: "https://www.discountregion.com/", // Correct Vercel URL
+    description:
+      "Your go-to source for verified discounts and promo codes from top brands like Oraimo, Shopinverse, 1xBet, and leading prop firms. Begin your discount journey and save more every time!",
+    ogImage:
+      "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Use your main logo or a compelling social share image
+    ogUrl: "https://www.discountregion.com/", //
+    canonicalUrl: "https://www.discountregion.com/", //
   });
-
 
   const [products, setProducts] = useState<NavProduct[]>([]);
   const [dropdown, setDropdown] = useState(false);
@@ -55,33 +56,46 @@ const Nav: React.FC = () => {
       try {
         const productsRes = await fetch(`${BACKEND_URL}/api/products/`);
         if (!productsRes.ok) {
-          throw new Error(`HTTP error! status: ${productsRes.status} for products`);
+          throw new Error(
+            `HTTP error! status: ${productsRes.status} for products`
+          );
         }
         const rawProductsData: NavProduct[] = await productsRes.json();
 
-        const fetchedProducts: NavProduct[] = Array.isArray(rawProductsData) ? rawProductsData : (rawProductsData as any).results || [];
-
+        const fetchedProducts: NavProduct[] = Array.isArray(rawProductsData)
+          ? rawProductsData
+          : (rawProductsData as any).results || [];
 
         // --- START OF REVISED SORTING LOGIC FOR HARDCODED PRIORITY ---
         const specificPriorities = [
-          "Oraimo Nigeria", "Oraimo Ghana", "Oraimo Morocco", "FundedNext", "Maven Trading",
+          "Oraimo Nigeria",
+          "Oraimo Ghana",
+          "Oraimo Morocco",
+          "FundedNext",
+          "Maven Trading",
         ];
 
         const sortedProducts = [...fetchedProducts].sort((a, b) => {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
 
-          const indexA = specificPriorities.findIndex((priorityName) => priorityName.toLowerCase() === nameA);
-          const indexB = specificPriorities.findIndex((priorityName) => priorityName.toLowerCase() === nameB);
+          const indexA = specificPriorities.findIndex(
+            (priorityName) => priorityName.toLowerCase() === nameA
+          );
+          const indexB = specificPriorities.findIndex(
+            (priorityName) => priorityName.toLowerCase() === nameB
+          );
 
           if (indexA !== -1 && indexB !== -1) return indexA - indexB;
           if (indexA !== -1) return -1;
           if (indexB !== -1) return 1;
 
           let scoreA: number;
-          if (nameA.includes("oraimo")) scoreA = 1; else scoreA = 2;
+          if (nameA.includes("oraimo")) scoreA = 1;
+          else scoreA = 2;
           let scoreB: number;
-          if (nameB.includes("oraimo")) scoreB = 1; else scoreB = 2;
+          if (nameB.includes("oraimo")) scoreB = 1;
+          else scoreB = 2;
 
           if (scoreA !== scoreB) return scoreA - scoreB;
           return nameA.localeCompare(nameB);
@@ -97,11 +111,11 @@ const Nav: React.FC = () => {
 
   // Handle smooth scroll for "Today Deals" (no changes here)
   useEffect(() => {
-    if (location.hash === '#top-deals') {
-      const element = document.getElementById('top-deals');
+    if (location.hash === "#top-deals") {
+      const element = document.getElementById("top-deals");
       if (element) {
         setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 100);
       }
     }
@@ -109,13 +123,13 @@ const Nav: React.FC = () => {
 
   const handleTodayDealsClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    if (location.pathname === '/') {
-      const element = document.getElementById('top-deals');
+    if (location.pathname === "/") {
+      const element = document.getElementById("top-deals");
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     } else {
-      navigate('/#top-deals');
+      navigate("/#top-deals");
     }
     setMobileMenu(false);
   };
@@ -153,7 +167,9 @@ const Nav: React.FC = () => {
             <button className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
               Stores
               <svg
-                className={`w-4 h-4 transform transition-transform duration-200 ${dropdown ? 'rotate-180' : 'rotate-0'}`}
+                className={`w-4 h-4 transform transition-transform duration-200 ${
+                  dropdown ? "rotate-180" : "rotate-0"
+                }`}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -243,8 +259,16 @@ const Nav: React.FC = () => {
         {mobileMenu && (
           <div className="fixed inset-0 bg-white z-30 flex flex-col md:hidden">
             <div className="flex justify-between items-center p-4 border-b border-gray-200">
-              <Link to="/" className="flex items-center gap-2" onClick={() => setMobileMenu(false)}>
-                <img src={LOGO_URL} alt="Discount Region" className="h-10 w-auto" />
+              <Link
+                to="/"
+                className="flex items-center gap-2"
+                onClick={() => setMobileMenu(false)}
+              >
+                <img
+                  src={LOGO_URL}
+                  alt="Discount Region"
+                  className="h-10 w-auto"
+                />
               </Link>
               <button
                 className="p-2 rounded-md hover:bg-gray-100 transition-colors duration-200"

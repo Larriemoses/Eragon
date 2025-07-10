@@ -28,7 +28,7 @@ interface Product {
   social_facebook_url?: string | null;
   social_twitter_url?: string | null;
   social_instagram_url?: string | null;
-  is_signup_store?: boolean; // --- CRITICAL: Add this to the Product interface ---
+  is_signup_store?: boolean;
 }
 
 interface Coupon {
@@ -113,6 +113,15 @@ const ProductStore: React.FC = () => {
   const handleCopy = async (coupon: Coupon) => {
     navigator.clipboard.writeText(coupon.code);
 
+    // Frontend update for immediate feedback
+    setCoupons((prevCoupons) =>
+      prevCoupons.map((c) =>
+        c.id === coupon.id
+          ? { ...c, used_today: c.used_today + 1, used_count: c.used_count + 1 } // Increment both
+          : c
+      )
+    );
+
     try {
       const response = await fetch(`${COUPON_API}${coupon.id}/use/`, {
         method: "POST",
@@ -123,42 +132,13 @@ const ProductStore: React.FC = () => {
           `HTTP error! status: ${response.status} when updating coupon usage`
         );
       }
-
-      let updatedUsageData = {
-        used_count: coupon.used_count,
-        used_today: coupon.used_today,
-      };
-      try {
-        const jsonResponse = await response.json();
-        updatedUsageData = {
-          used_count: jsonResponse.used_count || coupon.used_count,
-          used_today: jsonResponse.used_today || coupon.used_today,
-        };
-      } catch (e) {
-        console.warn("Backend did not return JSON for coupon usage update:", e);
-      }
-
-      // --- FIX: Update the specific coupon in state WITHOUT sorting ---
-      setCoupons(
-        (prevCoupons) =>
-          prevCoupons.map((c) =>
-            c.id === coupon.id
-              ? {
-                  ...c,
-                  used_count: updatedUsageData.used_count,
-                  used_today: updatedUsageData.used_today,
-                }
-              : c
-          ) // Removed .sort() call here
-      );
-      // --- END FIX ---
-
+    } catch (error) {
+      console.error("Error handling copy or coupon usage update:", error);
+    } finally {
       setShowCopyNotification(true);
       setTimeout(() => {
         setShowCopyNotification(false);
       }, 2000); // Hide after 2 seconds
-    } catch (error) {
-      console.error("Error handling copy or coupon usage update:", error);
     }
   };
 
@@ -166,38 +146,78 @@ const ProductStore: React.FC = () => {
     if (!id) return;
     setLoading(true);
 
-    // --- FIXED: Added trailing slash ---
-    const fetchProduct = fetch(`${PRODUCT_API}${id}/`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(setProduct)
-      .catch((error) => {
-        console.error("Error fetching product:", error);
-        setProduct(null);
-      });
-
-    // --- FIXED: Added trailing slash ---
-    const fetchCoupons = fetch(`${COUPON_API}`) // Coupon API itself needs trailing slash
-      .then((res) => {
-        if (!res.ok)
+    const fetchData = async () => {
+      try {
+        const productRes = await fetch(`${PRODUCT_API}${id}/`);
+        if (!productRes.ok) {
           throw new Error(
-            `HTTP error! status: ${res.status} when fetching coupons`
+            `HTTP error! status: ${productRes.status} for product`
           );
-        return res.json();
-      })
-      .then((data) => {
-        const couponData = Array.isArray(data) ? data : data.results || [];
-        // --- FIX: Set coupons WITHOUT sorting ---
-        setCoupons(couponData.filter((c: Coupon) => c.product === Number(id))); // Removed .sort() call here
-        // --- END FIX ---
-      })
-      .catch((error) => console.error("Error fetching coupons:", error));
+        }
+        const productData = await productRes.json();
+        setProduct(productData);
 
-    Promise.all([fetchProduct, fetchCoupons]).finally(() => setLoading(false));
+        const couponsRes = await fetch(`${COUPON_API}`);
+        if (!couponsRes.ok) {
+          throw new Error(
+            `HTTP error! status: ${couponsRes.status} for coupons`
+          );
+        }
+        const couponsData = await couponsRes.json();
+        const allFetchedCoupons: Coupon[] = Array.isArray(couponsData)
+          ? couponsData
+          : couponsData.results || [];
+        const productCoupons = allFetchedCoupons.filter(
+          (c: Coupon) => c.product === Number(id)
+        );
+
+        let couponsToSet = productCoupons;
+        const today = new Date().toDateString(); // e.g., "Thu Jul 10 2025"
+
+        // --- ONE-TIME FORCE RESET LOGIC (ADD THIS BLOCK) ---
+        const forceResetKey = "forceResetUsedToday_ProductStore"; // Unique key for this one-time reset
+
+        if (localStorage.getItem(forceResetKey) === null) {
+          console.log(
+            "ProductStore: Performing one-time force reset of 'used_today'."
+          );
+          couponsToSet = couponsToSet.map((coupon: Coupon) => ({
+            ...coupon,
+            used_today: 0,
+          }));
+          localStorage.setItem(forceResetKey, "true"); // Mark as done
+        }
+        // --- END ONE-TIME FORCE RESET LOGIC ---
+
+        // Daily Reset Logic (Apply AFTER the one-time force reset)
+        const lastVisitDate = localStorage.getItem(
+          "lastVisitDate_ProductStore"
+        );
+
+        if (lastVisitDate !== today) {
+          console.log(
+            "ProductStore: New day detected. Resetting 'used_today' for coupons."
+          );
+          couponsToSet = couponsToSet.map((coupon: Coupon) => ({
+            ...coupon,
+            used_today: 0,
+          }));
+          localStorage.setItem("lastVisitDate_ProductStore", today);
+        } else {
+          console.log(
+            "ProductStore: Same day. 'used_today' values are preserved (unless force-reset)."
+          );
+        }
+        setCoupons(couponsToSet);
+      } catch (error) {
+        console.error("Error fetching data in ProductStore component:", error);
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [id]);
 
   if (loading) {
