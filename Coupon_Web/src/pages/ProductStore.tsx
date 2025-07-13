@@ -72,13 +72,22 @@ const ProductStore: React.FC = () => {
   const [liveBaseUrl, setLiveBaseUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      if ((window as any).getPrerenderLiveBaseUrl) {
-        setLiveBaseUrl((window as any).getPrerenderLiveBaseUrl());
-      } else {
-        setLiveBaseUrl(window.location.origin);
+    const resolveLiveBaseUrl = async () => {
+      if (typeof window !== "undefined") {
+        if ((window as any).getPrerenderLiveBaseUrl) {
+          try {
+            const resolved = await (window as any).getPrerenderLiveBaseUrl();
+            setLiveBaseUrl(resolved);
+          } catch (err) {
+            console.error("Failed to resolve getPrerenderLiveBaseUrl:", err);
+            setLiveBaseUrl(window.location.origin);
+          }
+        } else {
+          setLiveBaseUrl(window.location.origin);
+        }
       }
-    }
+    };
+    resolveLiveBaseUrl();
   }, []);
 
   const pageTitle = product?.name

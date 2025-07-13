@@ -1,83 +1,72 @@
-// Stores.tsx
+// src/pages/Store.tsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { usePageHead } from '../utils/headManager';
-import { slugify } from '../utils/slugify'; // IMPORT slugify helper
-
+import { usePageHead } from "../utils/headManager";
+import { slugify } from "../utils/slugify";
 
 interface Product {
   id: number;
   name: string;
   logo?: string | null;
   logo_url?: string | null;
-  title?: string;
-  subtitle?: string;
-  sub_subtitle?: string;
-  country?: string;
 }
 
 const API_URL = "https://eragon-backend1.onrender.com/api/products/";
 const BACKEND_BASE_URL = "https://eragon-backend1.onrender.com";
 
-// Helper function to get full logo URL (unified logic)
 const getFullLogoUrl = (logoPath?: string | null) => {
-  if (logoPath) {
-    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
-      return logoPath;
-    }
-    // Ensure no double slashes if logoPath already starts with '/'
-    if (logoPath.startsWith('/')) {
-        return `${BACKEND_BASE_URL}${logoPath}`;
-    }
-    return `${BACKEND_BASE_URL}/${logoPath}`; // Add a leading slash if missing
+  if (!logoPath) return undefined;
+  if (logoPath.startsWith("http://") || logoPath.startsWith("https://")) {
+    return logoPath;
   }
-  return undefined;
+  return `${BACKEND_BASE_URL}${logoPath.startsWith("/") ? "" : "/"}${logoPath}`;
 };
 
 const Store: React.FC = () => {
-  // --- NEW: Determine live base URL for usePageHead ---
   const [liveBaseUrl, setLiveBaseUrl] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    // Check if getPrerenderLiveBaseUrl is exposed (means we are pre-rendering)
-    if (window.getPrerenderLiveBaseUrl) {
-      setLiveBaseUrl(window.getPrerenderLiveBaseUrl());
-    } else {
-      // Otherwise, assume running in a live browser, use window.location.origin
-      setLiveBaseUrl(window.location.origin);
-    }
-  }, []);
-  // --- END NEW ---
-
-  // CORRECT PLACEMENT: usePageHead is inside the functional component.
-  usePageHead({
-    title: "All Stores & Brands - Verified Coupons & Deals | Discount Region",
-    description: "Browse a comprehensive list of top brands and stores offering verified discount codes on gadgets, trading tools, and everyday essentials. Find Oraimo, prop firms, Shopinverse & more.",
-    keywords: "stores, brands, verified coupons, discount codes, prop firms, oraimo, shopinverse, 1xbet", // Example keywords for stores page
-    ogImage: "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png", // Consider a different image if you have one for stores
-    // --- CHANGE: Use liveBaseUrl for ogUrl and canonicalUrl ---
-    ogUrl: liveBaseUrl ? `${liveBaseUrl}/stores/` : undefined,
-    canonicalUrl: liveBaseUrl ? `${liveBaseUrl}/stores/` : undefined,
-    // --- END CHANGE ---
-  });
-  // <--- END CORRECT PLACEMENT ---
-
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // ✅ FIXED: Await getPrerenderLiveBaseUrl if available
+  useEffect(() => {
+    const resolveLiveBaseUrl = async () => {
+      if (typeof window !== "undefined") {
+        if ((window as any).getPrerenderLiveBaseUrl) {
+          try {
+            const resolved = await (window as any).getPrerenderLiveBaseUrl();
+            setLiveBaseUrl(resolved);
+          } catch {
+            setLiveBaseUrl(window.location.origin);
+          }
+        } else {
+          setLiveBaseUrl(window.location.origin);
+        }
+      }
+    };
+    resolveLiveBaseUrl();
+  }, []);
+
+  usePageHead({
+    title: "All Stores & Brands - Verified Coupons & Deals | Discount Region",
+    description:
+      "Browse a comprehensive list of top brands and stores offering verified discount codes on gadgets, trading tools, and everyday essentials. Find Oraimo, prop firms, Shopinverse & more.",
+    keywords:
+      "stores, brands, verified coupons, discount codes, prop firms, oraimo, shopinverse, 1xbet",
+    ogImage:
+      "https://res.cloudinary.com/dvl2r3bdw/image/upload/v1747609358/image-removebg-preview_soybkt.png",
+    ogUrl: liveBaseUrl ? `${liveBaseUrl}/stores/` : undefined,
+    canonicalUrl: liveBaseUrl ? `${liveBaseUrl}/stores/` : undefined,
+  });
+
   useEffect(() => {
     fetch(API_URL)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((data) => {
-        const productData: Product[] = Array.isArray(data) ? data : data.results || [];
+        const productData: Product[] = Array.isArray(data)
+          ? data
+          : data.results || [];
 
-        // --- START OF REVISED SORTING LOGIC FOR HARDCODED PRIORITY ---
         const specificPriorities = [
           "Oraimo Nigeria",
           "Oraimo Ghana",
@@ -89,50 +78,29 @@ const Store: React.FC = () => {
         const sortedProducts = [...productData].sort((a, b) => {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
-
           const indexA = specificPriorities.findIndex(
-            (priorityName) => priorityName.toLowerCase() === nameA
+            (p) => p.toLowerCase() === nameA
           );
           const indexB = specificPriorities.findIndex(
-            (priorityName) => priorityName.toLowerCase() === nameB
+            (p) => p.toLowerCase() === nameB
           );
 
-          if (indexA !== -1 && indexB !== -1) {
-            return indexA - indexB;
-          }
+          if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+          if (indexA !== -1) return -1;
+          if (indexB !== -1) return 1;
 
-          if (indexA !== -1) {
-            return -1;
-          }
+          const scoreA = nameA.includes("oraimo") ? 1 : 2;
+          const scoreB = nameB.includes("oraimo") ? 1 : 2;
 
-          if (indexB !== -1) {
-            return 1;
-          }
-
-          let scoreA: number;
-          if (nameA.includes("oraimo")) {
-            scoreA = 1;
-          } else {
-            scoreA = 2;
-          }
-
-          let scoreB: number;
-          if (nameB.includes("oraimo")) {
-            scoreB = 1;
-          } else {
-            scoreB = 2;
-          }
-
-          if (scoreA !== scoreB) {
-            return scoreA - scoreB;
-          }
-
-          return nameA.localeCompare(nameB);
+          return scoreA !== scoreB
+            ? scoreA - scoreB
+            : nameA.localeCompare(nameB);
         });
+
         setProducts(sortedProducts);
       })
-      .catch((error) => {
-        console.error("Error fetching products in Store component:", error);
+      .catch((err) => {
+        console.error("Error fetching products:", err);
         setProducts([]);
       })
       .finally(() => setLoading(false));
@@ -148,21 +116,22 @@ const Store: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {products.map((product) => {
               const logoSrc = product.logo || product.logo_url;
-              // Generate the slug for the product name
               const productSlug = slugify(product.name);
               return (
                 <div
                   key={product.id}
                   className="flex flex-col items-center bg-gray-50 rounded-xl p-4 shadow hover:shadow-lg transition"
                 >
-                  <div className="w-20 h-20 flex items-center justify-center bg-white rounded-lg mb-3 ">
+                  <div className="w-20 h-20 flex items-center justify-center bg-white rounded-lg mb-3">
                     {logoSrc ? (
                       <img
                         src={getFullLogoUrl(logoSrc)}
                         alt={product.name}
                         className="max-w-[60px] max-h-[60px] object-contain"
                         onError={(e) => {
-                          e.currentTarget.src = `https://placehold.co/60x60/cccccc/ffffff?text=${product.name.charAt(0)}`;
+                          e.currentTarget.src = `https://placehold.co/60x60/cccccc/ffffff?text=${product.name.charAt(
+                            0
+                          )}`;
                           e.currentTarget.onerror = null;
                         }}
                       />
@@ -170,10 +139,14 @@ const Store: React.FC = () => {
                       <span className="text-gray-400 text-2xl">?</span>
                     )}
                   </div>
-                  <div className="font-semibold text-center mb-2">{product.name}</div>
+                  <div className="font-semibold text-center mb-2">
+                    {product.name}
+                  </div>
                   <button
                     className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold transition"
-                    onClick={() => navigate(`/store/${product.id}/${productSlug}`)}
+                    onClick={() =>
+                      navigate(`/store/${product.id}/${productSlug}`)
+                    }
                   >
                     Open Store
                   </button>
